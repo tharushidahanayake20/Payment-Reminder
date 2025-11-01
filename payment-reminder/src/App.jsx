@@ -1,10 +1,11 @@
 import "./App.css";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
-    <>
-      <h1>Payment Reminder App</h1>
-    </>
+    <div className="App">
+      <Settings />
+    </div>
   );
 }
 
