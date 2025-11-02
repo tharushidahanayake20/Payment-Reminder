@@ -5,14 +5,27 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #f8f9fa;
   min-height: 100vh;
+  transition: all 0.3s ease;
 }
 
-/* Header Styles - Left Aligned */
+/* Dark Mode Styles */
+.settings-container.dark-mode {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+
+/* Header Styles */
 .settings-header {
-  background: white;
+  background: #ffffff;
   padding: 2rem 2rem 1.5rem 2rem;
   border-bottom: 1px solid #e1e5e9;
   margin-bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .settings-header {
+  background: #2d2d2d;
+  border-bottom: 1px solid #404040;
 }
 
 .header-content {
@@ -31,6 +44,11 @@
   color: #2563eb;
   font-size: 2.5rem;
   margin-top: 0.25rem;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .header-icon {
+  color: #3b82f6;
 }
 
 .settings-title {
@@ -39,6 +57,11 @@
   color: #1a1a1a;
   margin: 0;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .settings-title {
+  color: #ffffff;
 }
 
 .settings-subtitle {
@@ -46,6 +69,11 @@
   font-size: 1.1rem;
   margin: 0;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .settings-subtitle {
+  color: #cccccc;
 }
 
 .settings-form {
@@ -64,7 +92,7 @@
 }
 
 .settings-section {
-  background: white;
+  background: #ffffff;
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -72,6 +100,13 @@
   width: 100%;
   box-sizing: border-box;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .settings-section {
+  background: #2d2d2d;
+  border: 1px solid #404040;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .section-header {
@@ -85,6 +120,11 @@
 .section-icon {
   color: #2563eb;
   font-size: 1.25rem;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .section-icon {
+  color: #3b82f6;
 }
 
 .section-title {
@@ -93,6 +133,11 @@
   color: #1a1a1a;
   margin: 0;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .section-title {
+  color: #ffffff;
 }
 
 .section-description {
@@ -101,6 +146,11 @@
   font-size: 1rem;
   text-align: left;
   padding-left: 0;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .section-description {
+  color: #cccccc;
 }
 
 .form-group {
@@ -114,6 +164,11 @@
   margin-bottom: 0.5rem;
   font-size: 1rem;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .form-label {
+  color: #ffffff;
 }
 
 .bold-label {
@@ -126,17 +181,37 @@
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 1rem;
-  transition: border-color 0.2s;
+  transition: all 0.3s ease;
   background-color: #fafafa;
   box-sizing: border-box;
   text-align: left;
+  color: #1a1a1a;
+}
+
+.dark-mode .form-input {
+  background-color: #3d3d3d;
+  border: 1px solid #555555;
+  color: #ffffff;
 }
 
 .form-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background-color: white;
+  background-color: #ffffff;
+}
+
+.dark-mode .form-input:focus {
+  background-color: #4d4d4d;
+  border-color: #3b82f6;
+}
+
+.form-input::placeholder {
+  color: #888;
+}
+
+.dark-mode .form-input::placeholder {
+  color: #aaaaaa;
 }
 
 .section-divider {
@@ -144,6 +219,11 @@
   background: #e5e7eb;
   margin: 1.5rem 0;
   border: none;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .section-divider {
+  background: #404040;
 }
 
 .save-profile-section {
@@ -158,6 +238,11 @@
 .save-icon {
   color: #2563eb;
   font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .save-icon {
+  color: #3b82f6;
 }
 
 .save-profile-title {
@@ -165,6 +250,11 @@
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .save-profile-title {
+  color: #ffffff;
 }
 
 /* Toggle Switch Styles */
@@ -196,6 +286,11 @@
 .toggle-icon {
   color: #666;
   font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .toggle-icon {
+  color: #cccccc;
 }
 
 .toggle-label {
@@ -204,6 +299,11 @@
   font-size: 1rem;
   margin: 0;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .toggle-label {
+  color: #ffffff;
 }
 
 .toggle-title {
@@ -212,6 +312,11 @@
   margin: 0;
   font-size: 1rem;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .toggle-title {
+  color: #ffffff;
 }
 
 .toggle-description {
@@ -220,6 +325,11 @@
   margin: 0;
   padding-left: 1.5rem;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .toggle-description {
+  color: #cccccc;
 }
 
 .toggle-switch {
@@ -249,6 +359,10 @@
   border-radius: 24px;
 }
 
+.dark-mode .toggle-slider {
+  background-color: #555555;
+}
+
 .toggle-slider:before {
   position: absolute;
   content: "";
@@ -263,6 +377,10 @@
 
 input:checked + .toggle-slider {
   background-color: #2563eb;
+}
+
+.dark-mode input:checked + .toggle-slider {
+  background-color: #3b82f6;
 }
 
 input:checked + .toggle-slider:before {
@@ -293,6 +411,11 @@ input:checked + .toggle-slider:before {
   margin-bottom: 0.5rem;
   display: block;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .preference-label {
+  color: #ffffff;
 }
 
 .preference-option {
@@ -313,6 +436,11 @@ input:checked + .toggle-slider:before {
 .dark-mode-icon {
   color: #666;
   font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .dark-mode-icon {
+  color: #cccccc;
 }
 
 .preference-description {
@@ -321,15 +449,28 @@ input:checked + .toggle-slider:before {
   margin: 0;
   flex: 1;
   text-align: left;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .preference-description {
+  color: #cccccc;
 }
 
 .preference-select {
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  background: white;
+  background: #ffffff;
   min-width: 150px;
   font-size: 0.9rem;
+  color: #1a1a1a;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .preference-select {
+  background: #3d3d3d;
+  border: 1px solid #555555;
+  color: #ffffff;
 }
 
 .save-button {
@@ -341,14 +482,23 @@ input:checked + .toggle-slider:before {
   font-weight: 600;
   font-size: 1.1rem;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   width: 100%;
   margin-top: 1rem;
   display: block;
 }
 
+.dark-mode .save-button {
+  background: #3b82f6;
+}
+
 .save-button:hover {
   background: #1d4ed8;
+  transform: translateY(-2px);
+}
+
+.dark-mode .save-button:hover {
+  background: #2563eb;
 }
 
 /* Responsive Design */

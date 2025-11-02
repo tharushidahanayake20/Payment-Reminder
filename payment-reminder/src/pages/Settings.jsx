@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Settings.css';
-import { FaUser, FaBell, FaShieldAlt, FaCog, FaSave, FaEnvelope, FaPhone, FaMoon } from 'react-icons/fa';
+import { FaUser, FaBell, FaShieldAlt, FaCog, FaSave, FaEnvelope, FaPhone, FaMoon, FaSun } from 'react-icons/fa';
 
 const Settings = () => {
   const [formData, setFormData] = useState({
@@ -21,6 +21,17 @@ const Settings = () => {
     timezone: 'UTC'
   });
 
+  // Apply dark mode to the entire document
+  useEffect(() => {
+    if (preferences.darkMode) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.body.classList.add('dark-mode');
+    } else {
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.body.classList.remove('dark-mode');
+    }
+  }, [preferences.darkMode]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -40,10 +51,11 @@ const Settings = () => {
     e.preventDefault();
     console.log('Settings saved:', { formData, preferences });
     // Add your save logic here
+    alert('Settings saved successfully!');
   };
 
   return (
-    <div className="settings-container">
+    <div className={`settings-container ${preferences.darkMode ? 'dark-mode' : ''}`}>
       {/* Header with Settings Icon - Left Aligned */}
       <div className="settings-header">
         <div className="header-content">
@@ -276,8 +288,14 @@ const Settings = () => {
                   <label className="preference-label bold-label">Dark Mode :-</label>
                   <div className="preference-option">
                     <div className="dark-mode-toggle">
-                      <FaMoon className="dark-mode-icon" />
-                      <p className="preference-description">Toggle dark mode theme</p>
+                      {preferences.darkMode ? (
+                        <FaSun className="dark-mode-icon" />
+                      ) : (
+                        <FaMoon className="dark-mode-icon" />
+                      )}
+                      <p className="preference-description">
+                        {preferences.darkMode ? 'Light mode theme' : 'Dark mode theme'}
+                      </p>
                       <label className="toggle-switch">
                         <input
                           type="checkbox"
