@@ -1,6 +1,7 @@
 import "./App.css";
 import Sidebar from "./components/Sidebar";
 import CustomerManagement from "./pages/CustomerManagement";
+import CallerDashboard from "./pages/CallerDashboard";
 
 function App() {
   return (
@@ -8,7 +9,8 @@ function App() {
       <div className="app-container">
         <Sidebar />
         <div className="main-content">
-          <CustomerManagement />
+          <CallerDashboard />
+          {/* <CustomerManagement /> */}
         </div>
       </div>
     </>
