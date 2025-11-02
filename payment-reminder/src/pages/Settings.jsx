@@ -44,15 +44,21 @@ const Settings = () => {
 
   return (
     <div className="settings-container">
+      {/* Header with Settings Icon - Left Aligned */}
       <div className="settings-header">
-        <h1 className="settings-title">Settings</h1>
-        <p className="settings-subtitle">Manage your account settings and preferences</p>
+        <div className="header-content">
+          <FaCog className="header-icon" />
+          <div className="header-text">
+            <h1 className="settings-title">Settings</h1>
+            <p className="settings-subtitle">Manage your account settings and preferences</p>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="settings-form">
         {/* First Row: Profile Settings + Notifications */}
         <div className="settings-row">
-          {/* Profile Settings Section */}
+          {/* Profile Settings Section - Left Aligned */}
           <section className="settings-section">
             <div className="section-header">
               <FaUser className="section-icon" />
