@@ -6,14 +6,18 @@
   left: 0;
   top: 0;
   padding: 10px;
-  border: solid 1px #000000;
+  /* border: solid 1px #000000; */
+  /* box-shadow: 0 0 5px #9e9e9e; */
   margin: 5px;
   margin-right: auto;
+}
+h4 {
+  color: #3f3f3f;
 }
 
 .sidebar-logo {
   padding: 0;
-  border: solid 1px #000000;
+  /* border: solid 1px #000000; */
 }
 
 .sidebar-menu ul {
@@ -21,13 +25,21 @@
   padding: 0;
 }
 
+li {
+  margin-bottom: 20px;
+}
+
 .sidebar-end {
   position: absolute;
-  bottom: 10vh;
+  bottom: 5vh;
   width: 80%;
 }
 
 .sidebar-end ul {
   list-style-type: none;
   padding: 0;
+}
+
+.logout {
+  color: red;
 }

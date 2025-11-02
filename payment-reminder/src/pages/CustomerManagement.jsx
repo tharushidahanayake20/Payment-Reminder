@@ -2,6 +2,7 @@ import React from "react";
 import "./customerManagement.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import MyTable from "../components/CustomerTable";
+import "../components/CustomerTable.css";
 
 function CustomerManagement() {
   return (
@@ -23,7 +24,7 @@ function CustomerManagement() {
           Add
         </button>
       </div>
-      <div className="customer-list">
+      <div className="customer-container">
         <MyTable />
       </div>
     </>
