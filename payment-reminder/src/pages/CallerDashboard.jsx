@@ -144,10 +144,10 @@ function CallerDashboard() {
     const pendingCount = contacted.filter(c => c.status === "PENDING").length + overdue.length;
 
     setStats([
-      { type: "customers", value: totalCustomers.toString(), label: "Total Customers", color: "#c8b6ff" },
-      { type: "contacted", value: contactedCount.toString(), label: "Customers Contacted", color: "#c8b6ff" },
-      { type: "completed", value: completedCount.toString(), label: "Payments Completed", color: "#c8b6ff" },
-      { type: "pending", value: pendingCount.toString(), label: "Pending Payments", color: "#c8b6ff" },
+      { type: "customers", value: totalCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
+      { type: "contacted", value: contactedCount.toString(), label: "Customers Contacted", color: "#90e4f7ff" },
+      { type: "completed", value: completedCount.toString(), label: "Payments Completed", color: "#90e4f7ff" },
+      { type: "pending", value: pendingCount.toString(), label: "Pending Payments", color: "#90e4f7ff" },
     ]);
   };
 
