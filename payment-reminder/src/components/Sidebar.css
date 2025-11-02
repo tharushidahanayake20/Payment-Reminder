@@ -1,0 +1,33 @@
+.sidebar {
+  width: 10vw;
+  height: 100vh;
+  background-color: transparent;
+  position: fixed;
+  left: 0;
+  top: 0;
+  padding: 10px;
+  border: solid 1px #000000;
+  margin: 5px;
+  margin-right: auto;
+}
+
+.sidebar-logo {
+  padding: 0;
+  border: solid 1px #000000;
+}
+
+.sidebar-menu ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.sidebar-end {
+  position: absolute;
+  bottom: 10vh;
+  width: 80%;
+}
+
+.sidebar-end ul {
+  list-style-type: none;
+  padding: 0;
+}

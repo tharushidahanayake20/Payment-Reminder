@@ -1,9 +1,16 @@
 import "./App.css";
+import Sidebar from "./components/Sidebar";
+import CustomerManagement from "./pages/CustomerManagement";
 
 function App() {
   return (
     <>
-      <h1>Payment Reminder App</h1>
+      <div className="app-container">
+        <Sidebar />
+        <div className="main-content">
+          <CustomerManagement />
+        </div>
+      </div>
     </>
   );
 }
