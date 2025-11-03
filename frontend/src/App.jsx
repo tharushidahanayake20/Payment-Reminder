@@ -3,16 +3,21 @@ import Sidebar from "./components/Sidebar";
 import CustomerManagement from "./pages/CustomerManagement";
 import EmployeeManagement from "./pages/EmployeeManagement";
 import CallerDashboard from "./pages/CallerDashboard";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import Login from "./pages/Login";
 
 function App() {
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login";
+
   return (
     <>
       <div className="app-container">
-        <Sidebar />
-        <div className="main-content">
+        {!isLoginPage && <Sidebar />}
+        <div className={`main-content ${isLoginPage ? 'full-width' : ''}`}>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<CallerDashboard />} />
             <Route path="/tasks" element={<div>Tasks</div>} />
             <Route path="/customers" element={<CustomerManagement />} />
