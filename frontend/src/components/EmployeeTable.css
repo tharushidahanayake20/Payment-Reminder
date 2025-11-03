@@ -9,7 +9,7 @@
 }
 
 /* table without its own border; use separate mode so radius works */
-.custom-table {
+.employee-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -18,18 +18,18 @@
 }
 
 /* keep your row styles */
-.custom-table th,
-.custom-table td {
+.employee-table th,
+.employee-table td {
   padding: 15px;
   text-align: left;
   border-bottom: 1px solid #d9d9d9;
 }
 
-.custom-table th {
+.employee-table th {
   color: #000000;
 }
 
-.custom-table tbody tr:last-child td {
+.employee-table tbody tr:last-child td {
   border-bottom: none;
 }
 
