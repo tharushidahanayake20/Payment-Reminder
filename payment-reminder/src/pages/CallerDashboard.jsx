@@ -47,7 +47,7 @@ function CallerDashboard() {
     const initialContactedCustomers = [
       {
         id: 1,
-        customerId: "1001",
+        accountNumber: "1001",
         name: "Kumar Singh",
         date: todayString,
         status: "PENDING",
@@ -68,7 +68,7 @@ function CallerDashboard() {
       },
       {
         id: 2,
-        customerId: "1002",
+        accountNumber: "1002",
         name: "Ravi Kumar",
         date: todayString,
         status: "COMPLETED",
@@ -92,7 +92,7 @@ function CallerDashboard() {
     const initialOverduePayments = [
       {
         id: 3,
-        customerId: "1003",
+        accountNumber: "1003",
         name: "Kumar Singh",
         date: todayString,
         status: "OVERDUE",
@@ -105,7 +105,7 @@ function CallerDashboard() {
       },
       {
         id: 4,
-        customerId: "1004",
+        accountNumber: "1004",
         name: "Ash Kumar",
         date: todayString,
         status: "OVERDUE",
@@ -118,7 +118,7 @@ function CallerDashboard() {
       },
       {
         id: 5,
-        customerId: "1005",
+        accountNumber: "1005",
         name: "Priya Singh",
         date: todayString,
         status: "OVERDUE",
@@ -167,11 +167,11 @@ function CallerDashboard() {
   };
 
   // Handle saving customer details from modal
-  const handleSaveCustomerDetails = (customerId, data) => {
+  const handleSaveCustomerDetails = (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
     
     // Check if customer is in overdue list
-    const overdueCustomer = overduePayments.find(p => p.id === customerId);
+    const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
     
     if (overdueCustomer) {
       // Move from overdue to contacted
@@ -193,7 +193,7 @@ function CallerDashboard() {
       };
 
       // Remove from overdue
-      const newOverduePayments = overduePayments.filter(p => p.id !== customerId);
+      const newOverduePayments = overduePayments.filter(p => p.id !== accountNumber);
       
       // Add to contacted
       const newContactedCustomers = [...contactedCustomers, updatedCustomer];
@@ -204,7 +204,7 @@ function CallerDashboard() {
     } else {
       // Update existing contacted customer
       const newContactedCustomers = contactedCustomers.map(c => {
-        if (c.id === customerId) {
+        if (c.id === accountNumber) {
           const updated = {
             ...c,
             status: paymentMade ? "COMPLETED" : "PENDING",
@@ -238,7 +238,7 @@ function CallerDashboard() {
       .map(customer => ({
         name: customer.name,
         date: customer.date,
-        customerId: customer.customerId
+        accountNumber: customer.accountNumber
       }));
   };
 
@@ -295,7 +295,7 @@ function CallerDashboard() {
         const latestContact = customer.contactHistory[customer.contactHistory.length - 1];
         if (latestContact.promisedDate) {
           paymentsWithDates.push({
-            customerId: customer.customerId,
+            accountNumber: customer.accountNumber,
             name: customer.name,
             contactNumber: customer.contactNumber,
             amountOverdue: customer.amountOverdue,

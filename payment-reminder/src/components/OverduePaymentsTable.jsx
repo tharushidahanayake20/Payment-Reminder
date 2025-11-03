@@ -46,7 +46,7 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
                   <td>
                     <div className="customer-info">
                       <strong>{payment.name}</strong>
-                      <span className="customer-id">Customer ID: {payment.customerId}</span>
+                      <span className="account-number">Account Number: {payment.accountNumber}</span>
                       <span className="date">{payment.date}</span>
                     </div>
                   </td>

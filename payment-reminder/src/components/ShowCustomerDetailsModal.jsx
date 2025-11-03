@@ -90,9 +90,9 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
             <div className="customer-name-section">
               <h3>{customer.name}</h3>
-              <div className="customer-id-display">
+              <div className="account-number-display">
                 <i className="bi bi-person-badge"></i>
-                Customer ID: {customer.customerId}
+                Account Number: {customer.accountNumber}
               </div>
               
               {!showAllResponses ? (

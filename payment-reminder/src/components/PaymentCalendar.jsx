@@ -176,7 +176,7 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
                   <div key={index} className="customer-item">
                     <div className="customer-details">
                       <strong>{customer.name}</strong>
-                      <span className="customer-id-small">Customer ID: {customer.customerId}</span>
+                      <span className="account-number-small">Account Number: {customer.accountNumber}</span>
                       <span className="customer-amount">
                         {customer.amountOverdue}
                       </span>

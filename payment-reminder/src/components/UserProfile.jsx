@@ -133,7 +133,7 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
               <div key={index} className="payment-item">
                 <div className="payment-info">
                   <strong>{payment.name}</strong>
-                  <span className="payment-id">Customer ID: {payment.customerId}</span>
+                  <span className="payment-id">Account Number: {payment.accountNumber}</span>
                   <span className="payment-date">{payment.date}</span>
                 </div>
                 <span className="payment-badge">Paid</span>

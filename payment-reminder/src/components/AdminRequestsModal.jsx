@@ -12,7 +12,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
       const sampleRequests = [
         {
           id: 1,
-          customerId: "1006",
+          accountNumber: "1006",
           name: "Kamal Perera",
           contactNumber: "077-1234567",
           amountOverdue: "Rs.3500",
@@ -23,7 +23,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         },
         {
           id: 2,
-          customerId: "1007",
+          accountNumber: "1007",
           name: "Nimal Silva",
           contactNumber: "071-9876543",
           amountOverdue: "Rs.4200",
@@ -34,7 +34,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         },
         {
           id: 3,
-          customerId: "1008",
+          accountNumber: "1008",
           name: "Saman Fernando",
           contactNumber: "076-5555444",
           amountOverdue: "Rs.2800",
@@ -52,7 +52,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     // Convert all requests to customer data
     const allCustomersData = requests.map((request, index) => ({
       id: Date.now() + index, // Ensure unique IDs
-      customerId: request.customerId,
+      accountNumber: request.accountNumber,
       name: request.name,
       contactNumber: request.contactNumber,
       amountOverdue: request.amountOverdue,

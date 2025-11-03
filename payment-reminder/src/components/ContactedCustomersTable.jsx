@@ -46,7 +46,7 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
                   <td>
                     <div className="customer-info">
                       <strong>{customer.name}</strong>
-                      <span className="customer-id">Customer ID: {customer.customerId}</span>
+                      <span className="account-number">Account Number: {customer.accountNumber}</span>
                       <span className="date">{customer.date}</span>
                     </div>
                   </td>
