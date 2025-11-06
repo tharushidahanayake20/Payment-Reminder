@@ -26,7 +26,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         }
       } else {
         console.log('No stored request found, using sample data');
-        // Sample admin requests data - will be replaced with actual data from backend
+        // Sample admin requests data 
         const sampleRequests = [
           {
             id: 1,

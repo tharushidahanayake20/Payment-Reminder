@@ -273,7 +273,7 @@ function CallerDashboard() {
     
     // Get the start of the week (7 days ago from today)
     const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 6); // 6 days ago + today = 7 days total
+    sevenDaysAgo.setDate(today.getDate() - 6); 
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
     // Count calls from contacted customers' contact history
@@ -283,7 +283,7 @@ function CallerDashboard() {
           // Parse contact date (DD/MM/YYYY format)
           const [day, month, year] = contact.date.split('/');
           const contactDate = new Date(year, month - 1, day);
-          contactDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+          contactDate.setHours(12, 0, 0, 0); 
           
           // Check if contact is within last 7 days
           if (contactDate >= sevenDaysAgo && contactDate <= today) {
@@ -297,7 +297,7 @@ function CallerDashboard() {
     });
 
     return calls;
-  }, [contactedCustomers]); // Recalculate when contactedCustomers changes
+  }, [contactedCustomers]); 
 
   const userData = {
     name: "Caller",
