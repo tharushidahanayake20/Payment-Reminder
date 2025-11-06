@@ -115,6 +115,7 @@
   gap: 0.75rem;
   margin-bottom: 0.5rem;
   text-align: left;
+  justify-content: start;
 }
 
 .section-icon {
@@ -271,14 +272,18 @@
 /* Toggle Switch Styles */
 .toggle-group {
   space-y: 1rem;
+  flex-direction: column;
 }
 
 .toggle-item {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   padding: 0.5rem 0;
   text-align: left;
+  gap: 20rem;
+  
 }
 
 .toggle-content {
