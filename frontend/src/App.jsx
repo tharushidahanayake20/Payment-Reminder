@@ -7,6 +7,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
+import CallerTasks from "./pages/CallerTasks";
 
 function App() {
   const location = useLocation();
@@ -21,7 +22,7 @@ function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<CallerDashboard />} />
-            <Route path="/tasks" element={<div>Tasks</div>} />
+            <Route path="/tasks" element={<CallerTasks />} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/reports" element={<Report />} />
