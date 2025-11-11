@@ -7,6 +7,10 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
+import CallerTasks from "./pages/CallerTasks";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminTasks from "./pages/AdminTasks";
+
 
 function App() {
   const location = useLocation();
@@ -21,7 +25,9 @@ function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<CallerDashboard />} />
-            <Route path="/tasks" element={<div>Tasks</div>} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/tasks" element={<CallerTasks />} />
+            <Route path="/admin/tasks" element={<AdminTasks />} />
             <Route path="/customers" element={<CustomerManagement />} />
             <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/reports" element={<Report />} />

@@ -3,7 +3,7 @@ import "./ShowCustomerDetailsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
-  const [callOutcome, setCallOutcome] = useState("Spoke to the Customer");
+  const [callOutcome, setCallOutcome] = useState("Spoke to Customer");
   const [customerResponse, setCustomerResponse] = useState("");
   const [paymentMade, setPaymentMade] = useState(false);
   const [promisedDate, setPromisedDate] = useState("");
@@ -12,7 +12,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   // Reset form when modal opens with new customer
   useEffect(() => {
     if (isOpen && customer) {
-      setCallOutcome("Spoke to the Customer");
+      setCallOutcome("Spoke to Customer");
       setCustomerResponse("");
       setPaymentMade(false);
       setPromisedDate("");
@@ -45,8 +45,14 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   };
 
   const handleSave = () => {
+    // Validate that customerResponse is not empty
+    if (!customerResponse || customerResponse.trim() === '') {
+      alert('Please enter a customer response before saving.');
+      return;
+    }
+    
     if (onSave) {
-      onSave({
+      onSave(customer.id, {
         callOutcome,
         customerResponse,
         paymentMade,
@@ -76,15 +82,15 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
             <div className="customer-info-cards">
               <div className="info-card contact-card">
                 <div className="card-label">Contact Number</div>
-                <div className="card-value">{customer.contactNumber || "070 454 5457"}</div>
+                <div className="card-value">{customer.contactNumber}</div>
               </div>
               <div className="info-card amount-card">
                 <div className="card-label">Amount Overdue</div>
-                <div className="card-value">{customer.amountOverdue || "Rs.2000"}</div>
+                <div className="card-value">{customer.amountOverdue}</div>
               </div>
               <div className="info-card days-card">
                 <div className="card-label">Days Overdue</div>
-                <div className="card-value">{customer.daysOverdue || "16"}</div>
+                <div className="card-value">{customer.daysOverdue}</div>
               </div>
             </div>
 
@@ -195,11 +201,11 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                   onChange={(e) => setCallOutcome(e.target.value)}
                   className="form-select"
                 >
-                  <option>Spoke to the Customer</option>
+                  <option>Spoke to Customer</option>
                   <option>No Answer</option>
-                  <option>Voicemail Left</option>
+                  <option>Left Voicemail</option>
                   <option>Wrong Number</option>
-                  <option>Customer Unavailable</option>
+                  <option>Customer Refused</option>
                 </select>
               </div>
 
