@@ -9,6 +9,7 @@ import Settings from "./pages/Settings";
 import Report from "./pages/Report";
 import CallerTasks from "./pages/CallerTasks";
 
+
 function App() {
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
