@@ -25,12 +25,6 @@ function CallerDashboard() {
     { type: "pending", value: "0", label: "Pending Payments", color: "#4d99c0ff" },
   ]);
 
-  // Initialize with sample data
-  useEffect(() => {
-    // Check if data exists in localStorage
-    const storedContacted = localStorage.getItem('contactedCustomers');
-    
-    if (storedContacted && storedOverdue) {
   // Fetch customers from backend API
   const fetchCustomers = async () => {
     try {

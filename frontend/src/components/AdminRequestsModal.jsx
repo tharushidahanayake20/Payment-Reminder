@@ -2,109 +2,102 @@ import React, { useState, useEffect } from "react";
 import "./AdminRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed }) {
+function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestProcessed, callerId }) {
   const [requests, setRequests] = useState([]);
-  const [requestId, setRequestId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Initialize sample admin requests data when modal opens
+  // Fetch pending requests from localStorage when modal opens
   useEffect(() => {
     if (isOpen) {
-      console.log('AdminRequestsModal opened, checking localStorage...');
-      
-      // Check for pending request from localStorage
-      const storedRequest = localStorage.getItem('pendingAdminRequest');
-      console.log('Stored request:', storedRequest);
-      
-      if (storedRequest) {
-        try {
-          const parsedRequest = JSON.parse(storedRequest);
-          console.log('Parsed request:', parsedRequest);
-          setRequests(parsedRequest.customers);
-          setRequestId(parsedRequest.requestId);
-        } catch (error) {
-          console.error('Error parsing stored request:', error);
-        }
-      } else {
-        console.log('No stored request found, using sample data');
-        // Sample admin requests data 
-        const sampleRequests = [
-          {
-            id: 1,
-            accountNumber: "1001234582",
-            name: "Kamal Perera",
-            contactNumber: "077-1234567",
-            amountOverdue: "Rs.3500",
-            daysOverdue: "25",
-            date: "02/11/2025",
-            sentBy: "Admin",
-            sentDate: "02/11/2025"
-          },
-          {
-            id: 2,
-            accountNumber: "1001234583",
-            name: "Nimal Silva",
-            contactNumber: "071-9876543",
-            amountOverdue: "Rs.4200",
-            daysOverdue: "18",
-            date: "02/11/2025",
-            sentBy: "Admin",
-            sentDate: "02/11/2025"
-          },
-          {
-            id: 3,
-            accountNumber: "1001234584",
-            name: "Saman Fernando",
-            contactNumber: "076-5555444",
-            amountOverdue: "Rs.2800",
-            daysOverdue: "30",
-            date: "02/11/2025",
-            sentBy: "Admin",
-            sentDate: "02/11/2025"
-          }
-        ];
-        setRequests(sampleRequests);
-        setRequestId(null);
-      }
+      fetchPendingRequests();
     }
   }, [isOpen]);
 
+  const fetchPendingRequests = () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Get pending request from localStorage
+      const pendingRequest = localStorage.getItem('pendingAdminRequest');
+      
+      if (pendingRequest) {
+        const requestData = JSON.parse(pendingRequest);
+        
+        // Set the requests (customers array from the request)
+        if (requestData.customers && requestData.customers.length > 0) {
+          setRequests([{
+            id: requestData.requestId,
+            customers: requestData.customers,
+            customerCount: requestData.customers.length,
+            sentDate: requestData.sentDate,
+            callerName: requestData.callerName,
+            callerId: requestData.callerId
+          }]);
+        } else {
+          setRequests([]);
+        }
+      } else {
+        setRequests([]);
+      }
+    } catch (err) {
+      console.error('Error loading pending requests:', err);
+      setError('Failed to load requests. Please try again.');
+      setRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAcceptAll = () => {
-    // Convert all requests to customer data
-    const allCustomersData = requests.map((request, index) => ({
+    if (requests.length === 0) return;
+    
+    const request = requests[0];
+    
+    // Convert all customers to the format expected by CallerDashboard
+    const allCustomersData = request.customers.map((customer, index) => ({
       id: Date.now() + index, // Ensure unique IDs
-      accountNumber: request.accountNumber,
-      name: request.name,
-      contactNumber: request.contactNumber,
-      amountOverdue: request.amountOverdue,
-      daysOverdue: request.daysOverdue,
-      date: request.date,
+      accountNumber: customer.accountNumber,
+      name: customer.name,
+      contactNumber: customer.contactNumber,
+      amountOverdue: customer.amountOverdue,
+      daysOverdue: customer.daysOverdue,
+      date: customer.date,
       status: "OVERDUE",
       response: "Not Contacted Yet",
       previousResponse: "No previous contact",
       contactHistory: []
     }));
     
+    // Store response in localStorage for admin to see
+    const response = {
+      requestId: request.id,
+      status: "ACCEPTED",
+      respondedDate: new Date().toLocaleString(),
+      reason: null
+    };
+    localStorage.setItem('callerRequestResponse', JSON.stringify(response));
+    
+    // Remove the pending request from localStorage
+    localStorage.removeItem('pendingAdminRequest');
+    
+    // Update the sent request in adminSentRequests
+    const adminSentRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
+    const updatedRequests = adminSentRequests.map(r => {
+      if (r.id === request.id) {
+        return {
+          ...r,
+          status: 'ACCEPTED',
+          respondedDate: response.respondedDate
+        };
+      }
+      return r;
+    });
+    localStorage.setItem('adminSentRequests', JSON.stringify(updatedRequests));
+    
     // Call parent handler with all customers at once
     onAccept(allCustomersData);
-    
-    // Update request status in localStorage to ACCEPTED
-    if (requestId) {
-      const requestResponse = {
-        requestId: requestId,
-        status: 'ACCEPTED',
-        respondedDate: new Date().toLocaleString('en-GB', { 
-          day: '2-digit', 
-          month: '2-digit', 
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true 
-        }),
-        reason: null
-      };
-      localStorage.setItem('callerRequestResponse', JSON.stringify(requestResponse));
-      localStorage.removeItem('pendingAdminRequest');
-    }
     
     // Clear all requests
     setRequests([]);
@@ -114,29 +107,41 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   };
 
   const handleDeclineAll = () => {
-    // Decline all requests
-    requests.forEach(request => {
-      onDecline(request.id);
-    });
+    if (requests.length === 0) return;
     
-    // Update request status in localStorage to DECLINED
-    if (requestId) {
-      const requestResponse = {
-        requestId: requestId,
-        status: 'DECLINED',
-        respondedDate: new Date().toLocaleString('en-GB', { 
-          day: '2-digit', 
-          month: '2-digit', 
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true 
-        }),
-        reason: 'Too many customers assigned already' // Default reason, can be customized
-      };
-      localStorage.setItem('callerRequestResponse', JSON.stringify(requestResponse));
-      localStorage.removeItem('pendingAdminRequest');
-    }
+    const request = requests[0];
+    
+    // Store response in localStorage for admin to see
+    const response = {
+      requestId: request.id,
+      status: "DECLINED",
+      respondedDate: new Date().toLocaleString(),
+      reason: "Caller declined the request"
+    };
+    localStorage.setItem('callerRequestResponse', JSON.stringify(response));
+    
+    // Remove the pending request from localStorage
+    localStorage.removeItem('pendingAdminRequest');
+    
+    // Update the sent request in adminSentRequests
+    const adminSentRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
+    const updatedRequests = adminSentRequests.map(r => {
+      if (r.id === request.id) {
+        return {
+          ...r,
+          status: 'DECLINED',
+          respondedDate: response.respondedDate,
+          reason: response.reason
+        };
+      }
+      return r;
+    });
+    localStorage.setItem('adminSentRequests', JSON.stringify(updatedRequests));
+    
+    // Decline all requests
+    requests.forEach(req => {
+      onDecline(req.id);
+    });
     
     // Clear all requests
     setRequests([]);
@@ -164,7 +169,21 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
         </div>
 
         <div className="admin-requests-body">
-          {requests.length > 0 ? (
+          {loading ? (
+            <div className="loading-state">
+              <i className="bi bi-hourglass-split"></i>
+              <p>Loading requests...</p>
+            </div>
+          ) : error ? (
+            <div className="error-state">
+              <i className="bi bi-exclamation-triangle"></i>
+              <p>{error}</p>
+              <button onClick={fetchPendingRequests} className="retry-btn">
+                <i className="bi bi-arrow-clockwise"></i>
+                Retry
+              </button>
+            </div>
+          ) : requests.length > 0 ? (
             <div className="requests-summary-card">
               <div className="summary-header">
                 <i className="bi bi-envelope-open"></i>
@@ -173,8 +192,14 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
               
               <div className="summary-details">
                 <div className="detail-item">
-                  <span className="detail-label">Total Customers:</span>
+                  <span className="detail-label">Total Requests:</span>
                   <span className="detail-value">{requests.length}</span>
+                </div>
+                <div className="detail-item">
+                  <span className="detail-label">Total Customers:</span>
+                  <span className="detail-value">
+                    {requests.reduce((sum, req) => sum + (req.customerCount || 0), 0)}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Date:</span>
@@ -186,6 +211,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                 <button 
                   className="decline-all-btn"
                   onClick={handleDeclineAll}
+                  disabled={loading}
                 >
                   <i className="bi bi-x-circle"></i>
                   Decline
@@ -193,6 +219,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                 <button 
                   className="accept-all-btn"
                   onClick={handleAcceptAll}
+                  disabled={loading}
                 >
                   <i className="bi bi-check-circle"></i>
                   Accept
