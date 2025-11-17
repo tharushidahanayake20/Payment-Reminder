@@ -1,17 +1,50 @@
 import Customer from '../models/Customer.js';
 
 // @desc    Get all customers
-// @route   GET /api/customers
+// @route   GET /api/customers?callerId=xxx
 // @access  Public
 const getAllCustomers = async (req, res) => {
   try {
-    const customers = await Customer.find().populate('assignedTo', 'name callerId');
+    const { callerId } = req.query;
+    const query = {};
+    
+    console.log('=== GET CUSTOMERS ===');
+    console.log('callerId from query:', callerId);
+    
+    // Filter by callerId if provided (supports both MongoDB _id and callerId string)
+    if (callerId) {
+      // Try to find caller by MongoDB _id or callerId to get the ObjectId
+      const Caller = (await import('../models/Caller.js')).default;
+      const caller = await Caller.findById(callerId).catch(() => null) || 
+                     await Caller.findOne({ callerId });
+      
+      console.log('Found caller:', caller ? caller.name : 'NOT FOUND');
+      
+      if (caller) {
+        query.assignedTo = caller._id;
+        console.log('Querying customers with assignedTo:', caller._id);
+      } else {
+        // If caller not found, return empty array
+        console.log('Caller not found, returning empty array');
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+    }
+    
+    const customers = await Customer.find(query).populate('assignedTo', 'name callerId');
+    console.log('Found', customers.length, 'customers');
+    console.log('=== END GET CUSTOMERS ===');
+    
     res.status(200).json({
       success: true,
       count: customers.length,
       data: customers
     });
   } catch (error) {
+    console.error('Error in getAllCustomers:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching customers',

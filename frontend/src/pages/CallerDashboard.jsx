@@ -29,7 +29,16 @@ function CallerDashboard() {
   // Fetch customers from backend API
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers`);
+      // Get the logged-in user's ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const callerId = userData.id;
+      
+      if (!callerId) {
+        console.error('No caller ID found in localStorage');
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
       const data = await response.json();
       
       if (data.success && data.data) {

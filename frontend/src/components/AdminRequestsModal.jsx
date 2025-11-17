@@ -40,8 +40,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
             callerName: req.callerName,
             callerId: req.callerId
           })));
-          // Expand first request by default
-          setExpandedRequests({ [data[0].requestId || data[0]._id]: true });
+          // All requests collapsed by default
+          setExpandedRequests({});
         } else {
           setRequests([]);
         }

@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import Caller from '../models/Caller.js';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { sendOtpSms, generateOtp, getOtpExpiry } from '../utils/smsService.js';
 
 // Contract
 // - register(req.body: {email, password}) -> 201 { user, token }
@@ -13,7 +14,7 @@ import crypto from 'crypto';
 export const register = async (req, res) => {
   try {
     const { name, email, phone, password, confirmPassword } = req.body;
-    if (!name || !email || !password || !confirmPassword) return res.status(400).json({ message: 'All fields are required' });
+    if (!name || !email || !phone || !password || !confirmPassword) return res.status(400).json({ message: 'All fields are required' });
     if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match' });
 
     const existing = await Caller.findOne({ email });
@@ -26,11 +27,29 @@ export const register = async (req, res) => {
     const callerCount = await Caller.countDocuments();
     const callerId = `CALLER${String(callerCount + 1).padStart(3, '0')}`;
 
-    const user = await Caller.create({ callerId, name, email, phone, password: hashed });
+    // Generate OTP for phone verification
+    const otp = generateOtp();
+    const otpExpiry = getOtpExpiry(parseInt(process.env.OTP_EXPIRY_MINUTES || '10'));
 
-    const token = jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.SECRET_KEY || 'dev_secret', { expiresIn: '1d' });
+    const user = await Caller.create({ 
+      callerId, 
+      name, 
+      email, 
+      phone, 
+      password: hashed, 
+      otp, 
+      otpExpiry,
+      isVerified: false 
+    });
 
-    res.status(201).json({ user: { id: user._id, email: user.email, name: user.name }, token });
+    // Send OTP via SMS
+    await sendOtpSms(phone, otp);
+
+    res.status(201).json({ 
+      message: 'Registration successful. Please verify your phone number with the OTP sent via SMS.',
+      email: user.email,
+      requiresOtp: true
+    });
   } catch (error) {
     console.error('Register error', error);
     res.status(500).json({ message: 'Server error' });
@@ -42,7 +61,6 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ message: 'Email and password are required' });
 
-    //ok
     const user = await Caller.findOne({ email });
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -52,12 +70,22 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const token = jwt.sign({ id: user._id, email: user.email, name: user.name }, process.env.SECRET_KEY || 'dev_secret', { expiresIn: '1d' });
+    // Generate and send OTP
+    const otp = generateOtp();
+    const otpExpiry = getOtpExpiry(parseInt(process.env.OTP_EXPIRY_MINUTES || '10'));
 
-    // optional cookie
-    // res.cookie('token', token, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    user.otp = otp;
+    user.otpExpiry = otpExpiry;
+    await user.save();
 
-    res.json({ user: { id: user._id, email: user.email, name: user.name }, token });
+    // Send OTP via SMS
+    await sendOtpSms(user.phone, otp);
+
+    res.json({ 
+      message: 'OTP sent to your registered phone number. Please verify to complete login.',
+      email: user.email,
+      requiresOtp: true
+    });
   } catch (error) {
     console.error('Login error', error);
     res.status(500).json({ message: 'Server error' });
@@ -124,7 +152,7 @@ export const forgotPassword = async (req, res) => {
 // POST /auth/verify-otp
 export const verifyOtp = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { email, otp, isPasswordReset } = req.body;
     if (!email || !otp) return res.status(400).json({ message: 'Email and OTP required' });
 
     const user = await Caller.findOne({ email });
@@ -133,15 +161,40 @@ export const verifyOtp = async (req, res) => {
     if (!user.otp || user.otp !== otp) return res.status(400).json({ message: 'Invalid OTP' });
     if (user.otpExpiry && user.otpExpiry < new Date()) return res.status(400).json({ message: 'OTP expired' });
 
-    // create a short-lived token to allow password reset
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    user.token = resetToken;
-    // clear otp fields
+    // If this is for password reset, return reset token
+    if (isPasswordReset) {
+      const resetToken = crypto.randomBytes(20).toString('hex');
+      user.token = resetToken;
+      user.otp = null;
+      user.otpExpiry = null;
+      await user.save();
+      return res.json({ message: 'OTP verified', resetToken });
+    }
+
+    // Otherwise, this is for login/registration - return JWT token
+    user.isVerified = true;
+    user.isLoggedIn = true;
     user.otp = null;
     user.otpExpiry = null;
     await user.save();
 
-    return res.json({ message: 'OTP verified', resetToken });
+    const token = jwt.sign(
+      { id: user._id, email: user.email, name: user.name, role: user.role || 'caller' }, 
+      process.env.SECRET_KEY || 'dev_secret', 
+      { expiresIn: '1d' }
+    );
+
+    return res.json({ 
+      message: 'OTP verified successfully',
+      user: { 
+        id: user._id, 
+        email: user.email, 
+        name: user.name, 
+        avatar: user.avatar,
+        role: user.role || 'caller'
+      }, 
+      token 
+    });
   } catch (error) {
     console.error('verifyOtp error', error);
     return res.status(500).json({ message: 'Server error' });
