@@ -99,7 +99,7 @@ const UploadPage = () => {
             <MdOutlineFileUpload size={48} />
             <p className="drop-text">Choose a file or drag &amp; drop it here</p>
             <p className="drop-sub">excel up to 60MB</p>
-            <button type="button" className="browse-btn" onClick={onPick} aria-label="Browse File">Browse File</button>
+            <button type="button" className="browse-btn"  aria-label="Browse File">Browse File</button>
           </div>
         </div>
 
