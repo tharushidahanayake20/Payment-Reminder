@@ -6,6 +6,7 @@ import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import AuthSuccess from "./pages/AuthSuccess";
+import Logout from "./pages/Logout";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
 import CallerTasks from "./pages/CallerTasks";
@@ -34,7 +35,7 @@ function App() {
             <Route path="/employees" element={<EmployeeManagement />} />
             <Route path="/reports" element={<Report />} />
             <Route path="/settings" element={<Settings/>} />
-            <Route path="/logout" element={<div>Logging out…</div>} />
+            <Route path="/logout" element={<Logout />} />
           </Routes>
         </div>
       </div>

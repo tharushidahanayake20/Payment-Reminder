@@ -24,7 +24,13 @@ router.get('/google/callback',
     (req, res) => {
             try {
                 const secret = process.env.SECRET_KEY || 'dev_secret';
-                const token = jwt.sign({ id: req.user._id, email: req.user.email, name: req.user.name }, secret, { expiresIn: '1d' });
+                const token = jwt.sign({ 
+                    id: req.user._id, 
+                    email: req.user.email, 
+                    name: req.user.name,
+                    avatar: req.user.avatar,
+                    role: req.user.role || 'caller'
+                }, secret, { expiresIn: '1d' });
 
             // prefer redirect from state param if present, otherwise fallback to env Client_URL
             const state = req.query.state ? decodeURIComponent(req.query.state) : null;
