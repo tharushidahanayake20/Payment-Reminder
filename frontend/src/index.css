@@ -202,6 +202,11 @@ body.dark-mode {
   font-weight: 400 !important;
 }
 
+.dark-mode select option {
+  background-color: var(--input-bg) !important;
+  color: #b0b0b0 !important;
+}
+
 .dark-mode input::placeholder,
 .dark-mode textarea::placeholder {
   color: #666666 !important;
