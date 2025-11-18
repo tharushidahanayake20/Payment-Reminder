@@ -340,6 +340,150 @@ body.dark-mode {
   background-color: var(--hover-bg) !important;
 }
 
+/* Caller Tasks Page Dark Mode */
+.dark-mode .caller-tasks {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark-mode .caller-tasks-header {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.dark-mode .caller-tasks-header h1 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .tasks-subtitle {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .stat-card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 2px 8px var(--shadow) !important;
+}
+
+.dark-mode .stat-info h3 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .stat-info p {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .tasks-filters {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 2px 8px var(--shadow) !important;
+}
+
+.dark-mode .search-box input {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .search-box i {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .clear-search {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .clear-search:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.dark-mode .filter-btn {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .filter-btn:hover {
+  border-color: #667eea !important;
+  background-color: var(--hover-bg) !important;
+}
+
+.dark-mode .filter-btn.active {
+  background-color: #667eea !important;
+  border-color: #667eea !important;
+  color: white !important;
+}
+
+.dark-mode .task-card {
+  background-color: var(--bg-card) !important;
+  border-left-color: var(--border-color) !important;
+  box-shadow: 0 2px 8px var(--shadow) !important;
+}
+
+.dark-mode .task-card-header {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.dark-mode .customer-info h3 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .account-number {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .task-card-body {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .info-label {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .info-row {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .customer-response {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .response-label {
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .customer-response p {
+  color: var(--text-secondary) !important;
+}
+
+.dark-mode .last-contact {
+  border-top-color: var(--border-color) !important;
+  color: var(--text-muted) !important;
+}
+
+.dark-mode .btn-details {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .btn-details:hover {
+  background-color: var(--hover-bg) !important;
+}
+
+.dark-mode .no-customers {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.dark-mode .no-customers h3 {
+  color: var(--text-primary) !important;
+}
+
+.dark-mode .no-customers p {
+  color: var(--text-secondary) !important;
+}
+
 body {
   margin: 0;
   padding: 0;
