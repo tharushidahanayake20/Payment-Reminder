@@ -71,9 +71,10 @@ export default function Sidebar() {
                 </NavLink>
               </li>
             )}
+            
             <li>
               <NavLink
-                to="/reports"
+                to={userRole === 'admin' ? '/admin/reports' : '/reports'}
                 className={({ isActive }) =>
                   `menu-item${isActive ? " active" : ""}`
                 }
@@ -82,6 +83,7 @@ export default function Sidebar() {
                 <span>Report</span>
               </NavLink>
             </li>
+            
           </ul>
         </nav>
         <div className="sidebar-end">

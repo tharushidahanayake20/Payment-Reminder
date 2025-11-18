@@ -2,71 +2,47 @@ import React from "react";
 import "./CallerDetailsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-function CallerDetailsModal({ isOpen, onClose, caller }) {
+function CallerDetailsModal({ isOpen, onClose, caller, callerData }) {
   if (!isOpen || !caller) return null;
 
-  // Sample customer data for the caller
-  const assignedCustomers = [
-    {
-      id: 1,
-      accountNumber: "1001234567",
-      name: "Prashant Kumar Singh",
-      amountOverdue: "Rs.2000",
-      daysOverdue: 16,
-      status: "CONTACTED",
-      lastContact: "03/11/2025",
-      response: "Will pay next week",
-      promisedDate: "10/11/2025"
-    },
-    {
-      id: 2,
-      accountNumber: "1001234568",
-      name: "Ravi Sharma",
-      amountOverdue: "Rs.1500",
-      daysOverdue: 8,
-      status: "COMPLETED",
-      lastContact: "02/11/2025",
-      response: "Payment completed",
-      paymentDate: "02/11/2025"
-    },
-    {
-      id: 3,
-      accountNumber: "1001234569",
-      name: "Ash Kumar",
-      amountOverdue: "Rs.3500",
-      daysOverdue: 22,
-      status: "NOT_CONTACTED",
-      lastContact: null,
-      response: "Not yet contacted"
-    },
-    {
-      id: 4,
-      accountNumber: "1001234570",
-      name: "Priya Singh",
-      amountOverdue: "Rs.1800",
-      daysOverdue: 12,
-      status: "CONTACTED",
-      lastContact: "01/11/2025",
-      response: "Phone not reachable",
-      promisedDate: null
-    },
-    {
-      id: 5,
-      accountNumber: "1001234571",
-      name: "Kumar Patel",
-      amountOverdue: "Rs.2500",
-      daysOverdue: 14,
-      status: "COMPLETED",
-      lastContact: "03/11/2025",
-      response: "Payment completed",
-      paymentDate: "03/11/2025"
-    }
-  ];
+  // Use real data if available, otherwise show loading
+  const assignedCustomers = callerData?.assignedCustomers || [];
+  const isLoading = !callerData;
 
   const completedCount = assignedCustomers.filter(c => c.status === "COMPLETED").length;
-  const contactedCount = assignedCustomers.filter(c => c.status === "CONTACTED").length;
-  const notContactedCount = assignedCustomers.filter(c => c.status === "NOT_CONTACTED").length;
+  const contactedCount = assignedCustomers.filter(c => 
+    c.contactHistory && c.contactHistory.length > 0 && c.status !== "COMPLETED"
+  ).length;
+  const notContactedCount = assignedCustomers.filter(c => 
+    (!c.contactHistory || c.contactHistory.length === 0) && c.status !== "COMPLETED"
+  ).length;
   const totalAssigned = assignedCustomers.length;
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+  };
+
+  // Get last contact info
+  const getLastContact = (customer) => {
+    if (!customer.contactHistory || customer.contactHistory.length === 0) {
+      return { date: null, response: "Not yet contacted" };
+    }
+    const lastContact = customer.contactHistory[customer.contactHistory.length - 1];
+    return {
+      date: formatDate(lastContact.contactDate),
+      response: lastContact.remark || "Contacted"
+    };
+  };
+
+  // Get customer status
+  const getCustomerStatus = (customer) => {
+    if (customer.status === "COMPLETED") return "COMPLETED";
+    if (customer.contactHistory && customer.contactHistory.length > 0) return "CONTACTED";
+    return "NOT_CONTACTED";
+  };
 
   return (
     <div className="caller-details-modal-overlay" onClick={onClose}>
@@ -131,72 +107,91 @@ function CallerDetailsModal({ isOpen, onClose, caller }) {
           <div className="caller-details-section-header">
             <h3>Assigned Customers ({totalAssigned})</h3>
           </div>
-          <div className="caller-details-table-container">
-            <table className="caller-details-table">
-              <thead>
-                <tr>
-                  <th>ACCOUNT NUMBER</th>
-                  <th>CUSTOMER NAME</th>
-                  <th>AMOUNT OVERDUE</th>
-                  <th>DAYS OVERDUE</th>
-                  <th>STATUS</th>
-                  <th>LAST CONTACT</th>
-                  <th>RESPONSE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {assignedCustomers.map((customer) => (
-                  <tr key={customer.id} className={`customer-row ${customer.status.toLowerCase()}`}>
-                    <td>
-                      <span className="caller-details-account">{customer.accountNumber}</span>
-                    </td>
-                    <td>
-                      <strong>{customer.name}</strong>
-                    </td>
-                    <td>
-                      <span className="caller-details-amount">{customer.amountOverdue}</span>
-                    </td>
-                    <td>
-                      <span className="caller-details-days">{customer.daysOverdue} days</span>
-                    </td>
-                    <td>
-                      <span className={`caller-details-status-badge ${customer.status.toLowerCase()}`}>
-                        {customer.status === "COMPLETED" && (
-                          <><i className="bi bi-check-circle-fill"></i> COMPLETED</>
-                        )}
-                        {customer.status === "CONTACTED" && (
-                          <><i className="bi bi-telephone-fill"></i> CONTACTED</>
-                        )}
-                        {customer.status === "NOT_CONTACTED" && (
-                          <><i className="bi bi-dash-circle-fill"></i> NOT CONTACTED</>
-                        )}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="caller-details-date">
-                        {customer.lastContact || "-"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="caller-details-response">
-                        <span>{customer.response}</span>
-                        {customer.promisedDate && (
-                          <small className="caller-details-promised">
-                            <i className="bi bi-calendar-check"></i> Promised: {customer.promisedDate}
-                          </small>
-                        )}
-                        {customer.paymentDate && (
-                          <small className="caller-details-payment">
-                            <i className="bi bi-cash-coin"></i> Paid: {customer.paymentDate}
-                          </small>
-                        )}
-                      </div>
-                    </td>
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                border: '4px solid #f3f3f3',
+                borderTop: '4px solid #1488ee',
+                borderRadius: '50%',
+                margin: '0 auto 20px',
+                animation: 'spin 1s linear infinite'
+              }}></div>
+              <p>Loading customer details...</p>
+            </div>
+          ) : totalAssigned === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+              <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
+              <p>No customers assigned yet</p>
+            </div>
+          ) : (
+            <div className="caller-details-table-container">
+              <table className="caller-details-table">
+                <thead>
+                  <tr>
+                    <th>ACCOUNT NUMBER</th>
+                    <th>CUSTOMER NAME</th>
+                    <th>AMOUNT OVERDUE</th>
+                    <th>DAYS OVERDUE</th>
+                    <th>STATUS</th>
+                    <th>LAST CONTACT</th>
+                    <th>RESPONSE</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {assignedCustomers.map((customer) => {
+                    const lastContact = getLastContact(customer);
+                    const customerStatus = getCustomerStatus(customer);
+                    return (
+                      <tr key={customer._id} className={`customer-row ${customerStatus.toLowerCase()}`}>
+                        <td>
+                          <span className="caller-details-account">{customer.accountNumber}</span>
+                        </td>
+                        <td>
+                          <strong>{customer.name}</strong>
+                        </td>
+                        <td>
+                          <span className="caller-details-amount">{customer.amountOverdue || 0}</span>
+                        </td>
+                        <td>
+                          <span className="caller-details-days">{customer.daysOverdue || 0} days</span>
+                        </td>
+                        <td>
+                          <span className={`caller-details-status-badge ${customerStatus.toLowerCase()}`}>
+                            {customerStatus === "COMPLETED" && (
+                              <><i className="bi bi-check-circle-fill"></i> COMPLETED</>
+                            )}
+                            {customerStatus === "CONTACTED" && (
+                              <><i className="bi bi-telephone-fill"></i> CONTACTED</>
+                            )}
+                            {customerStatus === "NOT_CONTACTED" && (
+                              <><i className="bi bi-dash-circle-fill"></i> NOT CONTACTED</>
+                            )}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="caller-details-date">
+                            {lastContact.date}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="caller-details-response">
+                            <span>{lastContact.response}</span>
+                            {customer.contactHistory && customer.contactHistory.length > 0 && (
+                              <small className="caller-details-contact-count">
+                                <i className="bi bi-telephone"></i> {customer.contactHistory.length} call{customer.contactHistory.length > 1 ? 's' : ''}
+                              </small>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div className="caller-details-modal-footer">
@@ -205,11 +200,13 @@ function CallerDetailsModal({ isOpen, onClose, caller }) {
             <div className="caller-details-progress-bar">
               <div 
                 className="caller-details-progress-fill" 
-                style={{ width: `${(completedCount / totalAssigned) * 100}%` }}
+                style={{ width: totalAssigned > 0 ? `${(completedCount / totalAssigned) * 100}%` : '0%' }}
               >
-                <span className="caller-details-progress-text">
-                  {completedCount}/{totalAssigned} ({Math.round((completedCount / totalAssigned) * 100)}%)
-                </span>
+                {totalAssigned > 0 && (
+                  <span className="caller-details-progress-text">
+                    {completedCount}/{totalAssigned} ({Math.round((completedCount / totalAssigned) * 100)}%)
+                  </span>
+                )}
               </div>
             </div>
           </div>

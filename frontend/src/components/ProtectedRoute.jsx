@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         alert('Your session has expired. Please login again.');
         navigate('/login', { replace: true });
       }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 10 * 60 * 1000); // 10 minutes
 
     return () => clearInterval(sessionCheckInterval);
   }, [authenticated, navigate]);

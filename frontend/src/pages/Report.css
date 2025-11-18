@@ -46,6 +46,18 @@ hr {
     border-radius: 10px;
 }
 
+.active-callers{
+    border: 1px solid #D9D9D9;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.completed-requests-widget{
+    border: 1px solid #D9D9D9;
+    padding: 10px;
+    border-radius: 10px;
+}
+
 .widgets h4 {
     color: #000000;
     padding-bottom: 5px;
@@ -68,12 +80,121 @@ hr {
     color: #2585F4;
 }
 
+.active-icon {
+    color: #38C12D;
+}
+
+.completed-icon {
+    color: #2743B3;
+}
+
 .caller-statistics{
     border: 1px solid #D9D9D9;
     border-radius: 10px;
     padding: 10px;
     margin: auto;
     
+}
+
+.completed-requests-section {
+    border: 1px solid #D9D9D9;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+}
+
+.completed-requests-section h3 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.requests-table {
+    overflow-x: auto;
+}
+
+.requests-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.requests-table thead {
+    background-color: #f5f5f5;
+}
+
+.requests-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #ddd;
+}
+
+.requests-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    color: #333;
+}
+
+.requests-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.requests-table .status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.requests-table .status-badge.completed {
+    background-color: #38C12D;
+    color: white;
+}
+
+.requests-table .status-badge.accepted {
+    background-color: #2585F4;
+    color: white;
+}
+
+.requests-overview {
+    border: 1px solid #D9D9D9;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px;
+}
+
+.requests-overview h3 {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.progress-bar-container {
+    position: relative;
+    width: 100px;
+    height: 20px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(to right, #2585F4, #38C12D);
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
 }
 
 .chart-title{

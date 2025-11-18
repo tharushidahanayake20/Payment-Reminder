@@ -323,10 +323,37 @@
 
 .last-contact {
   margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e0e6ed;
+  padding: 8px 12px;
+  background: #e8f4f8;
+  border-radius: 8px;
   font-size: 12px;
-  color: #7f8c8d;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.last-contact i {
+  color: #3498db;
+  font-size: 14px;
+}
+
+.promised-date {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #fff3cd;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #856404;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.promised-date i {
+  color: #f39c12;
+  font-size: 14px;
 }
 
 .task-card-actions {
@@ -371,6 +398,49 @@
   box-shadow: 0 2px 8px rgba(77, 153, 192, 0.3);
 }
 
+/* Loading Screen */
+.loading-container {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+}
+
+.loading-content {
+  text-align: center;
+  padding: 40px;
+}
+
+.loading-content .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #2743B3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 24px auto;
+}
+
+.loading-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+}
+
+.loading-content p {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* No Customers State */
 .no-customers {
   grid-column: 1 / -1;
@@ -390,6 +460,48 @@
   margin: 0;
   color: #7f8c8d;
   font-size: 16px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 20px;
+  background: transparent;
+  border-radius: 12px;
+  min-height: 400px;
+  width: 100%;
+}
+
+.loading-spinner .spinner-circle {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #2743B3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px auto;
+}
+
+.loading-spinner p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Design */

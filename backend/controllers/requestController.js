@@ -75,6 +75,29 @@ const getPendingRequests = async (req, res) => {
   }
 };
 
+// @desc    Get completed requests
+// @route   GET /api/requests/completed
+// @access  Public
+const getCompletedRequests = async (req, res) => {
+  try {
+    const requests = await Request.find({ status: 'COMPLETED' })
+      .populate('caller', 'name callerId')
+      .populate('customers.customerId', 'accountNumber name contactNumber status');
+    
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      data: requests
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching completed requests',
+      error: error.message
+    });
+  }
+};
+
 // @desc    Get requests by caller ID
 // @route   GET /api/requests/caller/:callerId
 // @access  Public
@@ -163,6 +186,7 @@ const createRequest = async (req, res) => {
         daysOverdue: c.daysOverdue
       })),
       customersSent: customers.length,
+      customersContacted: 0,
       sentDate: dateString,
       status: 'PENDING',
       sentBy: 'Admin',
@@ -455,6 +479,7 @@ const declineRequest = async (req, res) => {
 export {
   getAllRequests,
   getPendingRequests,
+  getCompletedRequests,
   getRequestsByCallerId,
   getRequestById,
   createRequest,

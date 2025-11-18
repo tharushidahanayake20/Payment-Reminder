@@ -37,7 +37,7 @@ function AdminTasks() {
             accountNumber: customer.accountNumber,
             name: customer.name,
             contactNumber: customer.contactNumber || "N/A",
-            amountOverdue: `Rs.${(customer.amountOverdue || 0).toLocaleString()}`,
+            amountOverdue: customer.amountOverdue || 0,
             daysOverdue: customer.daysOverdue || 0,
             status: customer.status || "UNASSIGNED"
           }));

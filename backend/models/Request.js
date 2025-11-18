@@ -34,14 +34,22 @@ const requestSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  customersContacted: {
+    type: Number,
+    default: 0
+  },
   sentDate: {
     type: String,
     required: true
   },
   status: {
     type: String,
-    enum: ['PENDING', 'ACCEPTED', 'DECLINED'],
+    enum: ['PENDING', 'ACCEPTED', 'DECLINED', 'COMPLETED'],
     default: 'PENDING'
+  },
+  isCompleted: {
+    type: Boolean,
+    default: false
   },
   respondedDate: {
     type: String

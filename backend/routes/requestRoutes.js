@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllRequests, getRequestById, createRequest, updateRequest, acceptRequest, declineRequest, getRequestsByCallerId, getPendingRequests } from '../controllers/requestController.js';
+import { getAllRequests, getRequestById, createRequest, updateRequest, acceptRequest, declineRequest, getRequestsByCallerId, getPendingRequests, getCompletedRequests } from '../controllers/requestController.js';
 
 const router = express.Router();
 
@@ -12,6 +12,11 @@ router.get('/', getAllRequests);
 // @desc    Get pending requests
 // @access  Public
 router.get('/pending', getPendingRequests);
+
+// @route   GET /api/requests/completed
+// @desc    Get completed requests
+// @access  Public
+router.get('/completed', getCompletedRequests);
 
 // @route   GET /api/requests/caller/:callerId
 // @desc    Get requests by caller ID

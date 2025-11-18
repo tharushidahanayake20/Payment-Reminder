@@ -11,9 +11,10 @@ const getDashboardStats = async (req, res) => {
     const assignedCallers = await Caller.countDocuments({ taskStatus: { $in: ['ONGOING', 'COMPLETED'] } });
     const unassignedCallers = await Caller.countDocuments({ taskStatus: 'IDLE' });
     
-    // Get customers contacted (those with contactHistory)
+    // Get customers contacted from ACCEPTED requests only (those with contactHistory and assigned to someone)
     const customersContacted = await Customer.countDocuments({
-      contactHistory: { $exists: true, $ne: [] }
+      contactHistory: { $exists: true, $ne: [] },
+      assignedTo: { $exists: true, $ne: null }
     });
     
     // Get completed payments
@@ -53,19 +54,27 @@ const getAssignedCallers = async (req, res) => {
     .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers')
     .populate({
       path: 'assignedCustomers',
-      select: 'accountNumber name contactNumber amountOverdue status'
+      select: 'accountNumber name contactNumber amountOverdue status contactHistory'
     });
 
-    const formattedCallers = assignedCallers.map(caller => ({
-      id: caller._id,
-      name: caller.name,
-      callerId: caller.callerId,
-      task: caller.taskStatus,
-      customersContacted: caller.customersContacted,
-      currentLoad: caller.currentLoad,
-      maxLoad: caller.maxLoad,
-      assignedCustomers: caller.assignedCustomers
-    }));
+    const formattedCallers = assignedCallers.map(caller => {
+      // Count how many assigned customers have been contacted
+      const contactedCount = caller.assignedCustomers.filter(c => 
+        c.contactHistory && c.contactHistory.length > 0
+      ).length;
+      const totalAssigned = caller.assignedCustomers.length;
+      
+      return {
+        id: caller._id,
+        name: caller.name,
+        callerId: caller.callerId,
+        task: caller.taskStatus,
+        customersContacted: `${contactedCount}/${totalAssigned}`,
+        currentLoad: caller.currentLoad,
+        maxLoad: caller.maxLoad,
+        assignedCustomers: caller.assignedCustomers
+      };
+    });
 
     res.status(200).json({
       success: true,
@@ -196,7 +205,9 @@ const getWeeklyCalls = async (req, res) => {
     customers.forEach(customer => {
       if (customer.contactHistory && customer.contactHistory.length > 0) {
         customer.contactHistory.forEach(contact => {
-          const contactDate = new Date(contact.date);
+          // Parse contactDate field (DD/MM/YYYY format)
+          const [day, month, year] = contact.contactDate.split('/');
+          const contactDate = new Date(year, month - 1, day);
           
           if (contactDate >= sevenDaysAgo && contactDate <= today) {
             const dayOfWeek = contactDate.getDay();

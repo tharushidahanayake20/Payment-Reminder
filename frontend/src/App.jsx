@@ -11,6 +11,7 @@ import AuthSuccess from "./pages/AuthSuccess";
 import Logout from "./pages/Logout";
 import Settings from "./pages/Settings";
 import Report from "./pages/Report";
+import AdminReport from "./pages/AdminReport";
 import CallerTasks from "./pages/CallerTasks";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminTasks from "./pages/AdminTasks";
@@ -40,6 +41,7 @@ function App() {
             <Route path="/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><EmployeeManagement /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />
+            <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/logout" element={<Logout />} />
           </Routes>

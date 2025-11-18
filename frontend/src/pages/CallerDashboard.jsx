@@ -43,8 +43,27 @@ function CallerDashboard() {
       
       if (data.success && data.data) {
         // Separate customers by status
-        const contacted = data.data.filter(c => c.status === 'PENDING' || c.status === 'COMPLETED');
-        const overdue = data.data.filter(c => c.status === 'OVERDUE');
+        // Contacted customers: PENDING (promised to pay) or COMPLETED (paid)
+        const contacted = data.data.filter(c => 
+          c.status === 'PENDING' || c.status === 'COMPLETED'
+        );
+        
+        // Overdue payments: OVERDUE (contacted but no promise) or UNASSIGNED (not contacted yet)
+        const overdue = data.data.filter(c => 
+          c.status === 'OVERDUE' || c.status === 'UNASSIGNED'
+        );
+        
+        console.log('Customers loaded:', {
+          total: data.data.length,
+          contacted: contacted.length,
+          overdue: overdue.length,
+          breakdown: {
+            PENDING: data.data.filter(c => c.status === 'PENDING').length,
+            COMPLETED: data.data.filter(c => c.status === 'COMPLETED').length,
+            OVERDUE: data.data.filter(c => c.status === 'OVERDUE').length,
+            UNASSIGNED: data.data.filter(c => c.status === 'UNASSIGNED').length
+          }
+        });
         
         // Map MongoDB _id to id for frontend compatibility
         const formattedContacted = contacted.map(c => ({ ...c, id: c._id }));
@@ -68,7 +87,12 @@ function CallerDashboard() {
   // Update statistics based on data
   const updateStats = (contacted, overdue) => {
     const totalCustomers = contacted.length + overdue.length;
-    const contactedCount = contacted.length;
+    // Only count customers with contact history as "contacted"
+    const contactedCount = contacted.filter(c => 
+      c.contactHistory && c.contactHistory.length > 0
+    ).length + overdue.filter(c => 
+      c.contactHistory && c.contactHistory.length > 0
+    ).length;
     const completedCount = contacted.filter(c => c.status === "COMPLETED").length;
     const pendingCount = contacted.filter(c => c.status === "PENDING").length + overdue.length;
 
@@ -91,18 +115,21 @@ function CallerDashboard() {
   const handleSaveCustomerDetails = async (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
     
-    console.log('handleSaveCustomerDetails called with:', { accountNumber, data });
+    console.log('=== SAVING CUSTOMER DETAILS (CallerDashboard) ===');
+    console.log('Account/ID:', accountNumber);
+    console.log('Data:', data);
     
     // Check if customer is in overdue list
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
     const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
     
     if (!existingCustomer) {
-      console.error('Customer not found');
+      console.error('❌ Customer not found');
+      alert('Customer not found');
       return;
     }
     
-    console.log('Found customer:', existingCustomer);
+    console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer._id);
     
     try {
       const requestBody = {
@@ -130,28 +157,36 @@ function CallerDashboard() {
       console.log('Backend response:', result);
       
       if (result.success) {
-        console.log('Customer updated successfully in database');
+        console.log('✅ Customer updated successfully in database');
         
         // Refetch all customers from backend to get the latest data
         await fetchCustomers();
+        console.log('✅ Customers refreshed from database');
       } else {
-        console.error('Failed to update customer:', result.message);
+        console.error('❌ Failed to update customer:', result.message);
+        alert('Failed to save: ' + result.message);
       }
     } catch (error) {
-      console.error('Error saving customer details to backend:', error);
+      console.error('❌ Error saving customer details to backend:', error);
       alert('Failed to save customer details. Please try again.');
     }
   };
 
-  // Get completed payments from contacted customers
+  // Get completed payments from contacted customers with payment date
   const getCompletedPayments = () => {
     return contactedCustomers
       .filter(customer => customer.status === "COMPLETED")
-      .map(customer => ({
-        name: customer.name,
-        date: customer.date,
-        accountNumber: customer.accountNumber
-      }));
+      .map(customer => {
+        // Find the contact history entry where payment was marked as made
+        const paymentContact = customer.contactHistory?.find(contact => contact.paymentMade === true);
+        const paymentDate = paymentContact ? paymentContact.contactDate : customer.date;
+        
+        return {
+          name: customer.name,
+          date: paymentDate,
+          accountNumber: customer.accountNumber
+        };
+      });
   };
 
   // Calculate weekly calls based on contact history (Monday to Sunday)
@@ -171,7 +206,7 @@ function CallerDashboard() {
       if (customer.contactHistory && customer.contactHistory.length > 0) {
         customer.contactHistory.forEach(contact => {
           // Parse contact date (DD/MM/YYYY format)
-          const [day, month, year] = contact.date.split('/');
+          const [day, month, year] = contact.contactDate.split('/');
           const contactDate = new Date(year, month - 1, day);
           contactDate.setHours(12, 0, 0, 0); 
           
