@@ -29,7 +29,16 @@ function CallerDashboard() {
   // Fetch customers from backend API
   const fetchCustomers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/customers`);
+      // Get the logged-in user's ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const callerId = userData.id;
+      
+      if (!callerId) {
+        console.error('No caller ID found in localStorage');
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
       const data = await response.json();
       
       if (data.success && data.data) {
@@ -180,9 +189,12 @@ function CallerDashboard() {
     return calls;
   }, [contactedCustomers]); 
 
+  // Get user data from localStorage
+  const storedUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+  
   const userData = {
-    name: "Caller",
-    avatar: "https://via.placeholder.com/80",
+    name: storedUserData.name || "Caller",
+    avatar: storedUserData.avatar,
     weeklyCalls: weeklyCalls,
     completedPayments: getCompletedPayments(),
   };

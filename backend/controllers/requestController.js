@@ -1,13 +1,40 @@
-const Request = require('../models/Request');
-const Customer = require('../models/Customer');
-const Caller = require('../models/Caller');
+import Request from '../models/Request.js';
+import Customer from '../models/Customer.js';
+import Caller from '../models/Caller.js';
 
 // @desc    Get all requests
 // @route   GET /api/requests
 // @access  Public
 const getAllRequests = async (req, res) => {
   try {
-    const requests = await Request.find()
+    const { callerId, status } = req.query;
+    const query = {};
+    
+    // Handle filtering by callerId (can be either MongoDB _id or callerId string)
+    if (callerId) {
+      // Try to find caller by MongoDB _id first, then by callerId string
+      const caller = await Caller.findById(callerId).catch(() => null) || 
+                     await Caller.findOne({ callerId });
+      
+      if (caller) {
+        // Use the caller's MongoDB _id for the query
+        query.caller = caller._id;
+      } else {
+        // If caller not found, return empty array
+        return res.status(200).json({
+          success: true,
+          count: 0,
+          data: []
+        });
+      }
+    }
+    
+    // Handle filtering by status
+    if (status) {
+      query.status = status;
+    }
+    
+    const requests = await Request.find(query)
       .populate('caller', 'name callerId')
       .populate('customers.customerId', 'accountNumber name contactNumber');
     
@@ -106,7 +133,7 @@ const getRequestById = async (req, res) => {
 // @access  Public
 const createRequest = async (req, res) => {
   try {
-    const { callerName, callerId, customers } = req.body;
+    const { callerName, callerId, customers, adminId } = req.body;
 
     // Find the caller
     const caller = await Caller.findOne({ callerId });
@@ -138,7 +165,8 @@ const createRequest = async (req, res) => {
       customersSent: customers.length,
       sentDate: dateString,
       status: 'PENDING',
-      sentBy: 'Admin'
+      sentBy: 'Admin',
+      adminId: adminId || null
     });
 
     res.status(201).json({
@@ -159,7 +187,11 @@ const createRequest = async (req, res) => {
 // @access  Public
 const updateRequest = async (req, res) => {
   try {
-    const request = await Request.findById(req.params.id);
+    // Try to find by MongoDB _id first, then by requestId
+    let request = await Request.findById(req.params.id).catch(() => null);
+    if (!request) {
+      request = await Request.findOne({ requestId: req.params.id });
+    }
 
     if (!request) {
       return res.status(404).json({
@@ -206,19 +238,31 @@ const updateRequest = async (req, res) => {
 
     // If the request is being accepted, assign customers
     if (req.body.status === 'ACCEPTED') {
+      console.log('=== ACCEPTING REQUEST ===');
+      console.log('Request callerId:', request.callerId);
+      console.log('Request caller ObjectId:', request.caller);
+      
       // Format current date as DD/MM/YYYY
       const today = new Date();
       const dateString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
 
-      // Find the caller
-      const caller = await Caller.findOne({ callerId: request.callerId });
+      // Find the caller - use the caller ObjectId directly from request
+      const caller = await Caller.findById(request.caller);
+      
+      console.log('Found caller:', caller ? caller.name : 'NOT FOUND');
       
       if (caller) {
+        console.log('Processing', request.customers.length, 'customers');
+        
         // Update customers - assign them to the caller
         for (const customerData of request.customers) {
-          let customer = await Customer.findById(customerData.customerId);
+          console.log('Processing customer:', customerData.name, 'Account:', customerData.accountNumber);
+          
+          // Check if customer already exists by account number
+          let customer = await Customer.findOne({ accountNumber: customerData.accountNumber });
           
           if (!customer) {
+            console.log('Customer not found in DB, creating new customer');
             // If customer doesn't exist in DB, create them
             customer = await Customer.create({
               accountNumber: customerData.accountNumber,
@@ -233,17 +277,25 @@ const updateRequest = async (req, res) => {
               previousResponse: 'No previous contact',
               contactHistory: []
             });
+            console.log('Created new customer with _id:', customer._id);
           } else {
+            console.log('Customer exists, updating assignment');
             // Update existing customer
             customer.assignedTo = caller._id;
             customer.assignedDate = dateString;
             customer.status = 'OVERDUE';
+            customer.amountOverdue = customerData.amountOverdue;
+            customer.daysOverdue = customerData.daysOverdue;
             await customer.save();
+            console.log('Updated existing customer');
           }
 
           // Add customer to caller's assignedCustomers
           if (!caller.assignedCustomers.includes(customer._id)) {
             caller.assignedCustomers.push(customer._id);
+            console.log('Added customer to caller assignedCustomers');
+          } else {
+            console.log('Customer already in caller assignedCustomers');
           }
         }
 
@@ -251,14 +303,21 @@ const updateRequest = async (req, res) => {
         caller.currentLoad = caller.assignedCustomers.length;
         caller.taskStatus = 'ONGOING';
         await caller.save();
+        
+        console.log('Updated caller - currentLoad:', caller.currentLoad, 'taskStatus:', caller.taskStatus);
+        console.log('Caller assignedCustomers:', caller.assignedCustomers);
+      } else {
+        console.log('ERROR: Caller not found!');
       }
+      
+      console.log('=== END ACCEPTING REQUEST ===');
     }
 
     // Update the request with new data
     Object.assign(request, req.body);
     await request.save();
 
-    const updatedRequest = await Request.findById(req.params.id)
+    const updatedRequest = await Request.findById(request._id)
       .populate('caller', 'name callerId');
 
     res.status(200).json({
@@ -393,7 +452,7 @@ const declineRequest = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAllRequests,
   getPendingRequests,
   getRequestsByCallerId,

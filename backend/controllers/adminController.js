@@ -1,6 +1,6 @@
-const Caller = require('../models/Caller');
-const Customer = require('../models/Customer');
-const Request = require('../models/Request');
+import Caller from '../models/Caller.js';
+import Customer from '../models/Customer.js';
+import Request from '../models/Request.js';
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/stats
@@ -123,7 +123,10 @@ const getUnassignedCallers = async (req, res) => {
 // @access  Public
 const getSentRequests = async (req, res) => {
   try {
-    const requests = await Request.find()
+    // Filter by adminId if provided in query (for logged-in admin)
+    const filter = req.query.adminId ? { adminId: req.query.adminId } : {};
+    
+    const requests = await Request.find(filter)
       .populate('caller', 'name callerId')
       .populate('customers', 'accountNumber name amountOverdue daysOverdue')
       .sort({ createdAt: -1 });
@@ -299,7 +302,7 @@ const getCallerDetails = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getDashboardStats,
   getAssignedCallers,
   getUnassignedCallers,

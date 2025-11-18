@@ -1,10 +1,24 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-// Load environment variables
-dotenv.config();
+// Get directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables FIRST before any other imports that need them
+dotenv.config({ path: join(__dirname, '.env') });
+
+import passport from 'passport';
+import connectDB from './config/db.js';
+import './config/passport.js';
+import customerRoutes from './routes/customerRoutes.js';
+import callerRoutes from './routes/callerRoutes.js';
+import requestRoutes from './routes/requestRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -16,12 +30,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Initialize Passport
+app.use(passport.initialize());
+
 // Routes
-app.use('/api/customers', require('./routes/customerRoutes'));
-app.use('/api/callers', require('./routes/callerRoutes'));
-app.use('/api/requests', require('./routes/requestRoutes'));
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/customers', customerRoutes);
+app.use('/api/callers', callerRoutes);
+app.use('/api/requests', requestRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
@@ -38,7 +55,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

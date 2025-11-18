@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const requestSchema = new mongoose.Schema({
   requestId: {
@@ -59,6 +59,11 @@ const requestSchema = new mongoose.Schema({
     type: String,
     default: 'Admin'
   },
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    required: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -75,4 +80,4 @@ requestSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Request', requestSchema);
+export default mongoose.model('Request', requestSchema);
