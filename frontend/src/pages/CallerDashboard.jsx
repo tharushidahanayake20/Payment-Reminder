@@ -159,11 +159,18 @@ function CallerDashboard() {
     }
   };
 
-  // Get completed payments from contacted customers with payment date
+  // Get completed payments for this caller
   const getCompletedPayments = () => {
-    // Note: This won't show anything now since COMPLETED customers are filtered out
-    // Completed payments should be viewed from the Tasks page under Completed filter
-    return [];
+    // Show all completed customers assigned to this caller
+    return completedCustomers.map(customer => ({
+      accountNumber: customer.accountNumber,
+      name: customer.name,
+      contactNumber: customer.contactNumber,
+      amountPaid: customer.amountPaid || customer.amountOverdue || '-',
+      paymentDate: customer.paymentDate || (customer.contactHistory && customer.contactHistory.length > 0
+        ? (customer.contactHistory.find(h => h.paymentMade) ? customer.contactHistory.find(h => h.paymentMade).date : '-')
+        : '-')
+    }));
   };
 
   // Calculate weekly calls based on contact history (Monday to Sunday)
