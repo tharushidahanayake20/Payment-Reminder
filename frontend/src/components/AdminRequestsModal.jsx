@@ -38,7 +38,8 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
             customerCount: req.customers.length,
             sentDate: req.sentDate,
             callerName: req.callerName,
-            callerId: req.callerId
+            callerId: req.callerId,
+            sentBy: req.sentBy
           })));
           // All requests collapsed by default
           setExpandedRequests({});
@@ -221,7 +222,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                         </div>
                         <div className="detail-item">
                           <span className="detail-label">From:</span>
-                          <span className="detail-value">Admin</span>
+                          <span className="detail-value">{request.sentBy || 'Admin'}</span>
                         </div>
                       </div>
 

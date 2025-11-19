@@ -206,9 +206,10 @@ const getWeeklyCalls = async (req, res) => {
     sevenDaysAgo.setDate(today.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Get all customers with contact history
+
+    // Get all customers with contact history, including COMPLETED
     const customers = await Customer.find({
-      'contactHistory.0': { $exists: true }
+      contactHistory: { $exists: true, $ne: [] }
     });
 
     const weeklyCalls = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
@@ -217,9 +218,14 @@ const getWeeklyCalls = async (req, res) => {
       if (customer.contactHistory && customer.contactHistory.length > 0) {
         customer.contactHistory.forEach(contact => {
           // Parse contactDate field (DD/MM/YYYY format)
-          const [day, month, year] = contact.contactDate.split('/');
-          const contactDate = new Date(year, month - 1, day);
-          
+          if (!contact.contactDate) return;
+          let contactDate;
+          if (contact.contactDate.includes('/')) {
+            const [day, month, year] = contact.contactDate.split('/');
+            contactDate = new Date(year, month - 1, day);
+          } else {
+            contactDate = new Date(contact.contactDate);
+          }
           if (contactDate >= sevenDaysAgo && contactDate <= today) {
             const dayOfWeek = contactDate.getDay();
             const mondayFirstIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;

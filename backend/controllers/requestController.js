@@ -185,13 +185,17 @@ const createRequest = async (req, res) => {
     const sequentialNumber = String(todayRequestsCount + 1).padStart(3, '0');
     const taskId = `TASK-${datePrefix}-${sequentialNumber}`;
 
-    // Get admin name if adminId is provided
+    // Get admin name if adminId is provided, otherwise fallback to callerName or 'Admin'
     let sentByName = 'Admin';
     if (adminId) {
       const admin = await Admin.findById(adminId).select('name');
-      if (admin) {
+      if (admin && admin.name) {
         sentByName = admin.name;
+      } else if (callerName) {
+        sentByName = callerName;
       }
+    } else if (callerName) {
+      sentByName = callerName;
     }
 
     // Create request

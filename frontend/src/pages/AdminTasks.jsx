@@ -169,16 +169,19 @@ function AdminTasks() {
 
     const caller = availableCallers.find(c => c.id === selectedCaller);
     const selectedCustomerData = allCustomers.filter(c => selectedCustomers.includes(c.id));
-    
+
+    // Always use caller.callerId for backend, not MongoDB _id
+    const callerIdToSend = caller.callerId || caller.id;
+
     // Send request to backend
-    await sendRequestToCaller(caller.name, caller.id, selectedCustomerData);
-    
+    await sendRequestToCaller(caller.name, callerIdToSend, selectedCustomerData);
+
     // Remove assigned customers from list
     setAllCustomers(allCustomers.filter(c => !selectedCustomers.includes(c.id)));
     setSelectedCustomers([]);
     setSelectedCaller("");
     setShowAssignModal(false);
-    
+
     alert(`Successfully assigned ${selectedCustomerData.length} customer(s) to ${caller.name}`);
   };
 
@@ -186,13 +189,12 @@ function AdminTasks() {
     try {
       const today = new Date();
       const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-      
+
       // Get logged-in admin ID
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const adminId = userData.id;
-      
+
       const requestData = {
-        requestId: Date.now().toString(),
         callerName: callerName,
         callerId: callerId,
         customers: customers.map(customer => ({
@@ -208,7 +210,11 @@ function AdminTasks() {
         status: 'PENDING',
         adminId: adminId
       };
-      
+
+      // Debug: log callerId and requestData
+      console.log('Sending request to backend with callerId:', callerId);
+      console.log('Request payload:', requestData);
+
       // Save request to backend
       const response = await fetch(`${API_BASE_URL}/requests`, {
         method: 'POST',
@@ -217,7 +223,7 @@ function AdminTasks() {
         },
         body: JSON.stringify(requestData)
       });
-      
+
       if (response.ok) {
         console.log('✅ Request sent to caller:', callerName);
       } else {
