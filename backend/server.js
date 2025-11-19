@@ -14,14 +14,20 @@ dotenv.config({ path: join(__dirname, '.env') });
 import passport from 'passport';
 import connectDB from './config/db.js';
 import './config/passport.js';
+
 import customerRoutes from './routes/customerRoutes.js';
 import callerRoutes from './routes/callerRoutes.js';
 import requestRoutes from './routes/requestRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
+
 
 // Connect to MongoDB
 connectDB();
+
+// Start auto-report cron job
+import('./cron/autoReport.js');
 
 const app = express();
 
@@ -34,11 +40,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
 // Routes
+
 app.use('/api/customers', customerRoutes);
 app.use('/api/callers', callerRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

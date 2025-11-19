@@ -84,8 +84,9 @@ function Report() {
           const latestContact = customer.contactHistory && customer.contactHistory.length > 0
             ? customer.contactHistory[customer.contactHistory.length - 1]
             : null;
-          
+          // Include all analytics for each customer
           return {
+            taskId: customer.taskId || 'N/A',
             accountNumber: customer.accountNumber,
             name: customer.name,
             contactNumber: customer.contactNumber,
@@ -96,7 +97,14 @@ function Report() {
             lastContactOutcome: latestContact?.outcome || 'N/A',
             lastResponse: latestContact?.remark || 'N/A',
             promisedDate: latestContact?.promisedDate || 'N/A',
-            totalContacts: customer.contactHistory?.length || 0
+            totalContacts: customer.contactHistory?.length || 0,
+            payment: customer.status === 'COMPLETED' ? 'Paid' : 'Unpaid',
+            responses: customer.contactHistory?.map(ch => ({
+              date: ch.contactDate,
+              outcome: ch.outcome,
+              remark: ch.remark,
+              promisedDate: ch.promisedDate
+            })) || []
           };
         }).sort((a, b) => {
           // Sort by status: COMPLETED, PENDING, OVERDUE
@@ -137,45 +145,93 @@ function Report() {
     // TODO: Implement PDF generation
   };
 
+  // Download all customer analytics as CSV
   const handleDownloadExcel = () => {
-    alert('Excel download feature - Coming soon!');
-    // TODO: Implement Excel generation
+    if (!customerDetails.length) {
+      alert('No customer data to download.');
+      return;
+    }
+    // Define headers for all analytics
+    const headers = [
+      'Task ID',
+      'Account Number',
+      'Customer Name',
+      'Contact Number',
+      'Status',
+      'Payment',
+      'Amount Overdue',
+      'Days Overdue',
+      'Total Contacts',
+      'Last Contact Date',
+      'Last Outcome',
+      'Last Response',
+      'Promised Date',
+      'Responses (History)'
+    ];
+    const rows = customerDetails.map(cust => [
+      cust.taskId,
+      cust.accountNumber,
+      cust.name,
+      cust.contactNumber,
+      cust.status,
+      cust.payment,
+      cust.amountOverdue,
+      cust.daysOverdue,
+      cust.totalContacts,
+      cust.lastContactDate,
+      cust.lastContactOutcome,
+      cust.lastResponse,
+      cust.promisedDate,
+      // Flatten responses as a string
+      (cust.responses && cust.responses.length > 0)
+        ? cust.responses.map(r => `Date: ${r.date || ''} | Outcome: ${r.outcome || ''} | Remark: ${r.remark || ''} | Promised: ${r.promisedDate || ''}`).join(' || ')
+        : ''
+    ]);
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'customer_analytics_report.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleSendReportToAdmin = async () => {
     try {
       setSendingReport(true);
-      
       // Get logged-in caller ID
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const callerId = userData.id;
-      
       if (!callerId) {
         alert('Error: Caller ID not found');
         setSendingReport(false);
         return;
       }
-      
-      // Send request to generate and send report
+      // Send all analytics (stats and customerDetails) in the report
+      const reportPayload = {
+        reportType,
+        stats,
+        customerDetails
+      };
       const response = await fetch(`${API_BASE_URL}/callers/${callerId}/report`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          reportType: reportType
-        })
+        body: JSON.stringify(reportPayload)
       });
-      
       const result = await response.json();
-      
       if (result.success) {
-        alert(`✅ ${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully!\n\nReport ID: ${result.data.reportId}`);
+        alert(`${reportType.charAt(0).toUpperCase() + reportType.slice(1)} performance report sent to admin successfully!\n\nReport ID: ${result.data.reportId}`);
         console.log('📊 Report generated:', result.data);
       } else {
-        alert('❌ Failed to send report: ' + result.message);
+        alert('Failed to send report: ' + result.message);
       }
-      
       setSendingReport(false);
     } catch (error) {
       console.error('Error sending report:', error);

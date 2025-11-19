@@ -289,24 +289,31 @@ const generatePerformanceReport = async (req, res) => {
     const successRate = totalCalls > 0 ? ((successfulCalls / totalCalls) * 100).toFixed(2) : 0;
     const completionRate = totalCustomers > 0 ? ((completedPayments / totalCustomers) * 100).toFixed(2) : 0;
     
-    // Prepare detailed customer list with latest contact info
+    // Prepare detailed customer list with all contact history as responses
     const customerDetails = customers.map(customer => {
       const latestContact = customer.contactHistory && customer.contactHistory.length > 0
         ? customer.contactHistory[customer.contactHistory.length - 1]
         : null;
-      
       return {
+        taskId: customer.taskId || '',
         accountNumber: customer.accountNumber,
         name: customer.name,
         contactNumber: customer.contactNumber,
         amountOverdue: customer.amountOverdue,
         daysOverdue: customer.daysOverdue,
         status: customer.status,
+        payment: customer.status === 'COMPLETED' ? 'Paid' : 'Unpaid',
         lastContactDate: latestContact?.contactDate || 'Not contacted',
         lastContactOutcome: latestContact?.outcome || 'N/A',
         lastResponse: latestContact?.remark || 'N/A',
         promisedDate: latestContact?.promisedDate || 'N/A',
-        totalContacts: customer.contactHistory?.length || 0
+        totalContacts: customer.contactHistory?.length || 0,
+        responses: (customer.contactHistory || []).map(ch => ({
+          date: ch.contactDate,
+          outcome: ch.outcome,
+          remark: ch.remark,
+          promisedDate: ch.promisedDate
+        }))
       };
     });
     
@@ -354,16 +361,14 @@ const generatePerformanceReport = async (req, res) => {
       })
     };
     
-    // TODO: Here you can send email to admin with the report
-    // For now, we'll just return the report data
-    
-    console.log(`📊 Performance report generated for ${caller.name} (${reportType})`);
-    console.log(`   Total Calls: ${totalCalls} | Success Rate: ${successRate}%`);
-    console.log(`   Completed: ${completedPayments} | Pending: ${pendingPayments} | Overdue: ${overdueCustomers}`);
-    
+    // Save the report to the database so admin can access it
+    const Report = (await import('../models/Report.js')).default;
+    await Report.create(report);
+
+    console.log(`📊 Performance report generated and saved for ${caller.name} (${reportType})`);
     res.status(200).json({
       success: true,
-      message: 'Performance report generated successfully',
+      message: 'Performance report generated and saved successfully',
       data: report
     });
   } catch (error) {
