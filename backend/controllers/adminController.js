@@ -358,7 +358,7 @@ const getCallerDetails = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('❌ Error in getCallerDetails:', error);
+    console.error('Error in getCallerDetails:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching caller details',
