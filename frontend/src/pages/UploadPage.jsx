@@ -153,7 +153,6 @@ const UploadPage = () => {
 
     try {
       setUploading(true);
-      
       // Update status to uploading
       setFiles(prev => prev.map(f => 
         f.id === fileItem.id ? { ...f, status: 'uploading', progress: 0 } : f
@@ -163,9 +162,10 @@ const UploadPage = () => {
       formData.append('file', fileItem.file);
 
       const token = localStorage.getItem('token');
-      console.log('Uploading to:', `${API_BASE_URL}/upload/parse`);
-      
-      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
+      console.log('Uploading to:', `${API_BASE_URL}/upload/parse-and-import`);
+      console.log('File:', fileItem.file.name, 'Size:', fileItem.file.size);
+
+      const response = await fetch(`${API_BASE_URL}/upload/parse-and-import`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -178,7 +178,8 @@ const UploadPage = () => {
       console.log('Response data:', result);
 
       if (response.ok && result.success) {
-        console.log('Excel data received:', result.data);
+        console.log('Excel data received and imported:', result.data);
+        console.log('Imported:', result.data.imported, 'Duplicates:', result.data.duplicates);
         
         // Update status to completed
         setFiles(prev => prev.map(f => 
@@ -189,8 +190,8 @@ const UploadPage = () => {
         setExcelData(result.data);
         setCurrentPage(1);
         setSearchTerm("");
-        
-        console.log('Excel data state updated');
+
+        alert(`Successfully imported ${result.data.imported} customers! (${result.data.duplicates || 0} duplicates skipped)\n\nTotal processed: ${result.data.totalProcessed}`);
       } else {
         throw new Error(result.message || 'Upload failed');
       }
@@ -204,6 +205,7 @@ const UploadPage = () => {
           progress: 0 
         } : f
       ));
+      alert(`Upload failed: ${error.message}`);
     } finally {
       setUploading(false);
     }
