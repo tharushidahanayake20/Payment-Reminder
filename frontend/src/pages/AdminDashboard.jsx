@@ -1,122 +1,161 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import AdminSentRequestsModal from "../components/AdminSentRequestsModal";
 import CallerDetailsModal from "../components/CallerDetailsModal";
+import API_BASE_URL from "../config/api";
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
   const [isCallerDetailsModalOpen, setIsCallerDetailsModalOpen] = useState(false);
   const [selectedCaller, setSelectedCaller] = useState(null);
+  const [callerDetailsData, setCallerDetailsData] = useState(null);
+  const [assignedCallers, setAssignedCallers] = useState([]);
+  const [unassignedCallers, setUnassignedCallers] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
+  const [stats, setStats] = useState([
+    { icon: "bi-people", value: "0", label: "Total Customers", color: "#1488eeff" },
+    { icon: "bi-telephone-outbound", value: "0", label: "Assigned Callers", color: "#1488eeff" },
+    { icon: "bi-telephone-inbound", value: "0", label: "Unassigned Callers", color: "#1488eeff" },
+    { icon: "bi-person-check", value: "0", label: "Customers Contacted", color: "#1488eeff" },
+    { icon: "bi-credit-card", value: "0", label: "Payments Completed", color: "#1488eeff" },
+    { icon: "bi-clock-history", value: "0", label: "Pending Payments", color: "#1488eeff" }
+  ]);
+  const [weeklyCalls, setWeeklyCalls] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [completedPayments, setCompletedPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Check for caller responses on component mount and periodically
+  // Fetch all dashboard data on mount
   useEffect(() => {
-    checkForCallerResponses();
+    fetchDashboardData(true); // Initial load with loading screen
     
-    // Check every 5 seconds for responses (simulating real-time updates)
-    const interval = setInterval(checkForCallerResponses, 5000);
+    // Refresh data every 30 seconds in background
+    const interval = setInterval(() => fetchDashboardData(false), 30000);
     
     return () => clearInterval(interval);
   }, []);
 
-  const checkForCallerResponses = () => {
-    const response = localStorage.getItem('callerRequestResponse');
-    if (response) {
-      const parsedResponse = JSON.parse(response);
+  const fetchDashboardData = async (showLoading = false) => {
+    try {
+      // Only show loading screen on initial load
+      if (showLoading) {
+        setLoading(true);
+      }
+      setError(null);
       
-      // Update the corresponding request in sentRequests
-      setSentRequests(prevRequests => {
-        const updated = prevRequests.map(request => {
-          if (request.id === parsedResponse.requestId) {
-            console.log(`✅ Request ${parsedResponse.requestId} status updated to ${parsedResponse.status}`);
-            return {
-              ...request,
-              status: parsedResponse.status,
-              respondedDate: parsedResponse.respondedDate,
-              reason: parsedResponse.reason
-            };
-          }
-          return request;
-        });
-        return updated;
-      });
+      // Get logged-in admin ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const adminId = userData.id;
       
-      // Clear the response from localStorage
-      localStorage.removeItem('callerRequestResponse');
-      
-      // Show notification
-      alert(`Caller has ${parsedResponse.status.toLowerCase()} the request!`);
+      // Fetch all data in parallel
+      const [statsRes, assignedRes, unassignedRes, requestsRes, weeklyRes, paymentsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/stats`),
+        fetch(`${API_BASE_URL}/admin/assigned-callers`),
+        fetch(`${API_BASE_URL}/admin/unassigned-callers`),
+        fetch(`${API_BASE_URL}/admin/sent-requests${adminId ? `?adminId=${adminId}` : ''}`),
+        fetch(`${API_BASE_URL}/admin/weekly-calls`),
+        fetch(`${API_BASE_URL}/admin/completed-payments?limit=5`)
+      ]);
+
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats([
+          { icon: "bi-people", value: (statsData.totalCustomers || 0).toString(), label: "Total Customers", color: "#1488eeff" },
+          { icon: "bi-telephone-outbound", value: (statsData.assignedCallers || 0).toString(), label: "Assigned Callers", color: "#1488eeff" },
+          { icon: "bi-telephone-inbound", value: (statsData.unassignedCallers || 0).toString(), label: "Unassigned Callers", color: "#1488eeff" },
+          { icon: "bi-person-check", value: (statsData.customersContacted || 0).toString(), label: "Customers Contacted", color: "#1488eeff" },
+          { icon: "bi-credit-card", value: (statsData.paymentsCompleted || 0).toString(), label: "Payments Completed", color: "#1488eeff" },
+          { icon: "bi-clock-history", value: (statsData.pendingPayments || 0).toString(), label: "Pending Payments", color: "#1488eeff" }
+        ]);
+      }
+
+      if (assignedRes.ok) {
+        const assignedData = await assignedRes.json();
+        const assignedArray = Array.isArray(assignedData) ? assignedData : (assignedData.data || []);
+        setAssignedCallers(assignedArray.map(caller => ({
+          id: caller._id || caller.callerId || Math.random().toString(),
+          name: caller.name,
+          callerId: caller.callerId,
+          task: caller.taskStatus,
+          customersContacted: caller.customersContacted
+        })));
+      }
+
+      if (unassignedRes.ok) {
+        const unassignedData = await unassignedRes.json();
+        const unassignedArray = Array.isArray(unassignedData) ? unassignedData : (unassignedData.data || []);
+        setUnassignedCallers(unassignedArray.map(caller => ({
+          id: caller._id || caller.callerId || Math.random().toString(),
+          name: caller.name,
+          date: caller.joinedDate,
+          status: caller.status,
+          latestWork: caller.latestWork
+        })));
+      }
+
+      if (requestsRes.ok) {
+        const requestsData = await requestsRes.json();
+        const requestsArray = Array.isArray(requestsData) ? requestsData : (requestsData.data || []);
+        setSentRequests(requestsArray.map(req => ({
+          id: req.requestId || req._id || Math.random().toString(),
+          callerName: req.callerName,
+          callerId: req.callerId,
+          customersSent: req.customersSent,
+          sentDate: req.sentDate,
+          status: req.status,
+          respondedDate: req.respondedDate,
+          reason: req.declineReason || req.reason,
+          customers: req.customers
+        })));
+      }
+
+      if (weeklyRes.ok) {
+        const weeklyData = await weeklyRes.json();
+        setWeeklyCalls(weeklyData.data || [0, 0, 0, 0, 0, 0, 0]);
+      }
+
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json();
+        const paymentsArray = Array.isArray(paymentsData) ? paymentsData : (paymentsData.data || []);
+        setCompletedPayments(paymentsArray.map((payment, index) => ({
+          id: payment._id || `${payment.accountNumber}-${index}` || Math.random().toString(),
+          name: payment.name,
+          date: payment.completedDate
+        })));
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError('Failed to load dashboard data. Please check if the backend server is running.');
+      setLoading(false);
     }
   };
-  const [assignedCallers] = useState([
-    {
-      id: 1,
-      name: "Kumar Singh",
-      callerId: "2331",
-      task: "ONGOING",
-      customersContacted: "10/20"
-    },
-    {
-      id: 2,
-      name: "Ravi Kumar",
-      callerId: "2313",
-      task: "COMPLETED",
-      customersContacted: "20/20"
-    }
-  ]);
-
-  const [unassignedCallers] = useState([
-    {
-      id: 1,
-      name: "Kumar Singh",
-      date: "25/2/2025",
-      status: "AVAILABLE",
-      latestWork: "None"
-    },
-    {
-      id: 2,
-      name: "Kumar Singh",
-      date: "25/2/2025",
-      status: "AVAILABLE",
-      latestWork: "Completed 20/20"
-    },
-    {
-      id: 3,
-      name: "Kumar Singh",
-      date: "25/2/2025",
-      status: "AVAILABLE",
-      latestWork: "Completed 40/40"
-    }
-  ]);
-
-  const [sentRequests, setSentRequests] = useState([]);
-
-  // Load sent requests from localStorage on mount
-  useEffect(() => {
-    const storedRequests = JSON.parse(localStorage.getItem('adminSentRequests') || '[]');
-    setSentRequests(storedRequests);
-  }, []);
 
   const pendingRequestsCount = sentRequests.filter(req => req.status === "PENDING").length;
 
-  const stats = [
-    { icon: "bi-people", value: "250", label: "Total Customers", color: "#1488eeff" },
-    { icon: "bi-telephone-outbound", value: "33", label: "Assigned Callers", color: "#1488eeff" },
-    { icon: "bi-telephone-inbound", value: "12", label: "Unassigned Callers", color: "#1488eeff" },
-    { icon: "bi-person-check", value: "60", label: "Customers Contacted", color: "#1488eeff" },
-    { icon: "bi-credit-card", value: "140", label: "Payments Completed", color: "#1488eeff" },
-    { icon: "bi-clock-history", value: "50", label: "Pending Payments", color: "#1488eeff" }
-  ];
-
-  const weeklyCalls = [12, 15, 18, 20, 16, 22, 14]; // Mon - Sun
-  
-  const completedPayments = [
-    { name: "Prashant Kumar Singh", date: "25/2/2025" },
-    { name: "Prashant Kumar Singh", date: "25/2/2025" },
-    { name: "Prashant Kumar Singh", date: "25/2/2025" },
-    { name: "Prashant Kumar Singh", date: "25/2/2025" },
-    { name: "Prashant Kumar Singh", date: "25/2/2025" }
-  ];
+  // Navigation handlers for stat cards
+  const handleStatClick = (statLabel) => {
+    switch (statLabel) {
+      case "Total Customers":
+        navigate('/customers');
+        break;
+      case "Assigned Callers":
+      case "Unassigned Callers":
+        navigate('/employees');
+        break;
+      case "Customers Contacted":
+      case "Payments Completed":
+      case "Pending Payments":
+        navigate('/report');
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleRequestsClick = () => {
     setIsRequestsModalOpen(true);
@@ -126,14 +165,28 @@ function AdminDashboard() {
     setIsRequestsModalOpen(false);
   };
 
-  const handleShowCallerDetails = (caller) => {
-    setSelectedCaller(caller);
-    setIsCallerDetailsModalOpen(true);
+  const handleShowCallerDetails = async (caller) => {
+    try {
+      setSelectedCaller(caller);
+      setIsCallerDetailsModalOpen(true);
+      
+      // Fetch detailed caller information from backend
+      const response = await fetch(`${API_BASE_URL}/admin/callers/${caller.id}/details`);
+      if (response.ok) {
+        const result = await response.json();
+        setCallerDetailsData(result.data);
+      } else {
+        console.error('Failed to fetch caller details');
+      }
+    } catch (error) {
+      console.error('Error fetching caller details:', error);
+    }
   };
 
   const handleCloseCallerDetails = () => {
     setIsCallerDetailsModalOpen(false);
     setSelectedCaller(null);
+    setCallerDetailsData(null);
   };
 
   /**
@@ -205,12 +258,53 @@ function AdminDashboard() {
         <h1>Admin Dashboard</h1>
       </div>
 
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #1488ee',
+            borderRadius: '50%',
+            margin: '0 auto 20px',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p>Loading dashboard...</p>
+        </div>
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px', color: '#dc3545' }}>
+          <i className="bi bi-exclamation-triangle" style={{ fontSize: '48px', display: 'block', marginBottom: '20px' }}></i>
+          <p>{error}</p>
+          <button 
+            onClick={() => fetchDashboardData(true)}
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              background: '#1488eeff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            <i className="bi bi-arrow-clockwise" style={{ marginRight: '8px' }}></i>
+            Retry
+          </button>
+        </div>
+      ) : (
       <div className="admin-dashboard-layout">
         <div className="admin-dashboard-main">
           {/* Stats Cards */}
           <div className="admin-stats-grid">
             {stats.map((stat, index) => (
-              <div key={index} className="admin-stat-card">
+              <div 
+                key={index} 
+                className="admin-stat-card" 
+                onClick={() => handleStatClick(stat.label)}
+                style={{ cursor: 'pointer' }}
+                title={`Click to view ${stat.label.toLowerCase()}`}
+              >
                 <div className="admin-stat-icon" style={{ backgroundColor: stat.color }}>
                   <i className={stat.icon}></i>
                 </div>
@@ -218,8 +312,12 @@ function AdminDashboard() {
                   <h3>{stat.value}</h3>
                   <p>{stat.label}</p>
                 </div>
-                <button className="admin-stat-menu">
-                  <i className="bi bi-three-dots-vertical"></i>
+                <button 
+                  className="admin-stat-menu" 
+                  onClick={(e) => { e.stopPropagation(); fetchDashboardData(false); }}
+                  title="Refresh this stat"
+                >
+                  <i className="bi bi-arrow-clockwise"></i>
                 </button>
               </div>
             ))}
@@ -229,38 +327,14 @@ function AdminDashboard() {
           <div className="admin-assigned-callers-section">
             <div className="admin-section-header">
               <h3>Assigned Callers</h3>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <button 
-                  onClick={() => handleSendRequestToCaller(
-                    "Test Caller", 
-                    "9999", 
-                    [
-                      { accountNumber: "1001234585", name: "Test Customer 1", amountOverdue: "Rs.5000", daysOverdue: "20", contactNumber: "077-1111111" },
-                      { accountNumber: "1001234586", name: "Test Customer 2", amountOverdue: "Rs.3000", daysOverdue: "15", contactNumber: "077-2222222" }
-                    ]
-                  )}
-                  style={{
-                    padding: '6px 12px',
-                    background: '#1488ee',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '12px',
-                    fontWeight: '600'
-                  }}
-                >
-                  Send Test Request
-                </button>
-                <a href="#" className="admin-see-all">See All</a>
-              </div>
+              <button className="admin-see-all" onClick={() => navigate('/employees')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
             <table className="admin-callers-table">
               <thead>
                 <tr>
                   <th>CALLER NAME & ID</th>
                   <th>TASK</th>
-                  <th>CUSTOMERS CONTACTED</th>
+                  <th>TASK PROGRESS</th>
                   <th>ACTIONS</th>
                 </tr>
               </thead>
@@ -274,11 +348,22 @@ function AdminDashboard() {
                       </div>
                     </td>
                     <td>
-                      <span className={`admin-status-badge ${caller.task.toLowerCase()}`}>
-                        {caller.task}
+                      <span className="admin-task-id" style={{ 
+                        fontFamily: 'monospace',
+                        fontSize: '0.9em',
+                        padding: '4px 8px',
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: '4px',
+                        color: '#333'
+                      }}>
+                        {caller.task || 'N/A'}
                       </span>
                     </td>
-                    <td>{caller.customersContacted}</td>
+                    <td>
+                      <span style={{ fontWeight: '600', color: '#2e7d32' }}>
+                        {caller.customersContacted || '0/0'}
+                      </span>
+                    </td>
                     <td>
                       <button 
                         className="admin-action-button" 
@@ -297,7 +382,7 @@ function AdminDashboard() {
           <div className="admin-unassigned-callers-section">
             <div className="admin-section-header">
               <h3>Unassigned Callers</h3>
-              <a href="#" className="admin-see-all">See All</a>
+              <button className="admin-see-all" onClick={() => navigate('/employees')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
             <table className="admin-callers-table">
               <thead>
@@ -313,18 +398,18 @@ function AdminDashboard() {
                   <tr key={caller.id}>
                     <td>
                       <div className="admin-caller-info">
-                        <strong>{caller.name}</strong>
-                        <span className="admin-caller-date">{caller.date}</span>
+                        <strong>{caller.name || 'Unknown'}</strong>
+                        <span className="admin-caller-date">{caller.date || 'N/A'}</span>
                       </div>
                     </td>
                     <td>
                       <span className="admin-status-badge available">
-                        {caller.status}
+                        {caller.status || 'N/A'}
                       </span>
                     </td>
-                    <td>{caller.latestWork}</td>
+                    <td>{caller.latestWork || 'N/A'}</td>
                     <td>
-                      <button className="admin-action-button assign">ASSIGN WORK</button>
+                      <button className="admin-action-button assign" onClick={() => navigate('/admin/tasks')}>ASSIGN WORK</button>
                     </td>
                   </tr>
                 ))}
@@ -336,7 +421,7 @@ function AdminDashboard() {
           <div className="admin-sent-requests-section">
             <div className="admin-section-header">
               <h3>Sent Requests Status</h3>
-              <a href="#" className="admin-see-all">See All</a>
+              <button className="admin-see-all" onClick={handleRequestsClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
             <table className="admin-callers-table">
               <thead>
@@ -353,15 +438,15 @@ function AdminDashboard() {
                   <tr key={request.id}>
                     <td>
                       <div className="admin-caller-info">
-                        <strong>{request.callerName}</strong>
-                        <span className="admin-caller-id">{request.callerId}</span>
+                        <strong>{request.callerName || 'Unknown'}</strong>
+                        <span className="admin-caller-id">{request.callerId || 'N/A'}</span>
                       </div>
                     </td>
-                    <td>{request.customersSent} customers</td>
-                    <td>{request.sentDate}</td>
+                    <td>{request.customersSent || 0} customers</td>
+                    <td>{request.sentDate || 'N/A'}</td>
                     <td>
-                      <span className={`admin-status-badge ${request.status.toLowerCase()}`}>
-                        {request.status}
+                      <span className={`admin-status-badge ${(request.status || 'pending').toLowerCase()}`}>
+                        {request.status || 'PENDING'}
                       </span>
                     </td>
                     <td>
@@ -390,30 +475,38 @@ function AdminDashboard() {
           <div className="admin-user-profile-section">
             <div className="admin-profile-header">
               <h4>Your Profile</h4>
-              <button className="admin-menu-btn">
-                <i className="bi bi-three-dots-vertical"></i>
+              <button className="admin-menu-btn" onClick={() => fetchDashboardData(false)} title="Refresh Dashboard">
+                <i className="bi bi-arrow-clockwise"></i>
               </button>
             </div>
             
             <div className="admin-profile-content">
               <div className="admin-profile-avatar">
-                <img src="https://via.placeholder.com/80" alt="Admin" />
+                <img 
+                  src={(() => {
+                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                    return userData.avatar || "https://ui-avatars.com/api/?name=" + encodeURIComponent(userData.name || "Admin") + "&background=1488ee&color=fff&size=80";
+                  })()} 
+                  alt="Admin" 
+                />
               </div>
-              <h3>Good Morning, (Admin)</h3>
+              <h3>Good Morning, ({(() => {
+                const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+                return userData.name || 'Admin';
+              })()})</h3>
               
               <div className="admin-profile-actions">
-                <button className="admin-icon-btn">
+                <button className="admin-icon-btn" onClick={() => navigate('/settings')} title="Notifications">
                   <i className="bi bi-bell"></i>
                 </button>
-                <button className="admin-icon-btn" onClick={handleRequestsClick}>
+                <button className="admin-icon-btn" onClick={handleRequestsClick} title="View Requests">
                   <i className="bi bi-envelope"></i>
                   {pendingRequestsCount > 0 && (
                     <span className="admin-notification-badge">{pendingRequestsCount}</span>
                   )}
                 </button>
-                <button className="admin-icon-btn">
+                <button className="admin-icon-btn" onClick={() => navigate('/report')} title="Calendar & Reports">
                   <i className="bi bi-calendar"></i>
-                  <span className="admin-notification-badge">1</span>
                 </button>
               </div>
             </div>
@@ -443,13 +536,13 @@ function AdminDashboard() {
             <div className="admin-completed-payments-section">
               <div className="admin-section-header">
                 <h4>Completed Payments</h4>
-                <button className="admin-add-btn">
-                  <i className="bi bi-plus-circle"></i>
+                <button className="admin-add-btn" onClick={() => navigate('/customers')} title="View All Customers">
+                  <i className="bi bi-eye"></i>
                 </button>
               </div>
               <div className="admin-payments-list">
-                {completedPayments.map((payment, index) => (
-                  <div key={index} className="admin-payment-item">
+                {completedPayments.map((payment) => (
+                  <div key={payment.id} className="admin-payment-item">
                     <div className="admin-payment-info">
                       <strong>{payment.name}</strong>
                       <span className="admin-payment-date">{payment.date}</span>
@@ -458,11 +551,12 @@ function AdminDashboard() {
                   </div>
                 ))}
               </div>
-              <button className="admin-see-all-btn">See All</button>
+              <button className="admin-see-all-btn" onClick={() => navigate('/report')}>See All Payments</button>
             </div>
           </div>
         </div>
       </div>
+      )}
     </div>
 
     <AdminSentRequestsModal
@@ -475,6 +569,7 @@ function AdminDashboard() {
       isOpen={isCallerDetailsModalOpen}
       onClose={handleCloseCallerDetails}
       caller={selectedCaller}
+      callerData={callerDetailsData}
     />
     </>
   );

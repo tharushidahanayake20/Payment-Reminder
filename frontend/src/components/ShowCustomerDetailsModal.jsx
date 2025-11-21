@@ -3,7 +3,7 @@ import "./ShowCustomerDetailsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
-  const [callOutcome, setCallOutcome] = useState("Spoke to the Customer");
+  const [callOutcome, setCallOutcome] = useState("Spoke to Customer");
   const [customerResponse, setCustomerResponse] = useState("");
   const [paymentMade, setPaymentMade] = useState(false);
   const [promisedDate, setPromisedDate] = useState("");
@@ -12,7 +12,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   // Reset form when modal opens with new customer
   useEffect(() => {
     if (isOpen && customer) {
-      setCallOutcome("Spoke to the Customer");
+      setCallOutcome("Spoke to Customer");
       setCustomerResponse("");
       setPaymentMade(false);
       setPromisedDate("");
@@ -39,14 +39,20 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   // Get the most recent response
   const getLatestResponse = () => {
     if (customer.contactHistory && customer.contactHistory.length > 0) {
-      return customer.contactHistory[customer.contactHistory.length - 1].response;
+      return customer.contactHistory[customer.contactHistory.length - 1].remark;
     }
     return customer.previousResponse || "No previous contact";
   };
 
   const handleSave = () => {
+    // Validate that customerResponse is not empty
+    if (!customerResponse || customerResponse.trim() === '') {
+      alert('Please enter a customer response before saving.');
+      return;
+    }
+    
     if (onSave) {
-      onSave(customer.id, {
+      onSave(customer._id || customer.id, {
         callOutcome,
         customerResponse,
         paymentMade,
@@ -129,13 +135,13 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                           <div key={index} className="response-item">
                             <div className="response-date">
                               <i className="bi bi-calendar3"></i>
-                              {contact.date}
+                              {contact.contactDate}
                             </div>
                             <div className="response-outcome">
                               <strong>Outcome:</strong> {contact.outcome}
                             </div>
                             <div className="response-text-full">
-                              <strong>Response:</strong> {contact.response}
+                              <strong>Response:</strong> {contact.remark}
                             </div>
                             {contact.promisedDate && (
                               <div className="response-promised">
@@ -195,11 +201,11 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                   onChange={(e) => setCallOutcome(e.target.value)}
                   className="form-select"
                 >
-                  <option>Spoke to the Customer</option>
+                  <option>Spoke to Customer</option>
                   <option>No Answer</option>
-                  <option>Voicemail Left</option>
+                  <option>Left Voicemail</option>
                   <option>Wrong Number</option>
-                  <option>Customer Unavailable</option>
+                  <option>Customer Refused</option>
                 </select>
               </div>
 

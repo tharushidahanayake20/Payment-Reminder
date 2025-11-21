@@ -4,6 +4,7 @@ import DashboardStats from "../components/DashboardStats";
 import ContactedCustomersTable from "../components/ContactedCustomersTable";
 import OverduePaymentsTable from "../components/OverduePaymentsTable";
 import UserProfile from "../components/UserProfile";
+import API_BASE_URL from "../config/api";
 
 function CallerDashboard() {
   // Helper function to format date as DD/MM/YYYY
@@ -25,143 +26,65 @@ function CallerDashboard() {
     { type: "pending", value: "0", label: "Pending Payments", color: "#4d99c0ff" },
   ]);
 
-  // Initialize with sample data
-  useEffect(() => {
-    // Check if data exists in localStorage
-    const storedContacted = localStorage.getItem('contactedCustomers');
-    const storedOverdue = localStorage.getItem('overduePayments');
-    
-    if (storedContacted && storedOverdue) {
-      // Load from localStorage if available
-      const contacted = JSON.parse(storedContacted);
-      const overdue = JSON.parse(storedOverdue);
-      setContactedCustomers(contacted);
-      setOverduePayments(overdue);
-      updateStats(contacted, overdue);
-    } else {
-      // Simulate loading data from backend
-      const today = new Date();
-      const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowString = `${String(tomorrow.getDate()).padStart(2, '0')}/${String(tomorrow.getMonth() + 1).padStart(2, '0')}/${tomorrow.getFullYear()}`;
-      
-      // Get dates from this week for call history
-      // Today is the current date (for calls made today)
-      const callDate1 = new Date(today); // Today
-      const callDate1String = `${String(callDate1.getDate()).padStart(2, '0')}/${String(callDate1.getMonth() + 1).padStart(2, '0')}/${callDate1.getFullYear()}`;
-      
-      // Yesterday
-      const callDate2 = new Date(today);
-      callDate2.setDate(today.getDate() - 1);
-      const callDate2String = `${String(callDate2.getDate()).padStart(2, '0')}/${String(callDate2.getMonth() + 1).padStart(2, '0')}/${callDate2.getFullYear()}`;
-
-      const initialContactedCustomers = [
-        {
-          id: 1,
-          accountNumber: "1001",
-          name: "Kumar Singh",
-          date: todayString,
-          status: "PENDING",
-          response: "Will Be Paid Next Week",
-          contactNumber: "070 454 5457",
-          amountOverdue: "Rs.2000",
-          daysOverdue: "16",
-          previousResponse: "Said would pay last Friday",
-          contactHistory: [
-            { 
-              date: callDate1String, 
-              outcome: "Spoke to Customer", 
-              response: "Said would pay last Friday", 
-              promisedDate: todayString,
-              paymentMade: false 
-            }
-          ]
-        },
-        {
-          id: 2,
-          accountNumber: "1002",
-          name: "Ravi Kumar",
-          date: todayString,
-          status: "COMPLETED",
-          response: "Payment Will Be Done After The Call",
-          contactNumber: "070 123 4567",
-          amountOverdue: "Rs.1500",
-          daysOverdue: "8",
-          previousResponse: "Will pay after receiving salary",
-          contactHistory: [
-            { 
-              date: callDate2String, 
-              outcome: "Spoke to Customer", 
-              response: "Will pay after receiving salary", 
-              promisedDate: tomorrowString,
-              paymentMade: true 
-            }
-          ]
-        },
-      ];
-
-      const initialOverduePayments = [
-        {
-          id: 3,
-          accountNumber: "1003",
-          name: "Kumar Singh",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 454 5457",
-          amountOverdue: "Rs.2000",
-          daysOverdue: "16",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        },
-        {
-          id: 4,
-          accountNumber: "1004",
-          name: "Ash Kumar",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 789 4561",
-          amountOverdue: "Rs.3500",
-          daysOverdue: "22",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        },
-        {
-          id: 5,
-          accountNumber: "1005",
-          name: "Priya Singh",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 456 7890",
-          amountOverdue: "Rs.1800",
-          daysOverdue: "12",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        },
-      ];
-
-      setContactedCustomers(initialContactedCustomers);
-      setOverduePayments(initialOverduePayments);
-      updateStats(initialContactedCustomers, initialOverduePayments);
-      
-      // Save to localStorage
-      localStorage.setItem('contactedCustomers', JSON.stringify(initialContactedCustomers));
-      localStorage.setItem('overduePayments', JSON.stringify(initialOverduePayments));
+  // Fetch customers from backend API
+  const [completedCustomers, setCompletedCustomers] = useState([]);
+  const fetchCustomers = async () => {
+    try {
+      // Get the logged-in user's ID
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const callerId = userData.id;
+      if (!callerId) {
+        console.error('No caller ID found in localStorage');
+        return;
+      }
+      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const data = await response.json();
+      if (data.success && data.data) {
+        // Separate customers by status
+        const contacted = data.data.filter(c => 
+          c.status === 'PENDING' && 
+          c.contactHistory && 
+          c.contactHistory.length > 0
+        );
+        const overdue = data.data.filter(c => 
+          c.status === 'OVERDUE' || 
+          (c.status === 'PENDING' && (!c.contactHistory || c.contactHistory.length === 0))
+        );
+        const completed = data.data.filter(c => c.status === 'COMPLETED');
+        // Map MongoDB _id to id for frontend compatibility
+        const formattedContacted = contacted.map(c => ({ ...c, id: c._id }));
+        const formattedOverdue = overdue.map(c => ({ ...c, id: c._id }));
+        const formattedCompleted = completed.map(c => ({ ...c, id: c._id }));
+        setContactedCustomers(formattedContacted);
+        setOverduePayments(formattedOverdue);
+        setCompletedCustomers(formattedCompleted);
+        // Update stats with completed count from all data
+        const completedCount = completed.length;
+        updateStats(formattedContacted, formattedOverdue, completedCount);
+      }
+    } catch (error) {
+      console.error('Error fetching customers from backend:', error);
+      alert('Failed to load customer data. Please check if the backend server is running.');
     }
+  };
+
+  // Initialize by fetching from backend
+  useEffect(() => {
+    fetchCustomers();
   }, []);
 
   // Update statistics based on data
-  const updateStats = (contacted, overdue) => {
-    const totalCustomers = contacted.length + overdue.length;
+  const updateStats = (contacted, overdue, completedCount = 0) => {
+    // Get all assigned customers (excluding COMPLETED)
+    const allActiveCustomers = contacted.length + overdue.length;
+    
+    // Only count customers with contact history as "contacted"
     const contactedCount = contacted.length;
-    const completedCount = contacted.filter(c => c.status === "COMPLETED").length;
-    const pendingCount = contacted.filter(c => c.status === "PENDING").length + overdue.length;
+    
+    const pendingCount = contacted.length + overdue.length;
 
     setStats([
-      { type: "customers", value: totalCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
+      { type: "customers", value: allActiveCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
       { type: "contacted", value: contactedCount.toString(), label: "Customers Contacted", color: "#90e4f7ff" },
       { type: "completed", value: completedCount.toString(), label: "Payments Completed", color: "#90e4f7ff" },
       { type: "pending", value: pendingCount.toString(), label: "Pending Payments", color: "#90e4f7ff" },
@@ -169,154 +92,133 @@ function CallerDashboard() {
   };
 
   // Handle accepting customer request from admin
-  const handleAcceptRequest = (customersData) => {
-    // customersData can be a single customer object or an array of customers
-    const customersArray = Array.isArray(customersData) ? customersData : [customersData];
-    
-    // Add all accepted customers with OVERDUE status
-    const customersWithOverdueStatus = customersArray.map(customer => ({
-      ...customer,
-      status: "OVERDUE"
-    }));
-    
-    // Add to overdue payments list (they will be OVERDUE until contacted)
-    setOverduePayments(prevOverduePayments => {
-      const newOverduePayments = [...prevOverduePayments, ...customersWithOverdueStatus];
-      // Update stats with the new data
-      updateStats(contactedCustomers, newOverduePayments);
-      // Save to localStorage so CallerTasks can see the new customers
-      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-      console.log(`${customersArray.length} customer(s) added from admin request`);
-      
-      // Save to localStorage for Tasks page
-      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-      
-      return newOverduePayments;
-    });
+  const handleAcceptRequest = async () => {
+    // After accepting requests via API, refetch all customers from backend
+    console.log('Requests accepted, refetching customers from database...');
+    await fetchCustomers();
   };
 
   // Handle saving customer details from modal
-  const handleSaveCustomerDetails = (accountNumber, data) => {
+  const handleSaveCustomerDetails = async (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
+    
+    console.log('=== SAVING CUSTOMER DETAILS (CallerDashboard) ===');
+    console.log('Account/ID:', accountNumber);
+    console.log('Data:', data);
     
     // Check if customer is in overdue list
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
+    const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
     
-    if (overdueCustomer) {
-      
-      // status from OVERDUE to PENDING or COMPLETED
-      const updatedCustomer = {
-        ...overdueCustomer,
-        status: paymentMade ? "COMPLETED" : "PENDING",
-        response: customerResponse,
-        previousResponse: customerResponse,
-        contactHistory: [
-          ...overdueCustomer.contactHistory,
-          {
-            date: formatDate(new Date()),
-            outcome: callOutcome,
-            response: customerResponse,
-            promisedDate: promisedDate,
-            paymentMade: paymentMade
-          }
-        ]
+    if (!existingCustomer) {
+      console.error('❌ Customer not found');
+      alert('Customer not found');
+      return;
+    }
+    
+    console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer._id);
+    
+    try {
+      const requestBody = {
+        callOutcome,
+        customerResponse,
+        paymentMade,
+        promisedDate
       };
-
-      // Remove from overdue (status is no longer OVERDUE)
-      const newOverduePayments = overduePayments.filter(p => p.id !== accountNumber);
       
-      // Add to contacted (status is now PENDING or COMPLETED)
-      const newContactedCustomers = [...contactedCustomers, updatedCustomer];
-
-      setOverduePayments(newOverduePayments);
-      setContactedCustomers(newContactedCustomers);
-      updateStats(newContactedCustomers, newOverduePayments);
-      
-      // Save to localStorage
-      localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
-      localStorage.setItem('overduePayments', JSON.stringify(newOverduePayments));
-    } else {
-      // Update existing contacted customer (already PENDING or COMPLETED)
-      const newContactedCustomers = contactedCustomers.map(c => {
-        if (c.id === accountNumber) {
-          const updated = {
-            ...c,
-            status: paymentMade ? "COMPLETED" : "PENDING",
-            response: customerResponse,
-            previousResponse: customerResponse,
-            contactHistory: [
-              ...c.contactHistory,
-              {
-                date: formatDate(new Date()),
-                outcome: callOutcome,
-                response: customerResponse,
-                promisedDate: promisedDate,
-                paymentMade: paymentMade
-              }
-            ]
-          };
-          return updated;
-        }
-        return c;
+      console.log('Sending request to backend:', {
+        url: `${API_BASE_URL}/customers/${existingCustomer._id}/contact`,
+        body: requestBody
       });
-
-      setContactedCustomers(newContactedCustomers);
-      updateStats(newContactedCustomers, overduePayments);
       
-      // Save to localStorage
-      localStorage.setItem('contactedCustomers', JSON.stringify(newContactedCustomers));
+      // Save to backend API using the contact endpoint
+      const response = await fetch(`${API_BASE_URL}/customers/${existingCustomer._id}/contact`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      const result = await response.json();
+      console.log('Backend response:', result);
+      
+      if (result.success) {
+        console.log('✅ Customer updated successfully in database');
+        
+        // Refetch all customers from backend to get the latest data
+        await fetchCustomers();
+        console.log('✅ Customers refreshed from database');
+      } else {
+        console.error('❌ Failed to update customer:', result.message);
+        alert('Failed to save: ' + result.message);
+      }
+    } catch (error) {
+      console.error('❌ Error saving customer details to backend:', error);
+      alert('Failed to save customer details. Please try again.');
     }
   };
 
-  // Get completed payments from contacted customers
+  // Get completed payments for this caller
   const getCompletedPayments = () => {
-    return contactedCustomers
-      .filter(customer => customer.status === "COMPLETED")
-      .map(customer => ({
-        name: customer.name,
-        date: customer.date,
-        accountNumber: customer.accountNumber
-      }));
+    // Show all completed customers assigned to this caller
+    return completedCustomers.map(customer => ({
+      accountNumber: customer.accountNumber,
+      name: customer.name,
+      contactNumber: customer.contactNumber,
+      amountPaid: customer.amountPaid || customer.amountOverdue || '-',
+      paymentDate: customer.paymentDate || (customer.contactHistory && customer.contactHistory.length > 0
+        ? (customer.contactHistory.find(h => h.paymentMade) ? customer.contactHistory.find(h => h.paymentMade).date : '-')
+        : '-')
+    }));
   };
 
   // Calculate weekly calls based on contact history (Monday to Sunday)
-  // Using useMemo to recalculate when contactedCustomers changes
+  // Use all assigned customers, including COMPLETED, for weekly calls
   const weeklyCalls = useMemo(() => {
     const calls = [0, 0, 0, 0, 0, 0, 0]; // Mon, Tue, Wed, Thu, Fri, Sat, Sun
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Set to end of today
-    
-    // Get the start of the week (7 days ago from today)
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 6); 
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Count calls from contacted customers' contact history
-    contactedCustomers.forEach(customer => {
+    // Get all assigned customers from backend data (contacted, overdue, and completed)
+    const allAssignedCustomers = [
+      ...contactedCustomers,
+      ...overduePayments,
+      ...completedCustomers
+    ];
+
+    allAssignedCustomers.forEach(customer => {
       if (customer.contactHistory && customer.contactHistory.length > 0) {
         customer.contactHistory.forEach(contact => {
-          // Parse contact date (DD/MM/YYYY format)
-          const [day, month, year] = contact.date.split('/');
-          const contactDate = new Date(year, month - 1, day);
-          contactDate.setHours(12, 0, 0, 0); 
-          
-          // Check if contact is within last 7 days
+          if (!contact.contactDate) return;
+          let contactDate;
+          if (contact.contactDate.includes('/')) {
+            const [day, month, year] = contact.contactDate.split('/');
+            contactDate = new Date(year, month - 1, day);
+          } else {
+            contactDate = new Date(contact.contactDate);
+          }
+          contactDate.setHours(12, 0, 0, 0);
           if (contactDate >= sevenDaysAgo && contactDate <= today) {
             const dayOfWeek = contactDate.getDay(); // 0 = Sunday, 6 = Saturday
-            // Convert to Monday-first format: Mon=0, Tue=1, ..., Sun=6
             const mondayFirstIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
             calls[mondayFirstIndex]++;
           }
         });
       }
     });
-
     return calls;
-  }, [contactedCustomers]); 
+  }, [contactedCustomers, overduePayments, completedCustomers]);
 
+  // Get user data from localStorage
+  const storedUserData = JSON.parse(localStorage.getItem('userData') || '{}');
+  
   const userData = {
-    name: "Caller",
-    avatar: "https://via.placeholder.com/80",
+    name: storedUserData.name || "Caller",
+    avatar: storedUserData.avatar,
     weeklyCalls: weeklyCalls,
     completedPayments: getCompletedPayments(),
   };

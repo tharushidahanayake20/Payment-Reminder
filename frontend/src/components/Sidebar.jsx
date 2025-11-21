@@ -12,6 +12,10 @@ import { NavLink } from "react-router-dom";
 import { MdOutlineFileUpload } from "react-icons/md";
 
 export default function Sidebar() {
+  // Get user role from localStorage
+  const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+  const userRole = userData.role || 'caller';
+
   return (
     <>
       <div className="sidebar">
@@ -24,7 +28,7 @@ export default function Sidebar() {
           <ul>
             <li>
               <NavLink
-                to="/dashboard"
+                to={userRole === 'admin' ? '/admin' : '/dashboard'}
                 className={({ isActive }) =>
                   `menu-item${isActive ? " active" : ""}`
                 }
@@ -35,7 +39,7 @@ export default function Sidebar() {
             </li>
             <li>
               <NavLink
-                to="/tasks"
+                to={userRole === 'admin' ? '/admin/tasks' : '/tasks'}
                 className={({ isActive }) =>
                   `menu-item${isActive ? " active" : ""}`
                 }
@@ -55,20 +59,23 @@ export default function Sidebar() {
                 <span>Customers</span>
               </NavLink>
             </li>
+            {userRole === 'admin' && (
+              <li>
+                <NavLink
+                  to="/employees"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <TbPhoneCall />
+                  <span>Employees</span>
+                </NavLink>
+              </li>
+            )}
+            
             <li>
               <NavLink
-                to="/employees"
-                className={({ isActive }) =>
-                  `menu-item${isActive ? " active" : ""}`
-                }
-              >
-                <TbPhoneCall />
-                <span>Employees</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/reports"
+                to={userRole === 'admin' ? '/admin/reports' : '/reports'}
                 className={({ isActive }) =>
                   `menu-item${isActive ? " active" : ""}`
                 }

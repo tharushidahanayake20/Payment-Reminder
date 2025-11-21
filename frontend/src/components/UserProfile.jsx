@@ -3,6 +3,7 @@ import "./UserProfile.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import PaymentCalendar from "./PaymentCalendar";
 import AdminRequestsModal from "./AdminRequestsModal";
+import API_BASE_URL from "../config/api";
 
 function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -10,19 +11,35 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
   const [todayPaymentsCount, setTodayPaymentsCount] = useState(0);
   const [pendingRequestsCount, setPendingRequestsCount] = useState(0);
 
-  // Check for pending requests from admin
+  // Check for pending requests from MongoDB
   useEffect(() => {
-    const checkPendingRequests = () => {
-      const pendingRequest = localStorage.getItem('pendingAdminRequest');
-      const count = pendingRequest ? 1 : 0;
-      console.log('Checking pending requests... Found:', count);
-      setPendingRequestsCount(count);
+    const checkPendingRequests = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const callerId = userData.id;
+        
+        console.log('UserProfile - Logged in user data:', userData);
+        console.log('UserProfile - Fetching requests for callerId:', callerId);
+        
+        if (!callerId) return;
+        
+        const response = await fetch(`${API_BASE_URL}/requests?callerId=${callerId}&status=PENDING`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          const count = data.data?.length || 0;
+          console.log('Checking pending requests from MongoDB... Found:', count);
+          setPendingRequestsCount(count);
+        }
+      } catch (error) {
+        console.error('Error fetching pending requests:', error);
+      }
     };
 
     checkPendingRequests();
     
-    // Check every 3 seconds for new requests
-    const interval = setInterval(checkPendingRequests, 3000);
+    // Check every 10 seconds for new requests
+    const interval = setInterval(checkPendingRequests, 10000);
     
     return () => clearInterval(interval);
   }, []);
@@ -60,16 +77,17 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
     setIsRequestsModalOpen(false);
   };
 
-  const handleAcceptRequest = (customerData, requestId) => {
-    // Pass the accepted customer data to parent component (CallerDashboard)
+  const handleAcceptRequest = () => {
+    // Notify parent component (CallerDashboard) to refetch customers from database
     if (onAcceptRequest) {
-      onAcceptRequest(customerData);
+      onAcceptRequest();
     }
-    console.log("Accepted customer:", customerData);
+    console.log("Requests accepted, customers will be refetched from database");
   };
 
-  const handleDeclineRequest = (requestId) => {
-    console.log("Declined request ID:", requestId);
+  const handleDeclineRequest = () => {
+    console.log("Request declined");
+    // No need to refetch since nothing was added
   };
 
   const handleRequestProcessed = () => {
@@ -88,7 +106,14 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
         
         <div className="profile-card">
           <div className="profile-avatar">
-            <img src={user.avatar || "https://via.placeholder.com/80"} alt={user.name} />
+            <img 
+              src={user.avatar || "https://via.placeholder.com/80"} 
+              alt={user.name}
+              onError={(e) => {
+                console.log('Avatar failed to load, using fallback');
+                e.target.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.name) + "&background=2743B3&color=fff&size=80";
+              }}
+            />
           </div>
           <p className="profile-greeting">Good Morning, ({user.name})</p>
           
@@ -146,35 +171,42 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
           </div>
           
           <div className="payments-list">
-            {user.completedPayments.map((payment, index) => (
-              <div key={index} className="payment-item">
-                <div className="payment-info">
-                  <strong>{payment.name}</strong>
-                  <span className="payment-id">Account Number: {payment.accountNumber}</span>
-                  <span className="payment-date">{payment.date}</span>
+            {user.completedPayments && user.completedPayments.length > 0 ? (
+              user.completedPayments.map((payment, index) => (
+                <div key={index} className="payment-item">
+                  <div className="payment-info">
+                    <strong>{payment.name}</strong>
+                    <span className="payment-id">Account Number: {payment.accountNumber}</span>
+                    <span className="payment-date">{payment.date}</span>
+                  </div>
+                  <span className="payment-badge">Paid</span>
                 </div>
-                <span className="payment-badge">Paid</span>
+              ))
+            ) : (
+              <div className="no-payments-message">
+                <p>No completed payments yet</p>
               </div>
-            ))}
+            )}
           </div>
           
           <button className="see-all-btn">See All</button>
         </div>
       </div>
 
-    <PaymentCalendar
-      isOpen={isCalendarOpen}
-      onClose={handleCloseCalendar}
-      promisedPayments={promisedPayments}
-    />
+      <PaymentCalendar
+        isOpen={isCalendarOpen}
+        onClose={handleCloseCalendar}
+        promisedPayments={promisedPayments}
+      />
 
-    <AdminRequestsModal
-      isOpen={isRequestsModalOpen}
-      onClose={handleCloseRequests}
-      onAccept={handleAcceptRequest}
-      onDecline={handleDeclineRequest}
-      onRequestProcessed={handleRequestProcessed}
-    />
+      <AdminRequestsModal
+        isOpen={isRequestsModalOpen}
+        onClose={handleCloseRequests}
+        onAccept={handleAcceptRequest}
+        onDecline={handleDeclineRequest}
+        onRequestProcessed={handleRequestProcessed}
+        callerId={JSON.parse(localStorage.getItem('userData') || '{}').id}
+      />
     </>
   );
 }

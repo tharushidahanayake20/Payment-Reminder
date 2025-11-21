@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "./CallerTasks.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import ShowCustomerDetailsModal from "../components/ShowCustomerDetailsModal";
+import API_BASE_URL from "../config/api";
 
 function CallerTasks() {
   const [allCustomers, setAllCustomers] = useState([]);
@@ -10,90 +11,34 @@ function CallerTasks() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Load customers from localStorage (or API in future)
-  const loadCustomers = () => {
-    const contactedStr = localStorage.getItem('contactedCustomers');
-    const overdueStr = localStorage.getItem('overduePayments');
-    
-    let customers = [];
-    
-    if (contactedStr) {
-      const contacted = JSON.parse(contactedStr);
-      customers = [...customers, ...contacted];
-    }
-    
-    if (overdueStr) {
-      const overdue = JSON.parse(overdueStr);
-      customers = [...customers, ...overdue];
-    }
+  // Load customers assigned to the logged-in caller
+  const loadCustomers = async () => {
+    try {
+      // Get logged-in user info
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const callerId = userData.id;
 
-    // If no data, use sample data
-    if (customers.length === 0) {
-      const today = new Date();
-      const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-      
-      customers = [
-        {
-          id: 1,
-          accountNumber: "1001",
-          name: "Kumar Singh",
-          date: todayString,
-          status: "PENDING",
-          response: "Will Be Paid Next Week",
-          contactNumber: "070 454 5457",
-          amountOverdue: "Rs.2000",
-          daysOverdue: "16",
-          previousResponse: "Said would pay last Friday",
-          contactHistory: [
-            { 
-              date: todayString, 
-              outcome: "Spoke to Customer", 
-              response: "Said would pay last Friday", 
-              promisedDate: todayString,
-              paymentMade: false 
-            }
-          ]
-        },
-        {
-          id: 2,
-          accountNumber: "1002",
-          name: "Ravi Kumar",
-          date: todayString,
-          status: "COMPLETED",
-          response: "Payment Will Be Done After The Call",
-          contactNumber: "070 123 4567",
-          amountOverdue: "Rs.1500",
-          daysOverdue: "8",
-          previousResponse: "Will pay after receiving salary",
-          contactHistory: [
-            { 
-              date: todayString, 
-              outcome: "Spoke to Customer", 
-              response: "Will pay after receiving salary", 
-              promisedDate: todayString,
-              paymentMade: true 
-            }
-          ]
-        },
-        {
-          id: 3,
-          accountNumber: "1003",
-          name: "Ash Kumar",
-          date: todayString,
-          status: "OVERDUE",
-          response: "Not Contacted Yet",
-          contactNumber: "070 789 4561",
-          amountOverdue: "Rs.3500",
-          daysOverdue: "22",
-          previousResponse: "No previous contact",
-          contactHistory: []
-        }
-      ];
-    }
+      if (!callerId) {
+        console.error('No caller ID found in session');
+        setLoading(false);
+        return;
+      }
 
-    setAllCustomers(customers);
-    setFilteredCustomers(customers);
+      // Fetch customers assigned to this caller
+      const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setAllCustomers(data.data);
+        setFilteredCustomers(data.data);
+      }
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Load customers on mount
@@ -137,48 +82,45 @@ function CallerTasks() {
     setSelectedCustomer(null);
   };
 
-  const handleSaveCustomerDetails = (accountNumber, data) => {
-    const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
-    
-    // Format current date as DD/MM/YYYY
-    const today = new Date();
-    const todayString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-    
-    // Update customer in allCustomers
-    const updatedCustomers = allCustomers.map(customer => {
-      if (customer.id === accountNumber) {
-        return {
-          ...customer,
-          status: paymentMade ? "COMPLETED" : "PENDING",
-          response: customerResponse,
-          previousResponse: customerResponse,
-          contactHistory: [
-            ...(customer.contactHistory || []),
-            {
-              date: todayString,
-              outcome: callOutcome,
-              response: customerResponse,
-              promisedDate: promisedDate,
-              paymentMade: paymentMade
-            }
-          ]
-        };
+  const handleSaveCustomerDetails = async (customerId, data) => {
+    try {
+      const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
+      
+      console.log('=== SAVING CUSTOMER DETAILS ===');
+      console.log('Customer ID:', customerId);
+      console.log('Data:', data);
+      
+      // Update customer via API
+      const response = await fetch(`${API_BASE_URL}/customers/${customerId}/contact`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          callOutcome,
+          customerResponse,
+          paymentMade,
+          promisedDate
+        })
+      });
+
+      const result = await response.json();
+      console.log('Response:', result);
+
+      if (result.success) {
+        console.log("✅ Customer details saved successfully");
+        // Close modal first
+        handleCloseModal();
+        // Then reload customers to get updated data
+        await loadCustomers();
+      } else {
+        console.error('❌ Error saving customer details:', result.message);
+        alert('Failed to save: ' + result.message);
       }
-      return customer;
-    });
-    
-    // Update allCustomers state
-    setAllCustomers(updatedCustomers);
-    
-    // Save to localStorage
-    const contactedCustomers = updatedCustomers.filter(c => c.status === "PENDING" || c.status === "COMPLETED");
-    const overduePayments = updatedCustomers.filter(c => c.status === "OVERDUE");
-    
-    localStorage.setItem('contactedCustomers', JSON.stringify(contactedCustomers));
-    localStorage.setItem('overduePayments', JSON.stringify(overduePayments));
-    
-    console.log("Customer details saved:", accountNumber, data);
-    handleCloseModal();
+    } catch (error) {
+      console.error('❌ Error saving customer details:', error);
+      alert('Failed to save customer details. Please try again.');
+    }
   };
 
   const getStatusBadgeClass = (status) => {
@@ -257,9 +199,17 @@ function CallerTasks() {
 
       {/* Customer Cards Grid */}
       <div className="tasks-grid">
-        {filteredCustomers.length > 0 ? (
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-content">
+              <div className="spinner"></div>
+              <h3>Loading Tasks</h3>
+              <p>Please wait while we fetch your assigned customers...</p>
+            </div>
+          </div>
+        ) : filteredCustomers.length > 0 ? (
           filteredCustomers.map((customer) => (
-            <div key={customer.id} className={`task-card ${getPriorityClass(customer.daysOverdue)}`}>
+            <div key={customer._id} className={`task-card ${getPriorityClass(customer.daysOverdue)}`}>
               <div className="task-card-header">
                 <div className="customer-info">
                   <h3>{customer.name}</h3>
@@ -290,16 +240,26 @@ function CallerTasks() {
                   </span>
                 </div>
 
+                {customer.contactHistory && customer.contactHistory.length > 0 && (
+                  <>
+                    <div className="last-contact">
+                      <i className="bi bi-clock-history"></i>
+                      <span>Last contacted: {customer.contactHistory[customer.contactHistory.length - 1].contactDate}</span>
+                    </div>
+                    
+                    {customer.contactHistory[customer.contactHistory.length - 1].promisedDate && (
+                      <div className="promised-date">
+                        <i className="bi bi-calendar-check"></i>
+                        <span>Promised to pay: {customer.contactHistory[customer.contactHistory.length - 1].promisedDate}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
                 {customer.response && customer.status !== "OVERDUE" && (
                   <div className="customer-response">
                     <span className="response-label">Latest Response:</span>
                     <p>"{customer.response}"</p>
-                  </div>
-                )}
-
-                {customer.contactHistory && customer.contactHistory.length > 0 && (
-                  <div className="last-contact">
-                    <span>Last contact: {customer.contactHistory[customer.contactHistory.length - 1].date}</span>
                   </div>
                 )}
               </div>
