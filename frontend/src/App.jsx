@@ -15,6 +15,7 @@ import AdminReport from "./pages/AdminReport";
 import CallerTasks from "./pages/CallerTasks";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminTasks from "./pages/AdminTasks";
+import UploadPage from "./pages/UploadPage";
 
 
 function App() {
