@@ -149,6 +149,40 @@ const Settings = () => {
     }
   };
 
+  // Remove profile image (clear avatar on server and update local state/storage)
+  const removeProfileImage = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      setMessage('');
+
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API_BASE_URL}/settings/profile`,
+        { avatar: '' },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Clear local state and localStorage
+      setFormData(prev => ({ ...prev, avatar: '' }));
+      setAvatarPreview('');
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      localStorage.setItem('userData', JSON.stringify({ ...userData, avatar: '' }));
+      window.dispatchEvent(new Event('storage'));
+
+      setMessage('Profile image removed');
+    } catch (err) {
+      console.error('Remove profile image error:', err);
+      setError(err.response?.data?.msg || 'Failed to remove profile image');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Update profile information (name, email, phone)
   const updateProfileInfo = async () => {
     try {
@@ -435,7 +469,7 @@ const Settings = () => {
                       type="button"
                       className="remove-image-btn"
                       style={{ color: '#d00', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.95em' }}
-                      onClick={() => { setFormData(prev => ({ ...prev, avatar: '' })); setAvatarPreview(''); }}
+                      onClick={removeProfileImage}
                       disabled={loading}
                     >Remove Image</button>
                   </>
