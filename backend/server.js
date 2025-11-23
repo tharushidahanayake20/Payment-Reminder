@@ -22,7 +22,7 @@ import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
-
+import settingsRoutes from './routes/settingsRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -49,6 +49,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
