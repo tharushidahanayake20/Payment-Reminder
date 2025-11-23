@@ -47,7 +47,7 @@ router.get('/profile', verifyToken, async (req, res) => {
 // Update caller or admin profile (including avatar as base64)
 router.post('/profile', async (req, res) => {
   try {
-    const { callerId, adminId, name, email, phoneNumber, avatar } = req.body;
+  const { callerId, adminId, name, email, phone, avatar } = req.body;
     const userId = callerId || adminId;
     if (!userId) {
       return res.status(400).json({ success: false, message: 'callerId or adminId is required.' });
@@ -71,7 +71,7 @@ router.post('/profile', async (req, res) => {
     // Update fields
     if (name) user.name = name;
     if (email) user.email = email;
-    if (phoneNumber) user.phone = phoneNumber;
+  if (phone) user.phone = phone;
     if (avatar !== undefined) user.avatar = avatar; // Allow empty string to clear avatar
     
     await user.save();
