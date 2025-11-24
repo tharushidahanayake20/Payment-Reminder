@@ -92,11 +92,19 @@ const callerSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  preferences: {
+    emailNotifications: { type: Boolean, default: true },
+    paymentReminder: { type: Boolean, default: true },
+    callNotifications: { type: Boolean, default: false },
+    darkMode: { type: Boolean, default: false },
+    language: { type: String, default: 'English' },
+    timezone: { type: String, default: 'UTC' }
   }
 });
 
 // Update the updatedAt field on save
-callerSchema.pre('save', function(next) {
+callerSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });
