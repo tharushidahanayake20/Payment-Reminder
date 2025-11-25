@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { uploadExcelFile, importCustomers } from '../controllers/uploadController.js';
+import { uploadExcelFile, importCustomers, parseAndImport } from '../controllers/uploadController.js';
 import isAuthenticated from '../middleware/isAuthenticated.js';
 
 const router = express.Router();
@@ -34,5 +34,8 @@ router.post('/parse', isAuthenticated, upload.single('file'), uploadExcelFile);
 
 // Import customers from Excel to database
 router.post('/import-customers', isAuthenticated, upload.single('file'), importCustomers);
+
+// Parse and import Excel file to database immediately
+router.post('/parse-and-import', isAuthenticated, upload.single('file'), parseAndImport);
 
 export default router;
