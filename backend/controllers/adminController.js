@@ -11,9 +11,10 @@ const getDashboardStats = async (req, res) => {
     const assignedCallers = await Caller.countDocuments({ taskStatus: { $in: ['ONGOING', 'COMPLETED'] } });
     const unassignedCallers = await Caller.countDocuments({ taskStatus: 'IDLE' });
     
-    // Get customers contacted (those with contactHistory)
+    // Get customers contacted from ACCEPTED requests only (those with contactHistory and assigned to someone)
     const customersContacted = await Customer.countDocuments({
-      contactHistory: { $exists: true, $ne: [] }
+      contactHistory: { $exists: true, $ne: [] },
+      assignedTo: { $exists: true, $ne: null }
     });
     
     // Get completed payments
@@ -50,21 +51,40 @@ const getAssignedCallers = async (req, res) => {
     const assignedCallers = await Caller.find({ 
       taskStatus: { $in: ['ONGOING', 'COMPLETED'] } 
     })
-    .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers')
-    .populate({
-      path: 'assignedCustomers',
-      select: 'accountNumber name contactNumber amountOverdue status'
-    });
+    .select('name callerId taskStatus customersContacted currentLoad maxLoad assignedCustomers');
 
-    const formattedCallers = assignedCallers.map(caller => ({
-      id: caller._id,
-      name: caller.name,
-      callerId: caller.callerId,
-      task: caller.taskStatus,
-      customersContacted: caller.customersContacted,
-      currentLoad: caller.currentLoad,
-      maxLoad: caller.maxLoad,
-      assignedCustomers: caller.assignedCustomers
+    const formattedCallers = await Promise.all(assignedCallers.map(async caller => {
+      // Get active request for this caller to find taskId and customer count
+      const activeRequest = await Request.findOne({ 
+        caller: caller._id,
+        isCompleted: false 
+      }).select('taskId customersSent').lean();
+      
+      // Get customers from the current active task only
+      let completedCount = 0;
+      let totalAssigned = 0;
+      
+      if (activeRequest && activeRequest.taskId) {
+        // Get customers assigned to this caller with the current task ID
+        const taskCustomers = await Customer.find({ 
+          assignedTo: caller._id,
+          taskId: activeRequest.taskId
+        }).select('status').lean();
+        
+        totalAssigned = taskCustomers.length;
+        completedCount = taskCustomers.filter(c => c.status === 'COMPLETED').length;
+      }
+      
+      return {
+        id: caller._id,
+        name: caller.name,
+        callerId: caller.callerId,
+        task: activeRequest ? activeRequest.taskId : 'N/A',
+        taskStatus: caller.taskStatus,
+        customersContacted: `${completedCount}/${totalAssigned}`,
+        currentLoad: caller.currentLoad,
+        maxLoad: caller.maxLoad
+      };
     }));
 
     res.status(200).json({
@@ -186,9 +206,10 @@ const getWeeklyCalls = async (req, res) => {
     sevenDaysAgo.setDate(today.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Get all customers with contact history
+
+    // Get all customers with contact history, including COMPLETED
     const customers = await Customer.find({
-      'contactHistory.0': { $exists: true }
+      contactHistory: { $exists: true, $ne: [] }
     });
 
     const weeklyCalls = [0, 0, 0, 0, 0, 0, 0]; // Mon-Sun
@@ -196,8 +217,15 @@ const getWeeklyCalls = async (req, res) => {
     customers.forEach(customer => {
       if (customer.contactHistory && customer.contactHistory.length > 0) {
         customer.contactHistory.forEach(contact => {
-          const contactDate = new Date(contact.date);
-          
+          // Parse contactDate field (DD/MM/YYYY format)
+          if (!contact.contactDate) return;
+          let contactDate;
+          if (contact.contactDate.includes('/')) {
+            const [day, month, year] = contact.contactDate.split('/');
+            contactDate = new Date(year, month - 1, day);
+          } else {
+            contactDate = new Date(contact.contactDate);
+          }
           if (contactDate >= sevenDaysAgo && contactDate <= today) {
             const dayOfWeek = contactDate.getDay();
             const mondayFirstIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
@@ -264,12 +292,19 @@ const getCompletedPayments = async (req, res) => {
 // @access  Public
 const getCallerDetails = async (req, res) => {
   try {
-    const caller = await Caller.findById(req.params.id)
-      .select('-password')
-      .populate({
-        path: 'assignedCustomers',
-        select: 'accountNumber name contactNumber amountOverdue daysOverdue status contactHistory'
-      });
+    console.log('=== GET CALLER DETAILS ===');
+    console.log('Caller ID:', req.params.id);
+    
+    // Try to find caller by MongoDB _id first, then by callerId string
+    let caller = await Caller.findById(req.params.id).select('-password').catch(() => null);
+    
+    if (!caller) {
+      // If not found by _id, try finding by callerId field
+      console.log('Not found by _id, trying callerId field...');
+      caller = await Caller.findOne({ callerId: req.params.id }).select('-password');
+    }
+    
+    console.log('Caller found:', caller ? caller.name : 'NOT FOUND');
 
     if (!caller) {
       return res.status(404).json({
@@ -277,6 +312,44 @@ const getCallerDetails = async (req, res) => {
         message: 'Caller not found'
       });
     }
+
+    // Find all active (non-completed) requests for this caller
+    console.log('Fetching active requests for caller ID:', caller._id);
+    const activeRequests = await Request.find({ 
+      caller: caller._id,
+      isCompleted: false 
+    }).select('taskId customers').lean();
+    
+    console.log('Found', activeRequests.length, 'active requests');
+    console.log('Active task IDs:', activeRequests.map(r => r.taskId).join(', '));
+
+    // Extract customer IDs and task IDs from active requests
+    const activeCustomerIds = new Set();
+    const activeTaskIds = new Set();
+    
+    activeRequests.forEach(request => {
+      if (request.taskId) {
+        activeTaskIds.add(request.taskId);
+      }
+      request.customers.forEach(customer => {
+        if (customer.customerId) {
+          activeCustomerIds.add(customer.customerId.toString());
+        }
+      });
+    });
+
+    console.log('Active customer IDs count:', activeCustomerIds.size);
+    console.log('Active task IDs:', Array.from(activeTaskIds).join(', '));
+
+    // Fetch customers using taskId for better performance and accuracy
+    const assignedCustomers = await Customer.find({ 
+      assignedTo: caller._id,
+      taskId: { $in: Array.from(activeTaskIds) }
+    })
+      .select('accountNumber name contactNumber amountOverdue daysOverdue status contactHistory taskId')
+      .lean();
+    
+    console.log('Found', assignedCustomers.length, 'customers from active requests');
 
     res.status(200).json({
       success: true,
@@ -290,10 +363,11 @@ const getCallerDetails = async (req, res) => {
         currentLoad: caller.currentLoad,
         maxLoad: caller.maxLoad,
         customersContacted: caller.customersContacted,
-        assignedCustomers: caller.assignedCustomers
+        assignedCustomers: assignedCustomers
       }
     });
   } catch (error) {
+    console.error('Error in getCallerDetails:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching caller details',

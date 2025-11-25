@@ -24,9 +24,38 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashed = await bcrypt.hash(password, salt);
 
-    // Generate unique callerId
-    const callerCount = await Caller.countDocuments();
-    const callerId = `CALLER${String(callerCount + 1).padStart(3, '0')}`;
+    // Generate unique callerId - find the highest existing callerId and increment
+    let callerId;
+    let isUnique = false;
+    let attempts = 0;
+    
+    while (!isUnique && attempts < 100) {
+      const lastCaller = await Caller.findOne({}, { callerId: 1 })
+        .sort({ callerId: -1 })
+        .limit(1);
+      
+      let nextNumber = 1;
+      if (lastCaller && lastCaller.callerId) {
+        const match = lastCaller.callerId.match(/CALLER(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+      
+      callerId = `CALLER${String(nextNumber).padStart(3, '0')}`;
+      
+      // Check if this callerId already exists
+      const existingCaller = await Caller.findOne({ callerId });
+      if (!existingCaller) {
+        isUnique = true;
+      } else {
+        attempts++;
+      }
+    }
+    
+    if (!isUnique) {
+      return res.status(500).json({ message: 'Unable to generate unique caller ID' });
+    }
 
     // Generate OTP for phone verification
     const otp = generateOtp();
@@ -40,11 +69,14 @@ export const register = async (req, res) => {
       password: hashed, 
       otp, 
       otpExpiry,
-      isVerified: false 
+      isVerified: false
     });
 
     // Send OTP via SMS
-    await sendOtpSms(phone, otp);
+    sendOtpSms(phone, otp).catch(err => {
+      console.error('SMS sending failed:', err);
+    });
+    console.log(`[DEV MODE] OTP for ${phone}: ${otp}`);
 
     res.status(201).json({ 
       message: 'Registration successful. Please verify your phone number with the OTP sent via SMS.',
@@ -53,7 +85,10 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Register error', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 };
 
@@ -80,7 +115,10 @@ export const login = async (req, res) => {
     await user.save();
 
     // Send OTP via SMS
-    await sendOtpSms(user.phone, otp);
+    sendOtpSms(user.phone, otp).catch(err => {
+      console.error('SMS sending failed:', err);
+    });
+    console.log(`[DEV MODE] OTP for ${user.phone}: ${otp}`);
 
     res.json({ 
       message: 'OTP sent to your registered phone number. Please verify to complete login.',
@@ -180,7 +218,7 @@ export const verifyOtp = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, email: user.email, name: user.name, role: user.role || 'caller' }, 
+      { id: user._id, callerId: user.callerId, email: user.email, name: user.name, role: user.role || 'caller' }, 
       process.env.SECRET_KEY || 'dev_secret', 
       { expiresIn: '1d' }
     );
@@ -189,6 +227,7 @@ export const verifyOtp = async (req, res) => {
       message: 'OTP verified successfully',
       user: { 
         id: user._id, 
+        callerId: user.callerId,
         email: user.email, 
         name: user.name, 
         avatar: user.avatar,
@@ -260,7 +299,10 @@ export const adminLogin = async (req, res) => {
     await admin.save();
 
     // Send OTP via SMS
-    await sendOtpSms(admin.phone, otp);
+    sendOtpSms(admin.phone, otp).catch(err => {
+      console.error('SMS sending failed:', err);
+    });
+    console.log(`[DEV MODE] Admin OTP for ${admin.phone}: ${otp}`);
 
     res.json({ 
       message: 'OTP sent to your registered phone number. Please verify to complete login.',
@@ -293,7 +335,7 @@ export const verifyAdminOtp = async (req, res) => {
     await admin.save();
 
     const token = jwt.sign(
-      { id: admin._id, email: admin.email, name: admin.name, role: 'admin' }, 
+      { id: admin._id, adminId: admin.adminId, email: admin.email, name: admin.name, role: 'admin' }, 
       process.env.SECRET_KEY || 'dev_secret', 
       { expiresIn: '1d' }
     );
@@ -302,6 +344,8 @@ export const verifyAdminOtp = async (req, res) => {
       message: 'OTP verified successfully',
       user: { 
         id: admin._id, 
+        adminId: admin.adminId,
+        callerId: admin.adminId,
         email: admin.email, 
         name: admin.name, 
         avatar: admin.avatar,
@@ -315,4 +359,36 @@ export const verifyAdminOtp = async (req, res) => {
   }
 };
 
-export default { register, login, logout, getProfile, forgotPassword, verifyOtp, resetPassword, adminLogin, verifyAdminOtp };
+// POST /auth/change-password
+export const changePassword = async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+    if (!email || !currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Email, current password, and new password are required' });
+    }
+
+    // Find user by email
+    const user = await Caller.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    return res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('changePassword error', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export default { register, login, logout, getProfile, forgotPassword, verifyOtp, resetPassword, adminLogin, verifyAdminOtp, changePassword };

@@ -39,7 +39,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   // Get the most recent response
   const getLatestResponse = () => {
     if (customer.contactHistory && customer.contactHistory.length > 0) {
-      return customer.contactHistory[customer.contactHistory.length - 1].response;
+      return customer.contactHistory[customer.contactHistory.length - 1].remark;
     }
     return customer.previousResponse || "No previous contact";
   };
@@ -52,7 +52,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
     }
     
     if (onSave) {
-      onSave(customer.id, {
+      onSave(customer._id || customer.id, {
         callOutcome,
         customerResponse,
         paymentMade,
@@ -135,13 +135,13 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                           <div key={index} className="response-item">
                             <div className="response-date">
                               <i className="bi bi-calendar3"></i>
-                              {contact.date}
+                              {contact.contactDate}
                             </div>
                             <div className="response-outcome">
                               <strong>Outcome:</strong> {contact.outcome}
                             </div>
                             <div className="response-text-full">
-                              <strong>Response:</strong> {contact.response}
+                              <strong>Response:</strong> {contact.remark}
                             </div>
                             {contact.promisedDate && (
                               <div className="response-promised">

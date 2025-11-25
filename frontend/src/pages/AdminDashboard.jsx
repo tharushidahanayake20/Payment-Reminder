@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AdminDashboard.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import AdminSentRequestsModal from "../components/AdminSentRequestsModal";
@@ -6,9 +7,11 @@ import CallerDetailsModal from "../components/CallerDetailsModal";
 import API_BASE_URL from "../config/api";
 
 function AdminDashboard() {
+  const navigate = useNavigate();
   const [isRequestsModalOpen, setIsRequestsModalOpen] = useState(false);
   const [isCallerDetailsModalOpen, setIsCallerDetailsModalOpen] = useState(false);
   const [selectedCaller, setSelectedCaller] = useState(null);
+  const [callerDetailsData, setCallerDetailsData] = useState(null);
   const [assignedCallers, setAssignedCallers] = useState([]);
   const [unassignedCallers, setUnassignedCallers] = useState([]);
   const [sentRequests, setSentRequests] = useState([]);
@@ -111,7 +114,7 @@ function AdminDashboard() {
 
       if (weeklyRes.ok) {
         const weeklyData = await weeklyRes.json();
-        setWeeklyCalls(weeklyData.calls || [0, 0, 0, 0, 0, 0, 0]);
+        setWeeklyCalls(weeklyData.data || [0, 0, 0, 0, 0, 0, 0]);
       }
 
       if (paymentsRes.ok) {
@@ -134,6 +137,26 @@ function AdminDashboard() {
 
   const pendingRequestsCount = sentRequests.filter(req => req.status === "PENDING").length;
 
+  // Navigation handlers for stat cards
+  const handleStatClick = (statLabel) => {
+    switch (statLabel) {
+      case "Total Customers":
+        navigate('/customers');
+        break;
+      case "Assigned Callers":
+      case "Unassigned Callers":
+        navigate('/employees');
+        break;
+      case "Customers Contacted":
+      case "Payments Completed":
+      case "Pending Payments":
+        navigate('/report');
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleRequestsClick = () => {
     setIsRequestsModalOpen(true);
   };
@@ -142,14 +165,28 @@ function AdminDashboard() {
     setIsRequestsModalOpen(false);
   };
 
-  const handleShowCallerDetails = (caller) => {
-    setSelectedCaller(caller);
-    setIsCallerDetailsModalOpen(true);
+  const handleShowCallerDetails = async (caller) => {
+    try {
+      setSelectedCaller(caller);
+      setIsCallerDetailsModalOpen(true);
+      
+      // Fetch detailed caller information from backend
+      const response = await fetch(`${API_BASE_URL}/admin/callers/${caller.id}/details`);
+      if (response.ok) {
+        const result = await response.json();
+        setCallerDetailsData(result.data);
+      } else {
+        console.error('Failed to fetch caller details');
+      }
+    } catch (error) {
+      console.error('Error fetching caller details:', error);
+    }
   };
 
   const handleCloseCallerDetails = () => {
     setIsCallerDetailsModalOpen(false);
     setSelectedCaller(null);
+    setCallerDetailsData(null);
   };
 
   /**
@@ -222,12 +259,17 @@ function AdminDashboard() {
       </div>
 
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <div className="loading-text">
-            <h3>Loading Dashboard</h3>
-            <p>Fetching data from database...</p>
-          </div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #1488ee',
+            borderRadius: '50%',
+            margin: '0 auto 20px',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          <p>Loading dashboard...</p>
         </div>
       ) : error ? (
         <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px', color: '#dc3545' }}>
@@ -256,7 +298,13 @@ function AdminDashboard() {
           {/* Stats Cards */}
           <div className="admin-stats-grid">
             {stats.map((stat, index) => (
-              <div key={index} className="admin-stat-card">
+              <div 
+                key={index} 
+                className="admin-stat-card" 
+                onClick={() => handleStatClick(stat.label)}
+                style={{ cursor: 'pointer' }}
+                title={`Click to view ${stat.label.toLowerCase()}`}
+              >
                 <div className="admin-stat-icon" style={{ backgroundColor: stat.color }}>
                   <i className={stat.icon}></i>
                 </div>
@@ -264,8 +312,12 @@ function AdminDashboard() {
                   <h3>{stat.value}</h3>
                   <p>{stat.label}</p>
                 </div>
-                <button className="admin-stat-menu">
-                  <i className="bi bi-three-dots-vertical"></i>
+                <button 
+                  className="admin-stat-menu" 
+                  onClick={(e) => { e.stopPropagation(); fetchDashboardData(false); }}
+                  title="Refresh this stat"
+                >
+                  <i className="bi bi-arrow-clockwise"></i>
                 </button>
               </div>
             ))}
@@ -275,14 +327,14 @@ function AdminDashboard() {
           <div className="admin-assigned-callers-section">
             <div className="admin-section-header">
               <h3>Assigned Callers</h3>
-              <a href="#" className="admin-see-all">See All</a>
+              <button className="admin-see-all" onClick={() => navigate('/employees')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
             <table className="admin-callers-table">
               <thead>
                 <tr>
                   <th>CALLER NAME & ID</th>
                   <th>TASK</th>
-                  <th>CUSTOMERS CONTACTED</th>
+                  <th>TASK PROGRESS</th>
                   <th>ACTIONS</th>
                 </tr>
               </thead>
@@ -296,11 +348,22 @@ function AdminDashboard() {
                       </div>
                     </td>
                     <td>
-                      <span className={`admin-status-badge ${(caller.task || '').toLowerCase()}`}>
+                      <span className="admin-task-id" style={{ 
+                        fontFamily: 'monospace',
+                        fontSize: '0.9em',
+                        padding: '4px 8px',
+                        backgroundColor: '#f0f0f0',
+                        borderRadius: '4px',
+                        color: '#333'
+                      }}>
                         {caller.task || 'N/A'}
                       </span>
                     </td>
-                    <td>{caller.customersContacted || 'N/A'}</td>
+                    <td>
+                      <span style={{ fontWeight: '600', color: '#2e7d32' }}>
+                        {caller.customersContacted || '0/0'}
+                      </span>
+                    </td>
                     <td>
                       <button 
                         className="admin-action-button" 
@@ -319,7 +382,7 @@ function AdminDashboard() {
           <div className="admin-unassigned-callers-section">
             <div className="admin-section-header">
               <h3>Unassigned Callers</h3>
-              <a href="#" className="admin-see-all">See All</a>
+              <button className="admin-see-all" onClick={() => navigate('/employees')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
             <table className="admin-callers-table">
               <thead>
@@ -346,7 +409,7 @@ function AdminDashboard() {
                     </td>
                     <td>{caller.latestWork || 'N/A'}</td>
                     <td>
-                      <button className="admin-action-button assign">ASSIGN WORK</button>
+                      <button className="admin-action-button assign" onClick={() => navigate('/admin/tasks')}>ASSIGN WORK</button>
                     </td>
                   </tr>
                 ))}
@@ -358,7 +421,7 @@ function AdminDashboard() {
           <div className="admin-sent-requests-section">
             <div className="admin-section-header">
               <h3>Sent Requests Status</h3>
-              <a href="#" className="admin-see-all">See All</a>
+              <button className="admin-see-all" onClick={handleRequestsClick} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1488eeff', fontWeight: '500' }}>See All</button>
             </div>
             <table className="admin-callers-table">
               <thead>
@@ -412,8 +475,8 @@ function AdminDashboard() {
           <div className="admin-user-profile-section">
             <div className="admin-profile-header">
               <h4>Your Profile</h4>
-              <button className="admin-menu-btn">
-                <i className="bi bi-three-dots-vertical"></i>
+              <button className="admin-menu-btn" onClick={() => fetchDashboardData(false)} title="Refresh Dashboard">
+                <i className="bi bi-arrow-clockwise"></i>
               </button>
             </div>
             
@@ -433,18 +496,17 @@ function AdminDashboard() {
               })()})</h3>
               
               <div className="admin-profile-actions">
-                <button className="admin-icon-btn">
+                <button className="admin-icon-btn" onClick={() => navigate('/settings')} title="Notifications">
                   <i className="bi bi-bell"></i>
                 </button>
-                <button className="admin-icon-btn" onClick={handleRequestsClick}>
+                <button className="admin-icon-btn" onClick={handleRequestsClick} title="View Requests">
                   <i className="bi bi-envelope"></i>
                   {pendingRequestsCount > 0 && (
                     <span className="admin-notification-badge">{pendingRequestsCount}</span>
                   )}
                 </button>
-                <button className="admin-icon-btn">
+                <button className="admin-icon-btn" onClick={() => navigate('/report')} title="Calendar & Reports">
                   <i className="bi bi-calendar"></i>
-                  <span className="admin-notification-badge">1</span>
                 </button>
               </div>
             </div>
@@ -474,8 +536,8 @@ function AdminDashboard() {
             <div className="admin-completed-payments-section">
               <div className="admin-section-header">
                 <h4>Completed Payments</h4>
-                <button className="admin-add-btn">
-                  <i className="bi bi-plus-circle"></i>
+                <button className="admin-add-btn" onClick={() => navigate('/customers')} title="View All Customers">
+                  <i className="bi bi-eye"></i>
                 </button>
               </div>
               <div className="admin-payments-list">
@@ -489,7 +551,7 @@ function AdminDashboard() {
                   </div>
                 ))}
               </div>
-              <button className="admin-see-all-btn">See All</button>
+              <button className="admin-see-all-btn" onClick={() => navigate('/report')}>See All Payments</button>
             </div>
           </div>
         </div>
@@ -507,6 +569,7 @@ function AdminDashboard() {
       isOpen={isCallerDetailsModalOpen}
       onClose={handleCloseCallerDetails}
       caller={selectedCaller}
+      callerData={callerDetailsData}
     />
     </>
   );

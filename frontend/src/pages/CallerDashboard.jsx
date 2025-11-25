@@ -27,32 +27,40 @@ function CallerDashboard() {
   ]);
 
   // Fetch customers from backend API
+  const [completedCustomers, setCompletedCustomers] = useState([]);
   const fetchCustomers = async () => {
     try {
       // Get the logged-in user's ID
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
       const callerId = userData.id;
-      
       if (!callerId) {
         console.error('No caller ID found in localStorage');
         return;
       }
-      
       const response = await fetch(`${API_BASE_URL}/customers?callerId=${callerId}`);
       const data = await response.json();
-      
       if (data.success && data.data) {
         // Separate customers by status
-        const contacted = data.data.filter(c => c.status === 'PENDING' || c.status === 'COMPLETED');
-        const overdue = data.data.filter(c => c.status === 'OVERDUE');
-        
+        const contacted = data.data.filter(c => 
+          c.status === 'PENDING' && 
+          c.contactHistory && 
+          c.contactHistory.length > 0
+        );
+        const overdue = data.data.filter(c => 
+          c.status === 'OVERDUE' || 
+          (c.status === 'PENDING' && (!c.contactHistory || c.contactHistory.length === 0))
+        );
+        const completed = data.data.filter(c => c.status === 'COMPLETED');
         // Map MongoDB _id to id for frontend compatibility
         const formattedContacted = contacted.map(c => ({ ...c, id: c._id }));
         const formattedOverdue = overdue.map(c => ({ ...c, id: c._id }));
-        
+        const formattedCompleted = completed.map(c => ({ ...c, id: c._id }));
         setContactedCustomers(formattedContacted);
         setOverduePayments(formattedOverdue);
-        updateStats(formattedContacted, formattedOverdue);
+        setCompletedCustomers(formattedCompleted);
+        // Update stats with completed count from all data
+        const completedCount = completed.length;
+        updateStats(formattedContacted, formattedOverdue, completedCount);
       }
     } catch (error) {
       console.error('Error fetching customers from backend:', error);
@@ -66,14 +74,17 @@ function CallerDashboard() {
   }, []);
 
   // Update statistics based on data
-  const updateStats = (contacted, overdue) => {
-    const totalCustomers = contacted.length + overdue.length;
+  const updateStats = (contacted, overdue, completedCount = 0) => {
+    // Get all assigned customers (excluding COMPLETED)
+    const allActiveCustomers = contacted.length + overdue.length;
+    
+    // Only count customers with contact history as "contacted"
     const contactedCount = contacted.length;
-    const completedCount = contacted.filter(c => c.status === "COMPLETED").length;
-    const pendingCount = contacted.filter(c => c.status === "PENDING").length + overdue.length;
+    
+    const pendingCount = contacted.length + overdue.length;
 
     setStats([
-      { type: "customers", value: totalCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
+      { type: "customers", value: allActiveCustomers.toString(), label: "Total Customers", color: "#90e4f7ff" },
       { type: "contacted", value: contactedCount.toString(), label: "Customers Contacted", color: "#90e4f7ff" },
       { type: "completed", value: completedCount.toString(), label: "Payments Completed", color: "#90e4f7ff" },
       { type: "pending", value: pendingCount.toString(), label: "Pending Payments", color: "#90e4f7ff" },
@@ -91,18 +102,21 @@ function CallerDashboard() {
   const handleSaveCustomerDetails = async (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
     
-    console.log('handleSaveCustomerDetails called with:', { accountNumber, data });
+    console.log('=== SAVING CUSTOMER DETAILS (CallerDashboard) ===');
+    console.log('Account/ID:', accountNumber);
+    console.log('Data:', data);
     
     // Check if customer is in overdue list
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
     const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
     
     if (!existingCustomer) {
-      console.error('Customer not found');
+      console.error('❌ Customer not found');
+      alert('Customer not found');
       return;
     }
     
-    console.log('Found customer:', existingCustomer);
+    console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer._id);
     
     try {
       const requestBody = {
@@ -130,64 +144,74 @@ function CallerDashboard() {
       console.log('Backend response:', result);
       
       if (result.success) {
-        console.log('Customer updated successfully in database');
+        console.log('✅ Customer updated successfully in database');
         
         // Refetch all customers from backend to get the latest data
         await fetchCustomers();
+        console.log('✅ Customers refreshed from database');
       } else {
-        console.error('Failed to update customer:', result.message);
+        console.error('❌ Failed to update customer:', result.message);
+        alert('Failed to save: ' + result.message);
       }
     } catch (error) {
-      console.error('Error saving customer details to backend:', error);
+      console.error('❌ Error saving customer details to backend:', error);
       alert('Failed to save customer details. Please try again.');
     }
   };
 
-  // Get completed payments from contacted customers
+  // Get completed payments for this caller
   const getCompletedPayments = () => {
-    return contactedCustomers
-      .filter(customer => customer.status === "COMPLETED")
-      .map(customer => ({
-        name: customer.name,
-        date: customer.date,
-        accountNumber: customer.accountNumber
-      }));
+    // Show all completed customers assigned to this caller
+    return completedCustomers.map(customer => ({
+      accountNumber: customer.accountNumber,
+      name: customer.name,
+      contactNumber: customer.contactNumber,
+      amountPaid: customer.amountPaid || customer.amountOverdue || '-',
+      paymentDate: customer.paymentDate || (customer.contactHistory && customer.contactHistory.length > 0
+        ? (customer.contactHistory.find(h => h.paymentMade) ? customer.contactHistory.find(h => h.paymentMade).date : '-')
+        : '-')
+    }));
   };
 
   // Calculate weekly calls based on contact history (Monday to Sunday)
-  // Using useMemo to recalculate when contactedCustomers changes
+  // Use all assigned customers, including COMPLETED, for weekly calls
   const weeklyCalls = useMemo(() => {
     const calls = [0, 0, 0, 0, 0, 0, 0]; // Mon, Tue, Wed, Thu, Fri, Sat, Sun
     const today = new Date();
     today.setHours(23, 59, 59, 999); // Set to end of today
-    
-    // Get the start of the week (7 days ago from today)
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 6); 
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    // Count calls from contacted customers' contact history
-    contactedCustomers.forEach(customer => {
+    // Get all assigned customers from backend data (contacted, overdue, and completed)
+    const allAssignedCustomers = [
+      ...contactedCustomers,
+      ...overduePayments,
+      ...completedCustomers
+    ];
+
+    allAssignedCustomers.forEach(customer => {
       if (customer.contactHistory && customer.contactHistory.length > 0) {
         customer.contactHistory.forEach(contact => {
-          // Parse contact date (DD/MM/YYYY format)
-          const [day, month, year] = contact.date.split('/');
-          const contactDate = new Date(year, month - 1, day);
-          contactDate.setHours(12, 0, 0, 0); 
-          
-          // Check if contact is within last 7 days
+          if (!contact.contactDate) return;
+          let contactDate;
+          if (contact.contactDate.includes('/')) {
+            const [day, month, year] = contact.contactDate.split('/');
+            contactDate = new Date(year, month - 1, day);
+          } else {
+            contactDate = new Date(contact.contactDate);
+          }
+          contactDate.setHours(12, 0, 0, 0);
           if (contactDate >= sevenDaysAgo && contactDate <= today) {
             const dayOfWeek = contactDate.getDay(); // 0 = Sunday, 6 = Saturday
-            // Convert to Monday-first format: Mon=0, Tue=1, ..., Sun=6
             const mondayFirstIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
             calls[mondayFirstIndex]++;
           }
         });
       }
     });
-
     return calls;
-  }, [contactedCustomers]); 
+  }, [contactedCustomers, overduePayments, completedCustomers]);
 
   // Get user data from localStorage
   const storedUserData = JSON.parse(localStorage.getItem('userData') || '{}');

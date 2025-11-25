@@ -1,6 +1,7 @@
 import Request from '../models/Request.js';
 import Customer from '../models/Customer.js';
 import Caller from '../models/Caller.js';
+import Admin from '../models/Admin.js';
 
 // @desc    Get all requests
 // @route   GET /api/requests
@@ -70,6 +71,29 @@ const getPendingRequests = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching pending requests',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get completed requests
+// @route   GET /api/requests/completed
+// @access  Public
+const getCompletedRequests = async (req, res) => {
+  try {
+    const requests = await Request.find({ status: 'COMPLETED' })
+      .populate('caller', 'name callerId')
+      .populate('customers.customerId', 'accountNumber name contactNumber status');
+    
+    res.status(200).json({
+      success: true,
+      count: requests.length,
+      data: requests
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching completed requests',
       error: error.message
     });
   }
@@ -148,9 +172,35 @@ const createRequest = async (req, res) => {
     const today = new Date();
     const dateString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
 
+    // Generate taskId in format: TASK-YYYYMMDD-XXX (e.g., TASK-20251119-001)
+    const datePrefix = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    
+    // Find the count of requests created today to generate sequential number
+    const todayStart = new Date(today.setHours(0, 0, 0, 0));
+    const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+    const todayRequestsCount = await Request.countDocuments({
+      createdAt: { $gte: todayStart, $lte: todayEnd }
+    });
+    
+    const sequentialNumber = String(todayRequestsCount + 1).padStart(3, '0');
+    const taskId = `TASK-${datePrefix}-${sequentialNumber}`;
+
+    // Get admin name if adminId is provided, otherwise fallback to callerName or 'Admin'
+    let sentByName = 'Admin';
+    if (adminId) {
+      const admin = await Admin.findById(adminId).select('name');
+      if (admin && admin.name) {
+        sentByName = admin.name;
+      } else if (callerName) {
+        sentByName = callerName;
+      }
+    } else if (callerName) {
+      sentByName = callerName;
+    }
+
     // Create request
     const request = await Request.create({
-      requestId: Date.now().toString(),
+      taskId: taskId,
       callerName,
       callerId,
       caller: caller._id,
@@ -163,9 +213,10 @@ const createRequest = async (req, res) => {
         daysOverdue: c.daysOverdue
       })),
       customersSent: customers.length,
+      customersContacted: 0,
       sentDate: dateString,
       status: 'PENDING',
-      sentBy: 'Admin',
+      sentBy: sentByName,
       adminId: adminId || null
     });
 
@@ -187,10 +238,10 @@ const createRequest = async (req, res) => {
 // @access  Public
 const updateRequest = async (req, res) => {
   try {
-    // Try to find by MongoDB _id first, then by requestId
+    // Try to find by MongoDB _id first, then by taskId
     let request = await Request.findById(req.params.id).catch(() => null);
     if (!request) {
-      request = await Request.findOne({ requestId: req.params.id });
+      request = await Request.findOne({ taskId: req.params.id });
     }
 
     if (!request) {
@@ -273,6 +324,7 @@ const updateRequest = async (req, res) => {
               status: 'OVERDUE',
               assignedTo: caller._id,
               assignedDate: dateString,
+              taskId: request.taskId,
               response: 'Not Contacted Yet',
               previousResponse: 'No previous contact',
               contactHistory: []
@@ -283,6 +335,7 @@ const updateRequest = async (req, res) => {
             // Update existing customer
             customer.assignedTo = caller._id;
             customer.assignedDate = dateString;
+            customer.taskId = request.taskId;
             customer.status = 'OVERDUE';
             customer.amountOverdue = customerData.amountOverdue;
             customer.daysOverdue = customerData.daysOverdue;
@@ -455,6 +508,7 @@ const declineRequest = async (req, res) => {
 export {
   getAllRequests,
   getPendingRequests,
+  getCompletedRequests,
   getRequestsByCallerId,
   getRequestById,
   createRequest,

@@ -188,7 +188,7 @@ const updateCustomerContact = async (req, res) => {
       body: req.body
     });
     
-    const customer = await Customer.findById(req.params.id);
+    const customer = await Customer.findById(req.params.id).populate('assignedTo');
 
     if (!customer) {
       return res.status(404).json({
@@ -201,25 +201,120 @@ const updateCustomerContact = async (req, res) => {
     const today = new Date();
     const dateString = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
 
-    // Add to contact history
+    // Add to contact history with correct field names matching the schema
     customer.contactHistory.push({
-      date: dateString,
+      contactDate: dateString,
       outcome: callOutcome,
-      response: customerResponse,
+      remark: customerResponse,
+      crmAction: '',
+      customerFeedback: '',
+      creditAction: '',
+      retriedCount: customer.contactHistory.length, // Track retry count
       promisedDate: promisedDate || '',
-      paymentMade: paymentMade || false
+      paymentMade: paymentMade || false,
+      contactedBy: customer.assignedTo ? customer.assignedTo._id : null
     });
 
-    // Update status and response
-    customer.status = paymentMade ? 'COMPLETED' : 'PENDING';
+    // Update status based on payment status and promised date
+    if (paymentMade) {
+      // Payment made → COMPLETED
+      customer.status = 'COMPLETED';
+    } else {
+      // Contacted but payment not made → PENDING (regardless of promised date)
+      customer.status = 'PENDING';
+    }
+
+    // Update response fields
     customer.response = customerResponse;
     customer.previousResponse = customerResponse;
 
     await customer.save();
 
+    console.log('Customer updated successfully:', {
+      id: customer._id,
+      status: customer.status,
+      paymentMade,
+      promisedDate,
+      assignedTo: customer.assignedTo ? customer.assignedTo._id : 'NOT ASSIGNED',
+      assignedToName: customer.assignedTo ? customer.assignedTo.name : 'NOT ASSIGNED'
+    });
+
+    // Check if this customer belongs to a request and update request progress
+    if (customer.assignedTo) {
+      const Request = (await import('../models/Request.js')).default;
+      const Caller = (await import('../models/Caller.js')).default;
+      
+      // Find active (ACCEPTED) requests for this caller
+      const activeRequests = await Request.find({
+        caller: customer.assignedTo._id,
+        status: 'ACCEPTED'
+      });
+
+      for (const request of activeRequests) {
+        // Check if this customer is in the request
+        const isInRequest = request.customers.some(c => 
+          c.customerId.toString() === customer._id.toString()
+        );
+
+        if (isInRequest) {
+          // Count how many customers from this request have COMPLETED payment
+          const requestCustomerIds = request.customers.map(c => c.customerId.toString());
+          const Customer = (await import('../models/Customer.js')).default;
+          
+          // Count contacted customers for tracking
+          const contactedCustomers = await Customer.countDocuments({
+            _id: { $in: requestCustomerIds },
+            contactHistory: { $exists: true, $ne: [] }
+          });
+
+          // Count COMPLETED customers (payment made)
+          const completedCustomers = await Customer.countDocuments({
+            _id: { $in: requestCustomerIds },
+            status: 'COMPLETED'
+          });
+
+          // Update request contacted count
+          request.customersContacted = contactedCustomers;
+
+          // Only mark request as completed when ALL customers have made payment (COMPLETED status)
+          if (completedCustomers >= request.customersSent) {
+            request.status = 'COMPLETED';
+            request.isCompleted = true;
+
+            // Keep customers assigned so they show in caller's completed section
+            // Do NOT unassign customers - they stay assigned with COMPLETED status
+            
+            // Update caller status (keep customers assigned but update task status)
+            const caller = await Caller.findById(customer.assignedTo._id);
+            if (caller) {
+              // Check if caller has any PENDING customers left
+              const pendingCount = await Customer.countDocuments({
+                assignedTo: caller._id,
+                status: { $in: ['PENDING', 'OVERDUE'] }
+              });
+              
+              // Update caller status based on pending work
+              if (pendingCount === 0) {
+                caller.taskStatus = 'IDLE';
+              }
+              
+              await caller.save();
+              console.log(`✅ Request ${request.taskId} completed. All ${request.customersSent} customers paid. Customers remain assigned to ${caller.name}.`);
+            }
+          }
+
+          await request.save();
+          console.log(`📊 Request ${request.taskId} progress: ${contactedCustomers}/${request.customersSent} contacted, ${completedCustomers}/${request.customersSent} paid`);
+        }
+      }
+    }
+
+    // Re-fetch customer with populated assignedTo to ensure we return complete data
+    const updatedCustomer = await Customer.findById(customer._id).populate('assignedTo', 'name callerId');
+
     res.status(200).json({
       success: true,
-      data: customer
+      data: updatedCustomer
     });
   } catch (error) {
     console.error('Error updating customer contact:', error);

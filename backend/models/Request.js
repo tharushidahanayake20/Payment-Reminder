@@ -1,10 +1,11 @@
 import mongoose from 'mongoose';
 
 const requestSchema = new mongoose.Schema({
-  requestId: {
+  taskId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   callerName: {
     type: String,
@@ -34,14 +35,22 @@ const requestSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  customersContacted: {
+    type: Number,
+    default: 0
+  },
   sentDate: {
     type: String,
     required: true
   },
   status: {
     type: String,
-    enum: ['PENDING', 'ACCEPTED', 'DECLINED'],
+    enum: ['PENDING', 'ACCEPTED', 'DECLINED', 'COMPLETED'],
     default: 'PENDING'
+  },
+  isCompleted: {
+    type: Boolean,
+    default: false
   },
   respondedDate: {
     type: String

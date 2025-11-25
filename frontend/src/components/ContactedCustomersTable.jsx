@@ -23,6 +23,15 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
     handleCloseModal();
   };
 
+  // Get the latest response from contact history
+  const getLatestResponse = (customer) => {
+    if (customer.contactHistory && customer.contactHistory.length > 0) {
+      const latestContact = customer.contactHistory[customer.contactHistory.length - 1];
+      return latestContact.remark || customer.response;
+    }
+    return customer.response || "No response recorded";
+  };
+
   return (
     <>
       <div className="contacted-customers-section">
@@ -42,12 +51,12 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
             </thead>
             <tbody>
               {customers.map((customer, index) => (
-                <tr key={index}>
+                <tr key={customer._id || index}>
                   <td>
                     <div className="customer-info">
                       <strong>{customer.name}</strong>
                       <span className="account-number">Account Number: {customer.accountNumber}</span>
-                      <span className="date">{customer.date}</span>
+                      <span className="date">{customer.assignedDate || customer.date}</span>
                     </div>
                   </td>
                   <td>
@@ -55,7 +64,7 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
                       {customer.status}
                     </span>
                   </td>
-                  <td className="response-text">{customer.response}</td>
+                  <td className="response-text">{getLatestResponse(customer)}</td>
                   <td>
                     <button 
                       className="action-button"

@@ -171,16 +171,22 @@ function UserProfile({ user, promisedPayments = [], onAcceptRequest }) {
           </div>
           
           <div className="payments-list">
-            {user.completedPayments.map((payment, index) => (
-              <div key={index} className="payment-item">
-                <div className="payment-info">
-                  <strong>{payment.name}</strong>
-                  <span className="payment-id">Account Number: {payment.accountNumber}</span>
-                  <span className="payment-date">{payment.date}</span>
+            {user.completedPayments && user.completedPayments.length > 0 ? (
+              user.completedPayments.map((payment, index) => (
+                <div key={index} className="payment-item">
+                  <div className="payment-info">
+                    <strong>{payment.name}</strong>
+                    <span className="payment-id">Account Number: {payment.accountNumber}</span>
+                    <span className="payment-date">{payment.date}</span>
+                  </div>
+                  <span className="payment-badge">Paid</span>
                 </div>
-                <span className="payment-badge">Paid</span>
+              ))
+            ) : (
+              <div className="no-payments-message">
+                <p>No completed payments yet</p>
               </div>
-            ))}
+            )}
           </div>
           
           <button className="see-all-btn">See All</button>

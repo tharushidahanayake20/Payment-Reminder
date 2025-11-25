@@ -23,6 +23,15 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
     handleCloseModal();
   };
 
+  // Get the latest response from contact history
+  const getLatestResponse = (payment) => {
+    if (payment.contactHistory && payment.contactHistory.length > 0) {
+      const latestContact = payment.contactHistory[payment.contactHistory.length - 1];
+      return latestContact.remark || payment.response;
+    }
+    return payment.response || "Not contacted yet";
+  };
+
   return (
     <>
       <div className="overdue-payments-section">
@@ -42,12 +51,12 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
             </thead>
             <tbody>
               {payments.map((payment, index) => (
-                <tr key={index}>
+                <tr key={payment._id || index}>
                   <td>
                     <div className="customer-info">
                       <strong>{payment.name}</strong>
                       <span className="account-number">Account Number: {payment.accountNumber}</span>
-                      <span className="date">{payment.date}</span>
+                      <span className="date">{payment.assignedDate || payment.date}</span>
                     </div>
                   </td>
                   <td>
@@ -55,7 +64,7 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
                       {payment.status}
                     </span>
                   </td>
-                  <td className="response-text">{payment.response}</td>
+                  <td className="response-text">{getLatestResponse(payment)}</td>
                   <td>
                     <button 
                       className="action-button"
