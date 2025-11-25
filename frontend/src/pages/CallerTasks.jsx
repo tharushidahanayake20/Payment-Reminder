@@ -101,7 +101,7 @@ function CallerTasks() {
     loadCustomers();
     
     // Poll for updates every 5 seconds
-    const interval = setInterval(loadCustomers, 5000);
+    const interval = setInterval(loadCustomers, 4000);
     
     return () => clearInterval(interval);
   }, []);
