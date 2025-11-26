@@ -57,7 +57,7 @@ function CallerStatisticsTable() {
             const completedCount = assignedCustomers.filter(c => c.status === 'COMPLETED').length;
             
             return {
-              Employee: caller.name,
+              Caller: caller.name,
               CallerId: caller.callerId,
               Total_Calls: totalCalls,
               Successful: successful,
@@ -102,7 +102,7 @@ function CallerStatisticsTable() {
         <table className="statistics-table">
           <thead>
             <tr>
-              <th>Employee</th>
+              <th>Caller</th>
               <th>Caller ID</th>
               <th>Total Calls</th>
               <th>Successful</th>
@@ -115,7 +115,7 @@ function CallerStatisticsTable() {
             {statistics.length > 0 ? (
               statistics.map((item) => (
                 <tr key={item.CallerId}>
-                  <td>{item.Employee}</td>
+                  <td>{item.Caller}</td>
                   <td>{item.CallerId}</td>
                   <td>{item.Total_Calls}</td>
                   <td style={{ color: '#4CAF50', fontWeight: 'bold' }}>{item.Successful}</td>

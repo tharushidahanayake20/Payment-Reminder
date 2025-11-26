@@ -30,7 +30,7 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
 
     // Validation
     if (!formData.name.trim()) {
-      setError("Employee name is required");
+      setError("Caller name is required");
       return;
     }
     if (!formData.callerId.trim()) {
@@ -63,7 +63,7 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        alert('Employee added successfully');
+        alert('Caller added successfully');
         setFormData({
           name: "",
           callerId: "",
@@ -76,10 +76,10 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
         onSuccess();
         onClose();
       } else {
-        setError(result.message || 'Failed to add employee');
+        setError(result.message || 'Failed to add Caller');
       }
     } catch (err) {
-      setError(err.message || 'Error adding employee');
+      setError(err.message || 'Error adding Caller');
       console.error('Error:', err);
     } finally {
       setLoading(false);
@@ -92,7 +92,7 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Add New Employee</h2>
+          <h2>Add New Caller</h2>
           <button className="close-btn" onClick={onClose}>
             <i className="bi bi-x"></i>
           </button>
@@ -102,14 +102,14 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="name">Employee Name *</label>
+            <label htmlFor="name">Caller Name *</label>
             <input
               type="text"
               id="name"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              placeholder="Enter employee name"
+              placeholder="Enter Caller Name"
               required
             />
           </div>
@@ -196,7 +196,7 @@ function AddEmployeeModal({ isOpen, onClose, onSuccess }) {
               Cancel
             </button>
             <button type="submit" className="btn-submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Employee"}
+              {loading ? "Adding..." : "Add Caller"}
             </button>
           </div>
         </form>

@@ -62,15 +62,15 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to update employee');
+        throw new Error(data.message || 'Failed to update Caller');
       }
 
       const result = await response.json();
       onSave(result.data);
       onClose();
     } catch (err) {
-      setError(err.message || 'Error updating employee');
-      console.error('Error updating employee:', err);
+      setError(err.message || 'Error updating Caller');
+      console.error('Error updating Caller:', err);
     } finally {
       setLoading(false);
     }
@@ -82,7 +82,7 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content edit-employee-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Edit Employee</h2>
+          <h2>Edit Caller</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
@@ -97,7 +97,7 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Employee name"
+                placeholder="Caller Name"
                 required
               />
             </div>
@@ -123,7 +123,7 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="employee@example.com"
+                placeholder="caller@example.com"
               />
             </div>
 
