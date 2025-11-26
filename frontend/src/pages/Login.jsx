@@ -6,12 +6,15 @@ import { FaUserShield } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
 import API_BASE_URL from '../config/api';
+import { MdOutlineMailOutline } from "react-icons/md";
+import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
 const Login = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [isAdminLogin, setIsAdminLogin] = useState(false);
@@ -160,11 +163,64 @@ const Login = () => {
             {!showOtpInput ? (
               <form onSubmit={handleSignIn}>
                 <label>Email</label>
-                <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="username@gmail.com" required />
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="username@gmail.com" required 
+                style={{ 
+                  paddingRight: '40px', 
+                  width: '100%',
+                  paddingLeft: '12px',
+                  paddingTop: '12px',
+                  paddingBottom: '12px',
+                  fontSize: '16px',
+                  marginTop: '15px',
+                }}/>
+                <MdOutlineMailOutline 
+                size={20} 
+                color="#0066cc" 
+                style={{ 
+                  position: 'absolute', 
+                  right: '14px',
+                  pointerEvents: 'none',
+                  marginTop: '15px',
+                }} 
+              />
+              </div>
 
                 <label>Password</label>
-                <input value={password} onChange={e=>setPassword(e.target.value)} type="password" placeholder="Password" required />
-
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input value={password} onChange={e=>setPassword(e.target.value)} type={showPassword ? "text" : "password"} placeholder="Password" required 
+                  style={{ 
+                    paddingRight: '40px', 
+                    width: '100%',
+                    paddingLeft: '12px',
+                    paddingTop: '12px',
+                    paddingBottom: '12px',
+                    fontSize: '16px',
+                  }}
+                  />
+                <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '0',
+                  color: '#0066cc',
+                  marginTop: '15px',
+                }}
+              >
+                {showPassword ? (
+                  <AiOutlineEyeInvisible size={20} />
+                ) : (
+                  <AiOutlineEye size={20} />
+                )}
+                </button>
+                </div>
                 {!isAdminLogin && <span className="fp" onClick={()=>navigate('/forgot-password')}>Forgot Password?</span>}
 
                 <button className="signin-btn" type="submit" disabled={loading}>
