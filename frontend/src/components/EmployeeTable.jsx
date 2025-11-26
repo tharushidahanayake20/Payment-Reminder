@@ -129,7 +129,7 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
         <table className="employee-table">
           <thead>
             <tr>
-              <th>Employee</th>
+              <th>Caller</th>
               <th>Caller ID</th>
               <th>Customers</th>
               <th>Status</th>
