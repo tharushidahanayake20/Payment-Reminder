@@ -4,9 +4,13 @@ import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config/api';
 import { jwtDecode } from 'jwt-decode';
+<<<<<<< Updated upstream
 import { MdOutlineMailOutline } from 'react-icons/md';
 import { FaUser, FaPhone } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+=======
+import { clearSession } from '../utils/auth';
+>>>>>>> Stashed changes
 
 const Register = () => {
   const [form, setForm] = useState({ name:'', email:'', phone:'', password:'', confirmPassword:'' });
@@ -59,6 +63,7 @@ const Register = () => {
       
       // OTP verified - decode token and save it
       const decoded = jwtDecode(data.token);
+      clearSession();
       localStorage.setItem('token', data.token);
       
       // First, save decoded token data as baseline
@@ -69,6 +74,7 @@ const Register = () => {
         avatar: decoded.avatar,
         role: decoded.role || 'caller'
       };
+      clearSession();
       localStorage.setItem('userData', JSON.stringify(baseUserData));
       
       // Then, try to fetch full user profile to get additional fields like callerId
@@ -96,6 +102,7 @@ const Register = () => {
             role: user.role || decoded.role || 'caller'
           };
           
+          clearSession();
           localStorage.setItem('userData', JSON.stringify(completeUserData));
           
           console.log('Registration complete - User data saved to localStorage:', {

@@ -5,6 +5,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FaUserShield } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
+import { clearSession } from '../utils/auth';
 import API_BASE_URL from '../config/api';
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
@@ -63,6 +64,7 @@ const Login = () => {
       
       // OTP verified - decode token
       const decoded = jwtDecode(data.token);
+      clearSession();
       localStorage.setItem('token', data.token);
       
       // Fetch full user profile to get all fields including callerId
@@ -80,6 +82,7 @@ const Login = () => {
           const user = profileData.user || profileData;
           
           // Save complete user data including callerId/adminId
+          clearSession();
           localStorage.setItem('userData', JSON.stringify({
             id: user._id || decoded.id,
             _id: user._id || decoded.id,
@@ -99,6 +102,7 @@ const Login = () => {
           });
         } else {
           // Fallback: use data from token response which now includes callerId/adminId
+          clearSession();
           localStorage.setItem('userData', JSON.stringify({
             id: data.user?.id || decoded.id,
             _id: data.user?.id || decoded.id,
@@ -114,6 +118,7 @@ const Login = () => {
       } catch (profileErr) {
         console.error('Profile fetch error:', profileErr);
         // Fallback: use data from token response which now includes callerId/adminId
+        clearSession();
         localStorage.setItem('userData', JSON.stringify({
           id: data.user?.id || decoded.id,
           _id: data.user?.id || decoded.id,

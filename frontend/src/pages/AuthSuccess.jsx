@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import API_BASE_URL from '../config/api';
+import { clearSession } from '../utils/auth';
 
 const AuthSuccess = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const AuthSuccess = () => {
           const decoded = jwtDecode(token);
           
           // Store token
+          clearSession();
           localStorage.setItem('token', token);
           
           // Fetch full user profile to get all fields including callerId
@@ -35,6 +37,7 @@ const AuthSuccess = () => {
               const user = profileData.user || profileData;
               
               // Save complete user data including callerId/adminId
+              clearSession();
               localStorage.setItem('userData', JSON.stringify({
                 id: user._id || decoded.id,
                 _id: user._id || decoded.id,
@@ -55,6 +58,7 @@ const AuthSuccess = () => {
               });
             } else {
               // Fallback: use decoded data which now includes callerId/adminId
+              clearSession();
               localStorage.setItem('userData', JSON.stringify({
                 id: decoded.id,
                 _id: decoded.id,
@@ -71,6 +75,7 @@ const AuthSuccess = () => {
           } catch (profileErr) {
             console.error('Profile fetch error:', profileErr);
             // Fallback: use decoded data which now includes callerId/adminId
+            clearSession();
             localStorage.setItem('userData', JSON.stringify({
               id: decoded.id,
               _id: decoded.id,
