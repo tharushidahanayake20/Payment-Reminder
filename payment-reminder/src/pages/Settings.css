@@ -8,7 +8,11 @@
   transition: all 0.3s ease;
 }
 
-
+/* Dark Mode Styles */
+.settings-container.dark-mode {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
 
 /* Header Styles */
 .settings-header {
@@ -48,7 +52,7 @@
 }
 
 .settings-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
@@ -62,7 +66,7 @@
 
 .settings-subtitle {
   color: #666;
-  font-size: 1.1rem;
+  font-size: 2rem;
   margin: 0;
   text-align: left;
   transition: all 0.3s ease;
