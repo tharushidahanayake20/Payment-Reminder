@@ -116,7 +116,12 @@ const Settings = () => {
 
             <div className="section-divider"></div>
             
-            
+            <div className="save-profile-section">
+                <button type="button" className="save-profile-button">
+                    <FaSave className="save-icon" />
+                        Save Profile
+                </button>
+            </div>
             
             <div className="section-divider"></div>
           </section>
