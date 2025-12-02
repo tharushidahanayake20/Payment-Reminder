@@ -68,7 +68,7 @@ export default function Sidebar() {
                   }
                 >
                   <TbPhoneCall />
-                  <span>Employees</span>
+                  <span>Callers</span>
                 </NavLink>
               </li>
             )}

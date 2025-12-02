@@ -29,7 +29,7 @@ function EmployeeManagement() {
 
   return (
     <>
-      <div className="title">Employee management</div>
+      <div className="title">Caller Management</div>
       <hr />
       <SearchBar 
         onAddClick={handleAddClick}
