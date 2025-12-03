@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { uploadExcelFile, importCustomers, parseAndImport } from '../controllers/uploadController.js';
+import { uploadExcelFile, importCustomers, parseAndImport, importArrears, markCustomersAsPaid } from '../controllers/uploadController.js';
 import isAuthenticated from '../middleware/isAuthenticated.js';
 
 const router = express.Router();
@@ -37,5 +37,11 @@ router.post('/import-customers', isAuthenticated, upload.single('file'), importC
 
 // Parse and import Excel file to database immediately
 router.post('/parse-and-import', isAuthenticated, upload.single('file'), parseAndImport);
+
+// Import arrears update (partial payments, update customer status)
+router.post('/import-arrears', isAuthenticated, upload.single('file'), importArrears);
+
+// Mark customers as paid by account number
+router.post('/mark-paid', isAuthenticated, upload.single('file'), markCustomersAsPaid);
 
 export default router;
