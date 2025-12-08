@@ -28,10 +28,18 @@ hr {
     width: 200px;
 }
 
+.dark-mode .total-calls{
+    border: 1px solid #444444;
+}
+
 .sucessful-calls{
     border: 1px solid #D9D9D9;
     padding: 10px;
     border-radius: 10px;
+}
+
+.dark-mode .sucessful-calls{
+    border: 1px solid #444444;
 }
 
 .total-payments{
@@ -40,10 +48,18 @@ hr {
     border-radius: 10px;
 }
 
+.dark-mode .total-payments{
+    border: 1px solid #444444;
+}
+
 .pending-payments{
     border: 1px solid #D9D9D9;
     padding: 10px;
     border-radius: 10px;
+}
+
+.dark-mode .pending-payments{
+    border: 1px solid #444444;
 }
 
 .active-callers{
@@ -52,11 +68,19 @@ hr {
     border-radius: 10px;
 }
 
+.dark-mode .active-callers{
+    border: 1px solid #444444;
+}
+
 .completed-requests-widget{
     border: 1px solid #D9D9D9;
     padding: 10px;
     border-radius: 10px;
 }
+
+.dark-mode .completed-requests-widget{
+    border: 1px solid #444444;
+}   
 
 .widgets h4 {
     color: #000000;
