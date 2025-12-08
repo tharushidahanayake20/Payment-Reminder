@@ -89,13 +89,14 @@
   padding: 12px;
   border-radius: 8px;
   border: none;
-  background: #042b5f;
+  background: #0066cc;
   color: white;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .signin-btn:hover {
-  background: white;
+  background: #0052a3;
   color:black}
 
 .google-btn {
@@ -161,6 +162,7 @@ margin-top: 15px;
   width: fit-content;
   justify-content: center;
   text-align: center;
+  font-weight: 600;
 }
 
 .admin-btn:hover {
