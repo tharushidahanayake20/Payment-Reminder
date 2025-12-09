@@ -21,6 +21,7 @@
   border-bottom: 1px solid #e1e5e9;
   margin-bottom: 0;
   transition: all 0.3s ease;
+  border-radius: 10px;
 }
 
 .dark-mode .settings-header {
@@ -52,7 +53,7 @@
 }
 
 .settings-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
@@ -104,7 +105,7 @@
 }
 
 .dark-mode .settings-section {
-  background: #2d2d2d;
+  background: #bb0f0f;
   border: 1px solid #404040;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -523,6 +524,47 @@ input:checked + .toggle-slider:before {
 .dark-mode .save-button:hover {
   background: #2563eb;
 }
+
+.upload-image-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.65rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+}
+
+.dark-mode .upload-image-btn {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.4);
+}
+
+.upload-image-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+.dark-mode .upload-image-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.5);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+}
+
+.upload-image-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.upload-image-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 
 /* Responsive Design */
 @media (max-width: 968px) {

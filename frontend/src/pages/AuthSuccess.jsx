@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import API_BASE_URL from '../config/api';
+import { clearSession } from '../utils/auth';
 
 const AuthSuccess = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const AuthSuccess = () => {
           const decoded = jwtDecode(token);
           
           // Store token
+          clearSession();
           localStorage.setItem('token', token);
           
           // Fetch full user profile to get all fields including callerId
@@ -35,6 +37,7 @@ const AuthSuccess = () => {
               const user = profileData.user || profileData;
               
               // Save complete user data including callerId/adminId
+              clearSession();
               localStorage.setItem('userData', JSON.stringify({
                 id: user._id || decoded.id,
                 _id: user._id || decoded.id,
@@ -48,13 +51,14 @@ const AuthSuccess = () => {
                 role: user.role || decoded.role || 'caller'
               }));
               
-              console.log('✅ Google login - User data saved to localStorage:', {
+              console.log('Google login - User data saved to localStorage:', {
                 callerId: user.callerId || user.adminId,
                 name: user.name,
                 email: user.email
               });
             } else {
               // Fallback: use decoded data which now includes callerId/adminId
+              clearSession();
               localStorage.setItem('userData', JSON.stringify({
                 id: decoded.id,
                 _id: decoded.id,
@@ -66,11 +70,12 @@ const AuthSuccess = () => {
                 phone: decoded.phone,
                 role: decoded.role || 'caller'
               }));
-              console.warn('✅ Using decoded token data with callerId/adminId:', decoded.callerId || decoded.adminId);
+              console.warn('Using decoded token data with callerId/adminId:', decoded.callerId || decoded.adminId);
             }
           } catch (profileErr) {
             console.error('Profile fetch error:', profileErr);
             // Fallback: use decoded data which now includes callerId/adminId
+            clearSession();
             localStorage.setItem('userData', JSON.stringify({
               id: decoded.id,
               _id: decoded.id,
@@ -81,7 +86,7 @@ const AuthSuccess = () => {
               avatar: decoded.avatar,
               role: decoded.role || 'caller'
             }));
-            console.warn('✅ Using decoded token data (profile fetch failed) with callerId/adminId:', decoded.callerId || decoded.adminId);
+            console.warn('Using decoded token data (profile fetch failed) with callerId/adminId:', decoded.callerId || decoded.adminId);
           }
           
           // Navigate to appropriate dashboard

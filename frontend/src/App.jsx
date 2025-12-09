@@ -7,6 +7,8 @@ import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AuthSuccess from "./pages/AuthSuccess";
 import Logout from "./pages/Logout";
 import Settings from "./pages/Settings";
@@ -24,6 +26,8 @@ function App() {
   const isLoginPage = location.pathname === "/login" || 
                        location.pathname === "/auth-success" || 
                        location.pathname === "/register" ||
+                       location.pathname === "/forgot-password" ||
+                       location.pathname === "/reset-password" ||
                        location.pathname === "/logout";
 
   return (
@@ -35,6 +39,8 @@ function App() {
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/auth-success" element={<AuthSuccess />} />
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="caller"><CallerDashboard /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />

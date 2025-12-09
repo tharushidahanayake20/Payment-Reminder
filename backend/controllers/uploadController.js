@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import Customer from '../models/Customer.js';
+import Request from '../models/Request.js';
 
 // Helper function to map Excel columns to Customer model
 // Supports multiple column name variations (from different Excel formats)
@@ -347,4 +348,263 @@ export const importCustomers = async (req, res) => {
   }
 };
 
-export default { uploadExcelFile, parseAndImport, importCustomers };
+// @desc    Import arrears update (handle partial payments and update customer status)
+// @route   POST /api/upload/import-arrears
+// @access  Private (Authenticated)
+export const importArrears = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No file uploaded' 
+      });
+    }
+
+    const { headers, rows } = await parseExcelFile(req.file.buffer);
+
+    console.log('=== IMPORT ARREARS ===');
+    console.log('File name:', req.file.originalname);
+    console.log('Headers:', headers);
+    console.log('Total rows:', rows.length);
+
+    let updated = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const row of rows) {
+      try {
+        // Extract account number and new arrears from row
+        const accountNumber = 
+          row['Account Number'] || 
+          row['accountNumber'] || 
+          row['ACCOUNT_NUM'] || 
+          row['Account_Num'];
+
+        const newArrears = parseFloat(
+          row['New Arrears'] || 
+          row['newArrears'] || 
+          row['NEW_ARREARS'] || 
+          row['Arrears'] || 0
+        );
+
+        // Validate required fields
+        if (!accountNumber || accountNumber.toString().trim() === '') {
+          skipped++;
+          console.warn('Skipped: No account number in row:', row);
+          continue;
+        }
+
+        // Find customer by account number
+        const customer = await Customer.findOne({ 
+          accountNumber: accountNumber.toString().trim() 
+        });
+
+        if (!customer) {
+          skipped++;
+          errors.push(`Account ${accountNumber} not found in database`);
+          console.warn('Skipped: Customer not found for account:', accountNumber);
+          continue;
+        }
+
+        // Calculate payment amount (difference between old and new arrears)
+        const oldArrears = customer.newArrears || 0;
+        const paymentAmount = oldArrears - newArrears;
+
+        console.log(`Processing Account ${accountNumber}:`, {
+          oldArrears,
+          newArrears,
+          paymentAmount
+        });
+
+        // Update customer arrears and status
+        customer.newArrears = newArrears;
+        customer.status = 'COMPLETED'; // Mark as completed due to partial payment
+        await customer.save();
+
+        // Create request record for the payment (optional, for tracking)
+        if (paymentAmount > 0) {
+          const newRequest = new Request({
+            customerId: customer._id,
+            accountNumber: customer.accountNumber,
+            paymentAmount: paymentAmount,
+            description: `Partial payment received. Arrears reduced from ${oldArrears} to ${newArrears}`,
+            status: 'COMPLETED',
+            completedDate: new Date()
+          });
+          await newRequest.save();
+          console.log('Request created for account:', accountNumber);
+        }
+
+        updated++;
+      } catch (err) {
+        skipped++;
+        console.error('Error processing row:', err.message);
+        errors.push(`Error processing row: ${err.message}`);
+      }
+    }
+
+    console.log('=== END IMPORT ARREARS ===');
+    console.log('Summary:', { updated, skipped, errors: errors.slice(0, 5) });
+
+    res.status(200).json({
+      success: true,
+      message: `Arrears updated successfully`,
+      data: {
+        updated,
+        skipped,
+        total: rows.length,
+        errors: errors.slice(0, 10) // Return first 10 errors
+      }
+    });
+
+  } catch (error) {
+    console.error('Import arrears error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error importing arrears', 
+      error: error.message 
+    });
+  }
+};
+
+// @desc    Mark customers as paid by account number
+// @route   POST /api/upload/mark-paid
+// @access  Private (Authenticated)
+export const markCustomersAsPaid = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'No file uploaded' 
+      });
+    }
+
+    const { headers, rows } = await parseExcelFile(req.file.buffer);
+
+    console.log('=== MARK AS PAID ===');
+    console.log('File name:', req.file.originalname);
+    console.log('Headers:', headers);
+    console.log('Total rows:', rows.length);
+
+    let marked = 0;
+    let skipped = 0;
+    const errors = [];
+
+    for (const row of rows) {
+      try {
+        // Extract account number from row
+        const accountNumber = 
+          row['Account Number'] || 
+          row['accountNumber'] || 
+          row['ACCOUNT_NUM'] || 
+          row['Account_Num'] ||
+          row['Account'] ||
+          row['account'];
+
+        // Validate required fields
+        if (!accountNumber || accountNumber.toString().trim() === '') {
+          skipped++;
+          console.warn('Skipped: No account number in row:', row);
+          continue;
+        }
+
+        // Find customer by account number
+        const customer = await Customer.findOne({ 
+          accountNumber: accountNumber.toString().trim() 
+        });
+
+        if (!customer) {
+          skipped++;
+          errors.push(`Account ${accountNumber} not found in database`);
+          console.warn('Skipped: Customer not found for account:', accountNumber);
+          continue;
+        }
+
+        // Extract new arrears from row (flexible column naming)
+        const newArrears = parseFloat(
+          row['NEW_ARREARS'] ||
+          row['New Arrears'] ||
+          row['newArrears'] ||
+          row['Arrears'] ||
+          0
+        );
+
+        // Check if NEW_ARREARS field exists in the Excel file (any variant)
+        const hasNewArrearsField = headers.some(header => 
+          header === 'NEW_ARREARS' || 
+          header === 'New Arrears' || 
+          header === 'newArrears' || 
+          header === 'Arrears'
+        );
+
+        console.log(`Processing Account ${accountNumber}:`, {
+          currentArrears: customer.newArrears,
+          newArrears,
+          hasNewArrearsField,
+          paymentType: hasNewArrearsField ? 'PARTIAL' : 'FULL'
+        });
+
+        // Update customer with new arrears value
+        if (newArrears >= 0) {
+          customer.newArrears = newArrears;
+          console.log(`Updated new arrears to: ${newArrears}`);
+        }
+
+        // Update customer status: COMPLETED if full payment (no NEW_ARREARS field), PENDING if partial
+        customer.status = hasNewArrearsField ? 'PENDING' : 'COMPLETED';
+        
+        // Update amountOverdue to reflect remaining balance
+        customer.amountOverdue = (customer.newArrears || 0).toString();
+        
+        // Save updated customer
+        await customer.save();
+
+        // Create request record for the payment (for tracking)
+        if (paidAmount > 0 || newArrears > 0) {
+          const newRequest = new Request({
+            customerId: customer._id,
+            accountNumber: customer.accountNumber,
+            paymentAmount: paidAmount > 0 ? paidAmount : (customer.newArrears > 0 ? 0 : (customer.amountOverdue || 0)),
+            description: paidAmount > 0 
+              ? `Payment received. Amount: ${paidAmount}. Remaining arrears: ${customer.newArrears}`
+              : `Status updated to PAID. Remaining arrears: ${customer.newArrears}`,
+            status: 'COMPLETED',
+            completedDate: new Date()
+          });
+          await newRequest.save();
+          console.log('Request record created for account:', accountNumber);
+        }
+
+        marked++;
+      } catch (err) {
+        skipped++;
+        console.error('Error processing row:', err.message);
+        errors.push(`Error processing row: ${err.message}`);
+      }
+    }
+
+    console.log('=== END MARK AS PAID ===');
+    console.log('Summary:', { marked, skipped, errors: errors.slice(0, 5) });
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully marked ${marked} customers as paid`,
+      data: {
+        marked,
+        skipped,
+        total: rows.length,
+        errors: errors.slice(0, 10) // Return first 10 errors
+      }
+    });
+
+  } catch (error) {
+    console.error('Mark paid error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error marking customers as paid', 
+      error: error.message 
+    });
+  }
+};
+
+export default { uploadExcelFile, parseAndImport, importCustomers, importArrears, markCustomersAsPaid };
