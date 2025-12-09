@@ -29,7 +29,7 @@ const Register = () => {
     if (form.password !== form.confirmPassword) return setError('Passwords do not match');
     setLoading(true);
     try{
-      const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)
@@ -50,7 +50,7 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: form.phone, otp, isPasswordReset: false })
@@ -76,7 +76,7 @@ const Register = () => {
       
       // Then, try to fetch full user profile to get additional fields like callerId
       try {
-        const profileRes = await fetch(`${API_BASE_URL}/users/profile`, {
+        const profileRes = await fetch(`${API_BASE_URL}/api/users/profile`, {
           headers: { 
             'Authorization': `Bearer ${data.token}`,
             'Content-Type': 'application/json'

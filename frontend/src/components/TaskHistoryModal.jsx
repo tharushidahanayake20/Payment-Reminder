@@ -18,7 +18,7 @@ function TaskHistoryModal({ show, caller, onClose }) {
     setError('');
     try {
       const response = await fetch(
-        `${API_BASE_URL}/requests/caller/${caller.callerId}`,
+        `${API_BASE_URL}/api/requests/caller/${caller.callerId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -52,17 +52,33 @@ function TaskHistoryModal({ show, caller, onClose }) {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
+    // Try ISO or Date object first
+    let date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit'
       });
-    } catch (e) {
-      return dateString;
     }
+    // Try DD/MM/YYYY fallback
+    const parts = dateString.split(/[\/\-]/);
+    if (parts.length >= 3) {
+      // DD/MM/YYYY or DD-MM-YYYY
+      const [dd, mm, yyyy] = parts;
+      const parsed = new Date(`${yyyy}-${mm}-${dd}`);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+    }
+    // Fallback: show as-is
+    return dateString;
   };
 
   if (!show) return null;

@@ -27,10 +27,12 @@ const ResetPassword = ()=>{
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Debug: Log the received parameters
-  React.useEffect(() => {
-    console.log('ResetPassword params - Phone:', phoneParam, 'Token:', resetTokenParam, 'Email:', emailParam);
-  }, [phoneParam, resetTokenParam, emailParam]);
+  const verifyOtp = async () => {
+    const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })
+    });
+    return res.json().then(d=>({ ok: res.ok, body: d }));
+  }
 
   const reset = async (e) =>{
     e.preventDefault();
@@ -39,39 +41,11 @@ const ResetPassword = ()=>{
     setLoading(true);
     
     try{
-      if (newPassword !== confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
-
-      if (newPassword.length < 6) {
-        throw new Error('Password must be at least 6 characters');
-      }
-
-      if (!resetToken) {
-        throw new Error('Reset token is missing. Please start the forgot password process again.');
-      }
-
-      const payload = {
-        newPassword, 
-        confirmPassword,
-        resetToken: resetToken
-      };
-
-      // Use phone if available, otherwise use email
-      if (phone) {
-        payload.phone = phone;
-      } else if (email) {
-        payload.email = email;
-      } else {
-        throw new Error('No phone or email provided');
-      }
-
-      console.log('Sending reset password request with payload:', payload);
-
-      const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
-        method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
-        body: JSON.stringify(payload)
+      const { ok, body } = await verifyOtp();
+      if (!ok) throw new Error(body.message || 'Invalid OTP');
+      const resetToken = body.resetToken;
+      const res2 = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, resetToken, newPassword, confirmPassword })
       });
       
       const data = await res.json();

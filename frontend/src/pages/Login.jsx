@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "./Login.css";
 import logo from "../assets/logo.png";
-import { FcGoogle } from "react-icons/fc";
 import { FaUserShield } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from 'jwt-decode';
@@ -29,7 +28,7 @@ const Login = () => {
     setMessage('');
     setLoading(true);
     try {
-      const endpoint = isAdminLogin ? '/auth/admin/login' : '/auth/login';
+      const endpoint = isAdminLogin ? '/api/auth/admin/login' : '/api/auth/login';
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -53,7 +52,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const endpoint = isAdminLogin ? '/auth/admin/verify-otp' : '/auth/verify-otp';
+      const endpoint = isAdminLogin ? '/api/auth/admin/verify-otp' : '/api/auth/verify-otp';
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,7 +69,7 @@ const Login = () => {
 
       // Fetch full user profile to get all fields including callerId
       try {
-        const profileEndpoint = decoded.role === 'admin' ? '/admin/profile' : '/users/profile';
+        const profileEndpoint = decoded.role === 'admin' ? '/api/admin/profile' : '/api/users/profile';
         const profileRes = await fetch(`${API_BASE_URL}${profileEndpoint}`, {
           headers: { 
             'Authorization': `Bearer ${data.token}`,
@@ -233,24 +232,7 @@ const Login = () => {
                 {message && <p style={{color:'green'}}>{message}</p>}
 
                 {!isAdminLogin && (
-                  <>
-                    <p className="rg">Don't have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/register')}}>Register</a></p>
-
-
-                    {/* <p className="divider">or continue with</p> */}
-
-                  {/* loging with google */}
-                    {/* <button
-                      type="button"
-                      onClick={() => {
-                        const redirect = encodeURIComponent(window.location.origin);
-                        window.location.href = `${API_BASE_URL}/auth/google?redirect=${redirect}`;
-                      }}
-                      className="google-btn"
-                    >
-                      <FcGoogle size={20} />
-                    </button> */}
-                  </>
+                  <p className="rg">Don't have an account? <a href="#" onClick={(e)=>{e.preventDefault(); navigate('/register')}}>Register</a></p>
                 )}
                 
                 {isAdminLogin && (
