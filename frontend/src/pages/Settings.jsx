@@ -21,7 +21,14 @@ const Settings = () => {
   // For image preview
   const [avatarPreview, setAvatarPreview] = useState('');
   const fileInputRef = useRef();
-  const [loading, setLoading] = useState(false);
+
+  const [loadingImage, setLoadingImage] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [loadingPassword, setLoadingPassword] = useState(false);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [loadingSystem, setLoadingSystem] = useState(false);
+  // =======================================================================
+
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -75,8 +82,9 @@ const Settings = () => {
         setError('Failed to load settings');
       }
     };
+
     fetchSettings();
-  }, [darkMode]);
+  }, [darkMode]); // run once on mount
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -109,7 +117,7 @@ const Settings = () => {
   // Save profile image
   const saveProfileImage = async () => {
     try {
-      setLoading(true);
+      setLoadingImage(true); // <--- use image-specific loading
       setError('');
       setMessage('');
 
@@ -124,7 +132,8 @@ const Settings = () => {
         }
       );
 
-      setMessage('Profile image updated successfully!');
+      setMessage(res.data?.msg || 'Profile image updated successfully!');
+      showSuccess(res.data?.msg || 'Profile image updated successfully!');
 
       // Update localStorage
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
@@ -134,14 +143,14 @@ const Settings = () => {
       console.error('Save profile image error:', err);
       setError(err.response?.data?.msg || 'Failed to save profile image');
     } finally {
-      setLoading(false);
+      setLoadingImage(false);
     }
   };
 
   // Remove profile image (clear avatar on server and update local state/storage)
   const removeProfileImage = async () => {
     try {
-      setLoading(true);
+      setLoadingImage(true); // <--- reuse image-specific loading while removing
       setError('');
       setMessage('');
 
@@ -168,7 +177,7 @@ const Settings = () => {
       console.error('Remove profile image error:', err);
       setError(err.response?.data?.msg || 'Failed to remove profile image');
     } finally {
-      setLoading(false);
+      setLoadingImage(false);
     }
   };
 
@@ -191,7 +200,7 @@ const Settings = () => {
         return;
       }
 
-      setLoading(true);
+      setLoadingProfile(true); // <--- profile-specific loading
       setError('');
       setMessage('');
 
@@ -225,7 +234,7 @@ const Settings = () => {
       console.error('Update profile info error:', err);
       setError(err.response?.data?.msg || 'Failed to update profile');
     } finally {
-      setLoading(false);
+      setLoadingProfile(false);
     }
   };
 
@@ -245,7 +254,7 @@ const Settings = () => {
         return;
       }
 
-      setLoading(true);
+      setLoadingPassword(true); // <--- password-specific loading
       setError('');
       setMessage('');
 
@@ -274,7 +283,7 @@ const Settings = () => {
       console.error('Change password error:', err);
       setError(err.response?.data?.msg || 'Failed to change password');
     } finally {
-      setLoading(false);
+      setLoadingPassword(false);
     }
   };
 
@@ -299,7 +308,7 @@ const Settings = () => {
   // Save preferences
   const saveNotificationPreferences = async () => {
     try {
-      setLoading(true);
+      setLoadingNotifications(true); // <--- notifications-specific loading
       setError('');
       setMessage('');
 
@@ -319,13 +328,13 @@ const Settings = () => {
       console.error("Failed to update preferences:", err);
       setError(err.response?.data?.msg || 'Failed to update notification preferences');
     } finally {
-      setLoading(false);
+      setLoadingNotifications(false);
     }
   };
 
   const saveSystemPreferences = async () => {
     try {
-      setLoading(true);
+      setLoadingSystem(true); // <--- system-specific loading
       setError('');
       setMessage('');
 
@@ -345,7 +354,7 @@ const Settings = () => {
       console.error("Failed to update preferences:", err);
       setError(err.response?.data?.msg || 'Failed to update system preferences');
     } finally {
-      setLoading(false);
+      setLoadingSystem(false);
     }
   }
 
@@ -439,9 +448,9 @@ const Settings = () => {
                   className="upload-image-btn"
                   style={{ marginBottom: 8 }}
                   onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  disabled={loading}
+                  disabled={loadingImage} // disable while image save/remove is in progress
                 >
-                  {loading ? 'Uploading...' : 'Choose Image'}
+                  {loadingImage ? 'Uploading...' : 'Choose Image'}
                 </button>
                 {avatarPreview && formData.avatar && (
                   <>
@@ -450,16 +459,16 @@ const Settings = () => {
                       className="save-button"
                       style={{ marginBottom: 8, padding: '8px 20px', fontSize: '0.9em' }}
                       onClick={saveProfileImage}
-                      disabled={loading}
+                      disabled={loadingImage}
                     >
-                      {loading ? 'Saving...' : 'Save Image'}
+                      {loadingImage ? 'Saving...' : 'Save Image'}
                     </button>
                     <button
                       type="button"
                       className="remove-image-btn"
                       style={{ color: '#d00', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.95em' }}
                       onClick={removeProfileImage}
-                      disabled={loading}
+                      disabled={loadingImage}
                     >Remove Image</button>
                   </>
                 )}
@@ -511,10 +520,10 @@ const Settings = () => {
               type="button"
               className="save-button"
               onClick={updateProfileInfo}
-              disabled={loading}
+              disabled={loadingProfile}
               style={{ marginTop: 12, width: '100%' }}
             >
-              {loading ? 'Saving...' : 'Save Profile Info'}
+              {loadingProfile ? 'Saving...' : 'Save Profile Info'}
             </button>
 
             <div className="section-divider"></div>
@@ -592,10 +601,10 @@ const Settings = () => {
               type="button"
               className="save-button"
               onClick={saveNotificationPreferences}
-              disabled={loading}
+              disabled={loadingNotifications}
               style={{ marginTop: 12, width: '100%' }}
             >
-              {loading ? 'Saving...' : 'Save Notification Preferences'}
+              {loadingNotifications ? 'Saving...' : 'Save Notification Preferences'}
             </button>
           </section>
         </div>
@@ -652,10 +661,10 @@ const Settings = () => {
               type="button"
               className="save-button"
               onClick={changePassword}
-              disabled={loading}
+              disabled={loadingPassword}
               style={{ marginTop: 12, width: '100%' }}
             >
-              {loading ? 'Changing...' : 'Change Password'}
+              {loadingPassword ? 'Changing...' : 'Change Password'}
             </button>
 
             <div className="section-divider"></div>
@@ -678,8 +687,8 @@ const Settings = () => {
                     onChange={(e) => handlePreferenceChange('language', e.target.value)}
                   >
                     <option value="English">English</option>
-                    <option value="Spanish">Spanish</option>
-                    <option value="French">French</option>
+                    <option value="Sinhala">Sinhala</option>
+                    <option value="Tamil">Tamil</option>
                   </select>
                 </div>
               </div>
@@ -732,10 +741,10 @@ const Settings = () => {
               type="button"
               className="save-button"
               onClick={saveSystemPreferences}
-              disabled={loading}
+              disabled={loadingSystem}
               style={{ marginTop: 12, width: '100%' }}
             >
-              {loading ? 'Saving...' : 'Save System Preferences'}
+              {loadingSystem ? 'Saving...' : 'Save System Preferences'}
             </button>
           </section>
         </div>
