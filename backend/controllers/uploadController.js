@@ -623,20 +623,21 @@ export const markCustomersAsPaid = async (req, res) => {
         console.log(`Processing Account ${accountNumber}:`, {
           currentArrears: customer.newArrears,
           newArrears,
+          newArrearsType: typeof newArrears,
           hasNewArrearsField,
+          willBeCompleted: !(hasNewArrearsField && newArrears > 0),
           paymentType: hasNewArrearsField ? 'PARTIAL' : 'FULL'
         });
 
-        // Update customer with new arrears value
-        if (newArrears >= 0) {
-          customer.newArrears = newArrears;
-          console.log(`Updated new arrears to: ${newArrears}`);
-        }
+        // Update customer with new arrears value (allow negative for credit balance)
+        customer.newArrears = newArrears;
+        console.log(`Updated new arrears to: ${newArrears}`);
 
-        // Update customer status: COMPLETED if full payment (no NEW_ARREARS field), PENDING if partial
-        customer.status = hasNewArrearsField ? 'PENDING' : 'COMPLETED';
+        // Update customer status: COMPLETED if full payment (no NEW_ARREARS field, newArrears = 0, or negative/overpayment), PENDING if partial
+        customer.status = (hasNewArrearsField && newArrears > 0) ? 'PENDING' : 'COMPLETED';
+        console.log(`Status set to: ${customer.status} (hasNewArrearsField: ${hasNewArrearsField}, newArrears > 0: ${newArrears > 0})`);
         
-        // Update amountOverdue to reflect remaining balance
+        // Update amountOverdue to reflect remaining balance (negative values allowed for credit)
         customer.amountOverdue = (customer.newArrears || 0).toString();
         
         // Save updated customer
