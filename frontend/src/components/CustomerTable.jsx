@@ -21,7 +21,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/customers`);
+      const response = await fetch(`${API_BASE_URL}/customers`);
       const result = await response.json();
       if (result.success && result.data) {
         // Show all customers including COMPLETED
@@ -84,7 +84,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const handleDelete = async (customer) => {
     if (window.confirm(`Are you sure you want to delete ${customer.name}?`)) {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/customers/${customer._id}`, {
+        const response = await fetch(`${API_BASE_URL}/customers/${customer._id}`, {
           method: 'DELETE'
         });
         if (response.ok) {

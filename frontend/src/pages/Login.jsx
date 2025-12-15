@@ -28,7 +28,7 @@ const Login = () => {
     setMessage('');
     setLoading(true);
     try {
-      const endpoint = isAdminLogin ? '/api/auth/admin/login' : '/api/auth/login';
+      const endpoint = isAdminLogin ? '/auth/admin/login' : '/auth/login';
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,7 +52,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const endpoint = isAdminLogin ? '/api/auth/admin/verify-otp' : '/api/auth/verify-otp';
+      const endpoint = isAdminLogin ? '/auth/admin/verify-otp' : '/auth/verify-otp';
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,7 @@ const Login = () => {
 
       // Fetch full user profile to get all fields including callerId
       try {
-        const profileEndpoint = decoded.role === 'admin' ? '/api/admin/profile' : '/api/users/profile';
+        const profileEndpoint = decoded.role === 'admin' ? '/admin/profile' : '/users/profile';
         const profileRes = await fetch(`${API_BASE_URL}${profileEndpoint}`, {
           headers: { 
             'Authorization': `Bearer ${data.token}`,

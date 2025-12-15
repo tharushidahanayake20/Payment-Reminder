@@ -28,7 +28,7 @@ const ResetPassword = ()=>{
   const navigate = useNavigate();
 
   const verifyOtp = async () => {
-    const res = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
+    const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
       method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })
     });
     return res.json().then(d=>({ ok: res.ok, body: d }));
@@ -44,7 +44,7 @@ const ResetPassword = ()=>{
       const { ok, body } = await verifyOtp();
       if (!ok) throw new Error(body.message || 'Invalid OTP');
       const resetToken = body.resetToken;
-      const res2 = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      const res2 = await fetch(`${API_BASE_URL}/auth/reset-password`, {
         method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, resetToken, newPassword, confirmPassword })
       });
       

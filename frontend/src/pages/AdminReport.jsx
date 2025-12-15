@@ -35,7 +35,7 @@ function AdminReport() {
   // Fetch all performance reports submitted by callers
   const fetchPerformanceReports = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/reports`);
+      const response = await fetch(`${API_BASE_URL}/reports`);
       const result = await response.json();
       if (result.success && result.data) {
         setPerformanceReports(result.data);
@@ -48,7 +48,7 @@ function AdminReport() {
   // Fetch all callers for report list
   const fetchAllCallers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/callers`);
+      const response = await fetch(`${API_BASE_URL}/callers`);
       const result = await response.json();
       if (result.success && result.data) {
         setAllCallers(result.data);
@@ -102,11 +102,11 @@ function AdminReport() {
       setLoading(true);
       
       // Fetch all customers to calculate statistics
-      const customersResponse = await fetch(`${API_BASE_URL}/api/customers`);
+      const customersResponse = await fetch(`${API_BASE_URL}/customers`);
       const customersResult = await customersResponse.json();
       
       // Fetch all callers to get active caller count
-      const callersResponse = await fetch(`${API_BASE_URL}/api/callers`);
+      const callersResponse = await fetch(`${API_BASE_URL}/callers`);
       const callersResult = await callersResponse.json();
       
       if (customersResult.success && customersResult.data) {
@@ -157,7 +157,7 @@ function AdminReport() {
 
   const fetchCompletedRequests = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/requests/completed`);
+      const response = await fetch(`${API_BASE_URL}/requests/completed`);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -174,7 +174,7 @@ function AdminReport() {
 
   const fetchPendingRequests = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/requests?status=ACCEPTED`);
+      const response = await fetch(`${API_BASE_URL}/requests?status=ACCEPTED`);
       const result = await response.json();
       
       if (result.success && result.data) {

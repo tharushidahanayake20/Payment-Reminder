@@ -171,9 +171,9 @@ const UploadPage = () => {
       formData.append('file', fileItem.file);
 
       const token = localStorage.getItem('token');
-      console.log('Uploading paid customers file to:', `${API_BASE_URL}/api/upload/parse`);
+      console.log('Uploading paid customers file to:', `${API_BASE_URL}/upload/parse`);
       
-      const response = await fetch(`${API_BASE_URL}/api/upload/parse`, {
+      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -240,7 +240,7 @@ const UploadPage = () => {
       const token = localStorage.getItem('token');
       console.log('Importing paid customers to database...');
       
-      const response = await fetch(`${API_BASE_URL}/api/upload/mark-paid`, {
+      const response = await fetch(`${API_BASE_URL}/upload/mark-paid`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -300,7 +300,7 @@ const UploadPage = () => {
       const token = localStorage.getItem('token');
       console.log('Importing to database...');
       
-      const response = await fetch(`${API_BASE_URL}/api/upload/import-customers`, {
+      const response = await fetch(`${API_BASE_URL}/upload/import-customers`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -347,9 +347,9 @@ const UploadPage = () => {
       formData.append('file', fileItem.file);
 
       const token = localStorage.getItem('token');
-      console.log('Uploading to:', `${API_BASE_URL}/api/upload/parse`);
+      console.log('Uploading to:', `${API_BASE_URL}/upload/parse`);
       
-      const response = await fetch(`${API_BASE_URL}/api/upload/parse`, {
+      const response = await fetch(`${API_BASE_URL}/upload/parse`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
