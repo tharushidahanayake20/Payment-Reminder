@@ -33,6 +33,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     if (file) {
       if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
         showError("Please upload a valid Excel file (.xlsx or .xls)");
+        e.target.value = null; // Clear the input
         return;
       }
       setMainExcel(file);
@@ -52,6 +53,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     
     setExcludeFiles(prev => [...prev, ...validFiles]);
     showSuccess(`${validFiles.length} exclusion file(s) added`);
+    e.target.value = null; // Clear the input to allow re-uploading
   };
 
   const removeExcludeFile = (index) => {
@@ -244,6 +246,7 @@ function PODFilterComponent({ isOpen, onClose }) {
       if (lastBillValue > 5000) {
         // Categorize by segment type
         if (subSegmentUpper.includes('GOVERNMENT') || subSegmentUpper.includes('INST')) {
+          console.log(`→ Categorized as Enterprise Gov: ${subSegment}`);
           enterpriseGovRecords.push({ 
             ...row, 
             path: 'Enterprise - Government Institutions',
@@ -252,6 +255,7 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('LARGE')) {
+          console.log(`→ Categorized as Enterprise Large: ${subSegment}`);
           enterpriseLargeRecords.push({ 
             ...row, 
             path: 'Enterprise - Large',
@@ -260,6 +264,7 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('SME')) {
+          console.log(`→ Categorized as SME: ${subSegment}`);
           smeRecords.push({ 
             ...row, 
             path: 'SME',
@@ -268,6 +273,7 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else if (subSegmentUpper.includes('WHOLESALE')) {
+          console.log(`→ Categorized as Wholesales: ${subSegment}`);
           wholesalesRecords.push({ 
             ...row, 
             path: 'Wholesales',
@@ -276,6 +282,7 @@ function PODFilterComponent({ isOpen, onClose }) {
             lastBillValue 
           });
         } else {
+          console.log(`→ Not categorized (remaining): ${subSegment}`);
           remainingRecords.push({ ...row, lastBillValue });
         }
       } else {
@@ -541,6 +548,12 @@ function PODFilterComponent({ isOpen, onClose }) {
     setExcludeFiles([]);
     setResults(null);
     setCurrentStep(0);
+    
+    // Clear file input values
+    const mainExcelInput = document.getElementById('mainExcel');
+    const excludeFilesInput = document.getElementById('excludeFiles');
+    if (mainExcelInput) mainExcelInput.value = null;
+    if (excludeFilesInput) excludeFilesInput.value = null;
   };
 
   if (!isOpen) return null;
