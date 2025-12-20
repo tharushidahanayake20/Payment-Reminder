@@ -1,5 +1,6 @@
 import React from "react";
-import Logo from "../assets/logo_11.png";
+import LogoDark from "../assets/logoNew.svg";
+import LogoLight from "../assets/logo_11.png";
 import "./sideBar.css";
 import { BiHomeAlt2 } from "react-icons/bi";
 import { FaTasks } from "react-icons/fa";
@@ -10,17 +11,19 @@ import { RiSettings4Line } from "react-icons/ri";
 import { TbLogout2 } from "react-icons/tb";
 import { NavLink } from "react-router-dom";
 import { MdOutlineFileUpload } from "react-icons/md";
+import { useTheme } from "../context/ThemeContext";
 
 export default function Sidebar() {
   // Get user role from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
+  const { darkMode } = useTheme();
 
   return (
     <>
       <div className="sidebar">
         <div className="sidebar-logo">
-          <img src={Logo} alt="App Logo" />
+          <img src={darkMode ? LogoDark : LogoLight} alt="App Logo" />
         </div>
 
         <nav className="sidebar-menu">

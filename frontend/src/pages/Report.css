@@ -18,7 +18,101 @@ hr {
     gap: 50px;
     padding: 10px;
     margin: 20px;
-    
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+  .widgets {
+    gap: 30px;
+    margin: 15px;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .widgets {
+    gap: 15px;
+    margin: 10px;
+    padding: 5px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .total-calls,
+  .sucessful-calls,
+  .total-payments,
+  .pending-payments {
+    width: 100% !important;
+    max-width: 300px;
+  }
+
+  .title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .widgets {
+    gap: 10px;
+    margin: 8px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .total-calls,
+  .sucessful-calls,
+  .total-payments,
+  .pending-payments {
+    width: 100% !important;
+    max-width: 100%;
+    padding: 8px;
+  }
+}
+
+/* Table Responsiveness */
+.performance-table-container {
+  overflow-x: auto;
+}
+
+.performance-table,
+.requests-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+  .performance-table,
+  .requests-table table {
+    font-size: 12px;
+  }
+
+  .performance-table th,
+  .performance-table td,
+  .requests-table th,
+  .requests-table td {
+    padding: 8px 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .performance-table,
+  .requests-table table {
+    font-size: 10px;
+  }
+
+  .performance-table th,
+  .performance-table td,
+  .requests-table th,
+  .requests-table td {
+    padding: 6px 2px;
+  }
+
+  .customer-performance-log h3,
+  .completed-requests-section h3 {
+    font-size: 16px;
+  }
 }
 
 .total-calls{

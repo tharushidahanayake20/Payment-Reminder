@@ -5,6 +5,74 @@
   margin: 18px 0;
 }
 
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .upload-header {
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px 0;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+
+  .view-data-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 12px 18px;
+  }
+
+  .upload-header {
+    margin: 10px 0;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
+  .dropzone {
+    height: 180px;
+  }
+
+  .upload-section {
+    max-height: calc(100vh - 120px);
+  }
+}
+
+@media (max-width: 480px) {
+  .upload-container {
+    padding: 8px 12px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .view-data-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+
+  .dropzone {
+    height: 150px;
+    padding: 10px;
+  }
+
+  .upload-icon {
+    font-size: 32px;
+  }
+
+  .upload-text {
+    font-size: 12px;
+  }
+}
+
 .title{
   color: #000000;
   font-size: 20px;

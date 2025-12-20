@@ -4,6 +4,67 @@
   min-height: 100vh;
 }
 
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .admin-tasks {
+    padding: 20px;
+  }
+
+  .admin-tasks-header h1 {
+    font-size: 28px;
+  }
+
+  .admin-tasks-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-tasks {
+    padding: 15px;
+  }
+
+  .admin-tasks-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .admin-tasks-header h1 {
+    font-size: 22px;
+  }
+
+  .assign-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-tasks-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .admin-tasks-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-tasks {
+    padding: 10px;
+  }
+
+  .admin-tasks-header h1 {
+    font-size: 18px;
+  }
+
+  .stat-item {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
 /* Header */
 .admin-tasks-header {
   display: flex;

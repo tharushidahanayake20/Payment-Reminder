@@ -4,6 +4,63 @@
   min-height: 100vh;
 }
 
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .caller-tasks {
+    padding: 15px;
+  }
+
+  .caller-tasks-header h1 {
+    font-size: 24px;
+  }
+
+  .tasks-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .caller-tasks {
+    padding: 10px;
+  }
+
+  .caller-tasks-header h1 {
+    font-size: 20px;
+  }
+
+  .tasks-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .caller-tasks {
+    padding: 8px;
+  }
+
+  .caller-tasks-header h1 {
+    font-size: 18px;
+  }
+
+  .tasks-stats {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 12px;
+  }
+}
+
 /* Header */
 .caller-tasks-header {
   margin-bottom: 30px;
