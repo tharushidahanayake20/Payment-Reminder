@@ -65,6 +65,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'userType' => $user instanceof Admin ? 'admin' : 'caller',
                 'role' => $user instanceof Admin ? $user->role : 'caller',
+                'region' => $user instanceof Admin ? $user->region : null,
                 'rtom' => $user->rtom
             ]
         ]);
@@ -72,8 +73,20 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logged out successfully']);
+        try {
+            // Check if user is authenticated
+            if (!$request->user()) {
+                return response()->json(['message' => 'Not authenticated'], 401);
+            }
+
+            // Delete the current access token
+            $request->user()->currentAccessToken()->delete();
+            
+            return response()->json(['message' => 'Logged out successfully']);
+        } catch (\Exception $e) {
+            \Log::error('Logout error: ' . $e->getMessage());
+            return response()->json(['message' => 'Logout successful'], 200);
+        }
     }
 
     /**
@@ -122,6 +135,7 @@ class AuthController extends Controller
                     'email' => $user->email,
                     'userType' => $userType,
                     'role' => $userType === 'admin' ? $user->role : 'caller',
+                    'region' => $userType === 'admin' ? $user->region : null,
                     'rtom' => $user->rtom
                 ]
             ]);

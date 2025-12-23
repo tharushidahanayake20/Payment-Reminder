@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import './SuperAdminDashboard.css';
 import { API_BASE_URL } from '../config/api';
+import { ALL_REGIONS, getRtomsForRegion, ALL_RTOMS } from '../config/regionConfig';
 
 function SuperAdminDashboard() {
   const [admins, setAdmins] = useState([]);
@@ -15,8 +16,10 @@ function SuperAdminDashboard() {
     phone: '',
     password: '',
     role: 'admin',
+    region: '',
     rtom: ''
   });
+  const [availableRtoms, setAvailableRtoms] = useState([]);
 
   useEffect(() => {
     fetchAdmins();
@@ -61,8 +64,13 @@ function SuperAdminDashboard() {
       return;
     }
 
-    if (formData.role === 'admin' && !formData.rtom) {
-      toast.error('RTOM is required for admin role');
+    if (formData.role === 'region_admin' && !formData.region) {
+      toast.error('Region is required for region admin role');
+      return;
+    }
+
+    if ((formData.role === 'rtom_admin' || formData.role === 'supervisor') && !formData.rtom) {
+      toast.error('RTOM is required for RTOM admin and supervisor roles');
       return;
     }
 
@@ -112,8 +120,15 @@ function SuperAdminDashboard() {
       phone: admin.phone || '',
       password: '',
       role: admin.role,
+      region: admin.region || '',
       rtom: admin.rtom || ''
     });
+    
+    // Set available RTOMs if region is selected
+    if (admin.region) {
+      setAvailableRtoms(getRtomsForRegion(admin.region));
+    }
+    
     setShowModal(true);
   };
 
@@ -152,8 +167,10 @@ function SuperAdminDashboard() {
       phone: '',
       password: '',
       role: 'admin',
+      region: '',
       rtom: ''
     });
+    setAvailableRtoms([]);
     setEditingAdmin(null);
   };
 
@@ -190,6 +207,7 @@ function SuperAdminDashboard() {
               <th>Email</th>
               <th>Phone</th>
               <th>Role</th>
+              <th>Region</th>
               <th>RTOM</th>
               <th>Status</th>
               <th>Actions</th>
@@ -212,6 +230,7 @@ function SuperAdminDashboard() {
                       {admin.role}
                     </span>
                   </td>
+                  <td>{admin.region || '-'}</td>
                   <td>{admin.rtom || '-'}</td>
                   <td>
                     <span className={`status-badge ${admin.isVerified ? 'verified' : 'pending'}`}>
@@ -331,15 +350,44 @@ function SuperAdminDashboard() {
                 <select
                   name="role"
                   value={formData.role}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    handleInputChange(e);
+                    // Reset region/rtom when role changes
+                    setFormData(prev => ({ ...prev, region: '', rtom: '' }));
+                    setAvailableRtoms([]);
+                  }}
                   required
                 >
                   <option value="admin">Admin</option>
+                  <option value="region_admin">Region Admin</option>
+                  <option value="rtom_admin">RTOM Admin</option>
+                  <option value="supervisor">Supervisor</option>
                   <option value="uploader">Uploader</option>
                 </select>
               </div>
 
-              {formData.role === 'admin' && (
+              {formData.role === 'region_admin' && (
+                <div className="form-group">
+                  <label>Region *</label>
+                  <select
+                    name="region"
+                    value={formData.region}
+                    onChange={(e) => {
+                      handleInputChange(e);
+                      setAvailableRtoms(getRtomsForRegion(e.target.value));
+                      setFormData(prev => ({ ...prev, rtom: '' }));
+                    }}
+                    required
+                  >
+                    <option value="">Select Region</option>
+                    {ALL_REGIONS.map(region => (
+                      <option key={region} value={region}>{region}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {(formData.role === 'rtom_admin' || formData.role === 'supervisor') && (
                 <div className="form-group">
                   <label>RTOM *</label>
                   <select
@@ -349,11 +397,11 @@ function SuperAdminDashboard() {
                     required
                   >
                     <option value="">Select RTOM</option>
-                    <option value="Colombo">Colombo</option>
-                    <option value="Matara">Matara</option>
-                    <option value="Negombo">Negombo</option>
-                    <option value="Kandy">Kandy</option>
-                    <option value="Kalutara">Kalutara</option>
+                    {ALL_RTOMS.map(rtom => (
+                      <option key={rtom.code} value={rtom.code}>
+                        {rtom.display}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}

@@ -2,11 +2,14 @@ import React, { useState } from "react";
 import "./PODFilterComponent.css";
 import { showSuccess, showError } from "./Notifications";
 import * as XLSX from 'xlsx';
+import API_BASE_URL from "../config/api";
+import { getRegionForRtom } from "../config/regionConfig";
 
 function PODFilterComponent({ isOpen, onClose }) {
   const [mainExcel, setMainExcel] = useState(null);
   const [excludeFiles, setExcludeFiles] = useState([]);
   const [processing, setProcessing] = useState(false);
+  const [distributing, setDistributing] = useState(false);
   const [results, setResults] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   
@@ -635,6 +638,117 @@ function PODFilterComponent({ isOpen, onClose }) {
     showSuccess(`${type.toUpperCase()} results downloaded successfully`)``;
   };
 
+  // Distribute filtered data to regions and RTOMs
+  const distributeToRegionsAndRtoms = async () => {
+    console.log('Distribution triggered. Results:', results);
+    
+    if (!results || !results.allData) {
+      showError("No data available to distribute. Please run filtration first.");
+      console.error('No results or allData:', { results, hasAllData: results?.allData });
+      return;
+    }
+
+    if (!results.allData.length) {
+      showError("No data to distribute. The filtered data is empty.");
+      console.error('Empty allData array');
+      return;
+    }
+
+    setDistributing(true);
+
+    try {
+      // Send the raw Excel data directly to backend - no mapping needed
+      const customersToDistribute = results.allData
+        .filter(row => {
+          // Only include rows with account number - check multiple possible field names
+          const accountNumber = row['ACCOUNT_NUM'] || row['ACCOUNT_NUMBER'] || row['Account Number'] || row['Account_num'] || '';
+          const isValid = accountNumber && accountNumber.toString().trim() !== '';
+          if (!isValid) {
+            console.warn('Row missing account number:', Object.keys(row).slice(0, 5));
+          }
+          return isValid;
+        })
+        .map(row => {
+          // Add REGION from RTOM if not present
+          const rtomCode = row['RTOM'] || null;
+          const region = rtomCode ? getRegionForRtom(rtomCode) : (row['REGION'] || null);
+          
+          // Ensure ACCOUNT_NUMBER field exists for backend
+          return {
+            ...row,
+            REGION: region,
+            ACCOUNT_NUMBER: row['ACCOUNT_NUM'] || row['ACCOUNT_NUMBER'] || row['Account Number'] || row['Account_num']
+          };
+        });
+
+      console.log('Customers to distribute:', customersToDistribute.length, 'Sample:', customersToDistribute.slice(0, 2));
+
+      if (!customersToDistribute.length) {
+        showError("No valid customers to distribute. All rows are missing account numbers.");
+        setDistributing(false);
+        return;
+      }
+
+      // Send to backend API
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showError("Authentication token not found. Please log in again.");
+        setDistributing(false);
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/distribution/distribute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          customers: customersToDistribute
+        })
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 500));
+        showError('Server returned an error. Please check your authentication and try again.');
+        setDistributing(false);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showError(data.message || `Server error: ${response.status}`);
+        console.error('Distribution failed:', data);
+        setDistributing(false);
+        return;
+      }
+
+      if (data.success) {
+        showSuccess(`Successfully distributed ${data.summary.created + data.summary.updated} customers to regions and RTOMs`);
+        
+        // Show distribution summary
+        console.log('Distribution Summary:', data.summary);
+        
+        if (data.summary.errors > 0) {
+          showError(`${data.summary.errors} records failed to distribute. Check console for details.`);
+          console.error('Distribution errors:', data.errors);
+        }
+      } else {
+        showError(data.message || 'Failed to distribute data');
+        console.error('Distribution failed:', data);
+      }
+    } catch (error) {
+      console.error('Distribution error:', error);
+      showError('An error occurred while distributing data to regions and RTOMs');
+    } finally {
+      setDistributing(false);
+    }
+  };
+
   const reset = () => {
     setMainExcel(null);
     setExcludeFiles([]);
@@ -844,6 +958,30 @@ function PODFilterComponent({ isOpen, onClose }) {
                 <button className="download-btn" onClick={() => downloadResults('excluded')}>
                   <i className="fas fa-ban"></i>
                   Excluded (SU)
+                </button>
+                <button 
+                  className="distribute-btn" 
+                  onClick={distributeToRegionsAndRtoms}
+                  disabled={distributing || !results?.allData?.length}
+                  style={{
+                    backgroundColor: (!results?.allData?.length) ? '#ccc' : '#28a745',
+                    color: 'white',
+                    marginTop: '10px',
+                    cursor: (!results?.allData?.length) ? 'not-allowed' : 'pointer'
+                  }}
+                  title={!results?.allData?.length ? 'Process filtration first to enable distribution' : 'Distribute filtered data to database'}
+                >
+                  {distributing ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      Distributing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-share-alt"></i>
+                      Distribute to Regions & RTOMs {results?.allData?.length ? `(${results.allData.length})` : ''}
+                    </>
+                  )}
                 </button>
               </>
             )}

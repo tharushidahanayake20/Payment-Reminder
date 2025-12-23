@@ -57,6 +57,8 @@ const Login = () => {
         // Redirect based on role
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
+        } else if (data.user.role === 'uploader') {
+          navigate('/upload');
         } else if (data.user.userType === 'caller') {
           navigate('/dashboard');
         } else {
@@ -124,6 +126,8 @@ const Login = () => {
       setTimeout(() => {
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
+        } else if (data.user.role === 'uploader') {
+          navigate('/upload');
         } else if (data.user.userType === 'caller') {
           navigate('/dashboard');
         } else {

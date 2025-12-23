@@ -17,6 +17,7 @@ class Admin extends Authenticatable
         'adminId',
         'phone',
         'role',
+        'region',
         'rtom',
         'status'
     ];
@@ -28,6 +29,7 @@ class Admin extends Authenticatable
     protected $casts = [
         'status' => 'string',
         'role' => 'string',
+        'region' => 'string',
         'rtom' => 'string'
     ];
 
@@ -49,6 +51,24 @@ class Admin extends Authenticatable
         return $this->role === 'superadmin';
     }
 
+    // Check if region admin
+    public function isRegionAdmin()
+    {
+        return $this->role === 'region_admin';
+    }
+
+    // Check if rtom admin
+    public function isRtomAdmin()
+    {
+        return $this->role === 'rtom_admin';
+    }
+
+    // Check if supervisor
+    public function isSupervisor()
+    {
+        return $this->role === 'supervisor';
+    }
+
     // Check if admin
     public function isAdmin()
     {
@@ -59,5 +79,52 @@ class Admin extends Authenticatable
     public function isUploader()
     {
         return $this->role === 'uploader';
+    }
+
+    // Get customers based on admin's role and region/rtom
+    public function getAccessibleCustomers()
+    {
+        $query = \App\Models\Customer::query();
+
+        if ($this->isSuperAdmin()) {
+            // Superadmin can see all customers
+            return $query;
+        } elseif ($this->isRegionAdmin() && $this->region) {
+            // Region admin can see all customers in their region
+            return $query->where('region', $this->region);
+        } elseif ($this->isRtomAdmin() && $this->rtom) {
+            // RTOM admin can see only customers in their RTOM
+            return $query->where('rtom', $this->rtom);
+        } elseif ($this->isSupervisor() && $this->rtom) {
+            // Supervisor can see customers in their RTOM
+            return $query->where('rtom', $this->rtom);
+        }
+
+        // Default: no access
+        return $query->where('id', 0);
+    }
+
+    // Check if admin has access to a specific region
+    public function hasRegionAccess($region)
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        if ($this->isRegionAdmin()) {
+            return $this->region === $region;
+        }
+        return false;
+    }
+
+    // Check if admin has access to a specific RTOM
+    public function hasRtomAccess($rtom)
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        if ($this->isRegionAdmin() || $this->isRtomAdmin() || $this->isSupervisor()) {
+            return $this->rtom === $rtom;
+        }
+        return false;
     }
 }

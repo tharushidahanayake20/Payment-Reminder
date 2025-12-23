@@ -7,6 +7,7 @@ use App\Http\Controllers\CallerController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UploadController;
 use App\Http\Controllers\RequestController;
+use App\Http\Controllers\DataDistributionController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -51,6 +52,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/upload/parse', [UploadController::class, 'parse']);
     Route::post('/upload/import', [UploadController::class, 'import']);
     Route::post('/upload/mark-paid', [UploadController::class, 'markPaid']);
+    
+    // Data Distribution
+    Route::post('/distribution/distribute', [DataDistributionController::class, 'distributeToRegionsAndRtoms']);
+    Route::get('/distribution/summary', [DataDistributionController::class, 'getDistributionSummary']);
     
     // Superadmin routes
     Route::middleware('can:superadmin')->group(function () {

@@ -18,7 +18,7 @@ export default function Sidebar() {
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
 
-  // For uploaders, only show upload page
+  // For uploaders, show upload, POD filter, and customers
   if (userRole === 'uploader') {
     return (
       <>
@@ -50,6 +50,17 @@ export default function Sidebar() {
                 >
                   <FaFilter />
                   <span>POD Filter</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/customers"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <GoPeople />
+                  <span>Customers</span>
                 </NavLink>
               </li>
             </ul>
