@@ -63,16 +63,60 @@ function PODFilterComponent({ isOpen, onClose }) {
     setExcludeFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Convert Excel date serial number to YYYY-MM-DD format
+  const convertExcelDate = (excelDate) => {
+    if (!excelDate) return null;
+    
+    // If it's already a string date, return it
+    if (typeof excelDate === 'string') return excelDate;
+    
+    // If it's a number (Excel serial date)
+    if (typeof excelDate === 'number') {
+      // Excel dates are days since 1900-01-01 (with leap year bug)
+      const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899
+      const days = Math.floor(excelDate);
+      const date = new Date(excelEpoch.getTime() + days * 24 * 60 * 60 * 1000);
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    }
+    
+    return null;
+  };
+
   const readExcelFile = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
+          const workbook = XLSX.read(data, { type: 'array', cellDates: false });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-          resolve(jsonData);
+          const jsonData = XLSX.utils.sheet_to_json(firstSheet, { raw: false });
+          
+          // Convert date fields and trim all field names
+          const processedData = jsonData.map(row => {
+            const processed = {};
+            
+            // Trim all field names and copy values
+            Object.keys(row).forEach(key => {
+              const trimmedKey = key.trim();
+              processed[trimmedKey] = row[key];
+            });
+            
+            // Convert RUN_DATE if it exists
+            if (processed['RUN_DATE']) {
+              const converted = convertExcelDate(processed['RUN_DATE']);
+              if (converted) processed['RUN_DATE'] = converted;
+            }
+            
+            return processed;
+          });
+          
+          resolve(processedData);
         } catch (error) {
           reject(error);
         }

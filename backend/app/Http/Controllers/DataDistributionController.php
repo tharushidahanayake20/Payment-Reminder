@@ -65,13 +65,39 @@ class DataDistributionController extends Controller
 
             foreach ($customersData as $customerData) {
                 try {
+                    // Helper function to clean and convert numeric values
+                    $cleanNumeric = function($value) {
+                        if ($value === null || $value === '' || $value === 'NULL') {
+                            return null;
+                        }
+                        // Remove commas and convert to float
+                        $cleaned = str_replace(',', '', trim($value));
+                        return $cleaned !== '' ? floatval($cleaned) : null;
+                    };
+                    
                     // Find NEW_ARREARS column dynamically (can be NEW_ARREAR_S_20251221, NEW_ARREARS_20260121, etc.)
                     $newArrearsValue = null;
+                    $newArrearsKey = null;
                     foreach ($customerData as $key => $value) {
                         if (preg_match('/^NEW_ARREAR[S]?_\d{8}$/i', $key)) {
-                            $newArrearsValue = isset($value) ? floatval(str_replace(',', '', $value)) : null;
+                            $newArrearsKey = $key;
+                            $newArrearsValue = $cleanNumeric($value);
                             break;
                         }
+                    }
+                    
+                    // Log first record to debug
+                    static $logged = false;
+                    if (!$logged) {
+                        \Log::info('Sample customer data:', [
+                            'LATEST_BILL_MNY_raw' => $customerData['LATEST_BILL_MNY'] ?? 'NOT_FOUND',
+                            'LATEST_BILL_MNY_cleaned' => $cleanNumeric($customerData['LATEST_BILL_MNY'] ?? null),
+                            'NEW_ARREARS_key' => $newArrearsKey,
+                            'NEW_ARREARS_raw' => $newArrearsKey ? $customerData[$newArrearsKey] : 'NOT_FOUND',
+                            'NEW_ARREARS_cleaned' => $newArrearsValue,
+                            'all_keys' => array_keys($customerData)
+                        ]);
+                        $logged = true;
                     }
                     
                     // Step 1: Save to filtered_customers with essential columns for caller work
@@ -83,7 +109,7 @@ class DataDistributionController extends Controller
                             'PRODUCT_LABEL' => $customerData['PRODUCT_LABEL'] ?? null,
                             'MEDIUM' => $customerData['MEDIUM'] ?? null,
                             'CUSTOMER_NAME' => $customerData['ADDRESS_NAME'] ?? null,
-                            'LATEST_BILL_MNY' => isset($customerData['LATEST_BILL_MNY']) ? floatval(str_replace(',', '', $customerData['LATEST_BILL_MNY'])) : null,
+                            'LATEST_BILL_MNY' => $cleanNumeric($customerData['LATEST_BILL_MNY'] ?? null),
                             'NEW_ARREARS' => $newArrearsValue,
                             'CREDIT_SCORE' => $customerData['CREDIT_SCORE'] ?? null,
                             'ACCOUNT_MANAGER' => $customerData['ACCOUNT_MANAGER'] ?? null,
@@ -112,7 +138,7 @@ class DataDistributionController extends Controller
                             'CUSTOMER_SEGMENT' => $customerData['CUSTOMER_SEGMENT'] ?? null,
                             'ADDRESS_NAME' => $customerData['ADDRESS_NAME'] ?? null,
                             'FULL_ADDRESS' => $customerData['FULL_ADDRESS'] ?? null,
-                            'LATEST_BILL_MNY' => isset($customerData['LATEST_BILL_MNY']) ? floatval(str_replace(',', '', $customerData['LATEST_BILL_MNY'])) : null,
+                            'LATEST_BILL_MNY' => $cleanNumeric($customerData['LATEST_BILL_MNY'] ?? null),
                             'NEW_ARREARS' => $newArrearsValue,
                             'MOBILE_CONTACT_TEL' => $customerData['MOBILE_CONTACT_TEL'] ?? null,
                             'EMAIL_ADDRESS' => $customerData['EMAIL_ADDRESS'] ?? null,

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Customer;
+use App\Models\FilteredCustomer;
 use App\Models\ContactHistory;
 use App\Models\Admin;
 use Illuminate\Support\Facades\Log;
@@ -22,8 +22,8 @@ class CustomerController extends Controller
                 ], 401);
             }
 
-            // Start with base query
-            $query = Customer::with(['caller', 'contactHistory']);
+            // Start with base query - use FilteredCustomer (working table)
+            $query = FilteredCustomer::with(['assignedCaller']);
             
             // Apply role-based filtering
             if ($user instanceof Admin) {
@@ -31,13 +31,13 @@ class CustomerController extends Controller
                 if (!$user->isSuperAdmin()) {
                     if ($user->isRegionAdmin() && $user->region) {
                         // Region admin sees all customers in their region
-                        $query->where('region', $user->region);
+                        $query->where('REGION', $user->region);
                     } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $user->rtom) {
                         // RTOM admin and supervisor see only their RTOM
-                        $query->where('rtom', $user->rtom);
+                        $query->where('RTOM', $user->rtom);
                     } elseif ($user->rtom) {
                         // Legacy admin role with RTOM
-                        $query->where('rtom', $user->rtom);
+                        $query->where('RTOM', $user->rtom);
                     }
                 }
                 // Superadmin sees all customers (no filter)
@@ -52,11 +52,11 @@ class CustomerController extends Controller
             }
             
             if ($request->has('region')) {
-                $query->where('region', $request->region);
+                $query->where('REGION', $request->region);
             }
             
             if ($request->has('rtom')) {
-                $query->where('rtom', $request->rtom);
+                $query->where('RTOM', $request->rtom);
             }
             
             if ($request->has('callerId')) {
@@ -85,21 +85,17 @@ class CustomerController extends Controller
     {
         try {
             $validated = $request->validate([
-                'accountNumber' => 'required|unique:customers',
-                'name' => 'required',
-                'region' => 'nullable|string',
-                'rtom' => 'nullable|string',
-                'phone' => 'nullable|string',
-                'contactPerson' => 'nullable|string',
-                'contactPersonPhone' => 'nullable|string',
-                'address' => 'nullable|string',
-                'amountOverdue' => 'nullable|numeric',
-                'daysOverdue' => 'nullable|integer',
-                'status' => 'nullable|string',
-                'additionalInfo' => 'nullable|string'
+                'ACCOUNT_NUM' => 'required|unique:filtered_customers',
+                'CUSTOMER_NAME' => 'required',
+                'REGION' => 'nullable|string',
+                'RTOM' => 'nullable|string',
+                'MOBILE_CONTACT_TEL' => 'nullable|string',
+                'EMAIL_ADDRESS' => 'nullable|string',
+                'NEW_ARREARS' => 'nullable|numeric',
+                'status' => 'nullable|string'
             ]);
             
-            $customer = Customer::create($validated);
+            $customer = FilteredCustomer::create($validated);
             
             return response()->json([
                 'success' => true,
@@ -121,16 +117,16 @@ class CustomerController extends Controller
     {
         try {
             $user = $request->user();
-            $customer = Customer::with(['caller', 'contactHistory'])->findOrFail($id);
+            $customer = FilteredCustomer::with(['assignedCaller'])->findOrFail($id);
             
             // Check if user has access to this customer
             if ($user instanceof Admin && !$user->isSuperAdmin()) {
-                if ($user->isRegionAdmin() && $customer->region !== $user->region) {
+                if ($user->isRegionAdmin() && $customer->REGION !== $user->region) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Access denied'
                     ], 403);
-                } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $customer->rtom !== $user->rtom) {
+                } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $customer->RTOM !== $user->rtom) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Access denied'
@@ -157,16 +153,16 @@ class CustomerController extends Controller
     {
         try {
             $user = $request->user();
-            $customer = Customer::findOrFail($id);
+            $customer = FilteredCustomer::findOrFail($id);
             
             // Check if user has access to update this customer
             if ($user instanceof Admin && !$user->isSuperAdmin()) {
-                if ($user->isRegionAdmin() && $customer->region !== $user->region) {
+                if ($user->isRegionAdmin() && $customer->REGION !== $user->region) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Access denied'
                     ], 403);
-                } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $customer->rtom !== $user->rtom) {
+                } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $customer->RTOM !== $user->rtom) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Access denied'
@@ -196,7 +192,7 @@ class CustomerController extends Controller
     {
         try {
             $user = $request->user();
-            $customer = Customer::findOrFail($id);
+            $customer = FilteredCustomer::findOrFail($id);
             
             // Only superadmin can delete customers
             if ($user instanceof Admin && !$user->isSuperAdmin()) {
@@ -236,7 +232,7 @@ class CustomerController extends Controller
         $validated['customer_id'] = $id;
         $contactHistory = ContactHistory::create($validated);
         
-        Customer::findOrFail($id)->update(['status' => 'contacted']);
+        FilteredCustomer::findOrFail($id)->update(['status' => 'contacted']);
         
         return response()->json($contactHistory, 201);
     }
