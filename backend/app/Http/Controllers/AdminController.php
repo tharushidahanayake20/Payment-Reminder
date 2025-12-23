@@ -72,8 +72,8 @@ class AdminController extends Controller
     // Superadmin operations
     public function getAllAdmins()
     {
-        // Only get admin and uploader roles, exclude superadmin
-        $admins = Admin::whereIn('role', ['admin', 'uploader'])
+        // Get all admin types, exclude superadmin
+        $admins = Admin::whereIn('role', ['admin', 'region_admin', 'rtom_admin', 'supervisor', 'uploader'])
             ->orderBy('created_at', 'desc')
             ->get();
             
@@ -93,21 +93,36 @@ class AdminController extends Controller
             'email' => 'required|email|unique:admins',
             'phone' => 'nullable',
             'password' => 'required|min:6',
-            'role' => 'required|in:admin,uploader',
-            'rtom' => 'nullable|in:Colombo,Matara,Negombo,Kandy,Kalutara'
+            'role' => 'required|in:admin,region_admin,rtom_admin,supervisor,uploader',
+            'region' => 'nullable|string',
+            'rtom' => 'nullable|string'
         ]);
 
-        // RTOM is required for admin role
-        if ($validated['role'] === 'admin' && empty($validated['rtom'])) {
+        // Region is required for region_admin
+        if ($validated['role'] === 'region_admin' && empty($validated['region'])) {
             return response()->json([
                 'success' => false,
-                'message' => 'RTOM is required for admin role'
+                'message' => 'Region is required for region admin role'
             ], 400);
         }
 
-        // Uploaders don't need RTOM
+        // RTOM is required for rtom_admin and supervisor
+        if (in_array($validated['role'], ['rtom_admin', 'supervisor']) && empty($validated['rtom'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'RTOM is required for RTOM admin and supervisor roles'
+            ], 400);
+        }
+
+        // Auto-assign region based on RTOM for rtom_admin and supervisor
+        if (in_array($validated['role'], ['rtom_admin', 'supervisor']) && !empty($validated['rtom'])) {
+            $validated['region'] = $this->getRegionForRtom($validated['rtom']);
+        }
+
+        // Uploaders don't need RTOM or region
         if ($validated['role'] === 'uploader') {
             $validated['rtom'] = null;
+            $validated['region'] = null;
         }
 
         // Admins created by superadmin are auto-verified
@@ -138,10 +153,16 @@ class AdminController extends Controller
             'name' => 'nullable',
             'email' => 'nullable|email|unique:admins,email,' . $id,
             'phone' => 'nullable',
-            'role' => 'nullable|in:admin,uploader',
-            'rtom' => 'nullable|in:Colombo,Matara,Negombo,Kandy,Kalutara',
+            'role' => 'nullable|in:admin,region_admin,rtom_admin,supervisor,uploader',
+            'region' => 'nullable|string',
+            'rtom' => 'nullable|string',
             'status' => 'nullable|in:active,inactive'
         ]);
+
+        // Auto-assign region based on RTOM for rtom_admin and supervisor
+        if (isset($validated['rtom']) && in_array($validated['role'] ?? $admin->role, ['rtom_admin', 'supervisor'])) {
+            $validated['region'] = $this->getRegionForRtom($validated['rtom']);
+        }
 
         // Don't allow password updates through this endpoint
         $admin->update($request->except(['password', 'adminId']));
@@ -179,5 +200,35 @@ class AdminController extends Controller
             'success' => true,
             'data' => ['Colombo', 'Matara', 'Negombo', 'Kandy', 'Kalutara']
         ]);
+    }
+
+    /**
+     * Get region for a given RTOM code
+     */
+    private function getRegionForRtom($rtomCode)
+    {
+        $rtomToRegionMap = [
+            // Metro Region
+            'CO' => 'Metro Region', 'MA' => 'Metro Region', 'ND' => 'Metro Region',
+            'HK' => 'Metro Region', 'KX' => 'Metro Region', 'WT' => 'Metro Region',
+            'RM' => 'Metro Region',
+            
+            // Region 1
+            'AN' => 'Region 1', 'CW' => 'Region 1', 'GP' => 'Region 1',
+            'KA' => 'Region 1', 'KU' => 'Region 1', 'MT' => 'Region 1',
+            'NE' => 'Region 1', 'PO' => 'Region 1', 'KI' => 'Region 1',
+            
+            // Region 2
+            'AV' => 'Region 2', 'BA' => 'Region 2', 'BW' => 'Region 2',
+            'GA' => 'Region 2', 'HB' => 'Region 2', 'HA' => 'Region 2',
+            'KL' => 'Region 2', 'KG' => 'Region 2', 'RA' => 'Region 2',
+            
+            // Region 3
+            'AM' => 'Region 3', 'BT' => 'Region 3', 'JA' => 'Region 3',
+            'KM' => 'Region 3', 'KO' => 'Region 3', 'TR' => 'Region 3',
+            'VU' => 'Region 3',
+        ];
+        
+        return $rtomToRegionMap[$rtomCode] ?? null;
     }
 }

@@ -15,9 +15,20 @@ class CallerController extends Controller
         
         $query = Caller::with(['creator', 'customers']);
         
-        // RTOM filtering
-        if ($tokenData->userType === 'admin' && $tokenData->role !== 'superadmin') {
-            $query->where('rtom', $user->rtom);
+        // Apply role-based filtering
+        if ($tokenData->userType === 'admin') {
+            if ($tokenData->role === 'superadmin') {
+                // Superadmin sees all callers (no filter)
+            } elseif ($tokenData->role === 'region_admin' && $user->region) {
+                // Region admin sees all callers in their region
+                $query->where('region', $user->region);
+            } elseif (($tokenData->role === 'rtom_admin' || $tokenData->role === 'supervisor') && $user->rtom) {
+                // RTOM admin and supervisor see only callers in their RTOM
+                $query->where('rtom', $user->rtom);
+            } elseif ($user->rtom) {
+                // Legacy admin role with RTOM
+                $query->where('rtom', $user->rtom);
+            }
         }
         
         $callers = $query->get();
@@ -49,7 +60,8 @@ class CallerController extends Controller
             'maxLoad' => 'required|integer|min:1|max:100'
         ]);
         
-        // Auto-assign RTOM from authenticated admin
+        // Auto-assign region and RTOM from authenticated admin
+        $validated['region'] = $user->region;
         $validated['rtom'] = $user->rtom;
         $validated['created_by'] = $user->id;
         
@@ -64,7 +76,7 @@ class CallerController extends Controller
     public function update(Request $request, $id)
     {
         $caller = Caller::findOrFail($id);
-        $caller->update($request->except(['rtom', 'created_by']));
+        $caller->update($request->except(['region', 'rtom', 'created_by']));
         return response()->json($caller);
     }
 

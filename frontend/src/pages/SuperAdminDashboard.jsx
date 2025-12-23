@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import './SuperAdminDashboard.css';
 import { API_BASE_URL } from '../config/api';
-import { ALL_REGIONS, getRtomsForRegion, ALL_RTOMS } from '../config/regionConfig';
+import { ALL_REGIONS, getRtomsForRegion, ALL_RTOMS, getRegionForRtom } from '../config/regionConfig';
 
 function SuperAdminDashboard() {
   const [admins, setAdmins] = useState([]);
@@ -388,22 +388,44 @@ function SuperAdminDashboard() {
               )}
 
               {(formData.role === 'rtom_admin' || formData.role === 'supervisor') && (
-                <div className="form-group">
-                  <label>RTOM *</label>
-                  <select
-                    name="rtom"
-                    value={formData.rtom}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Select RTOM</option>
-                    {ALL_RTOMS.map(rtom => (
-                      <option key={rtom.code} value={rtom.code}>
-                        {rtom.display}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  <div className="form-group">
+                    <label>RTOM *</label>
+                    <select
+                      name="rtom"
+                      value={formData.rtom}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        // Auto-assign region based on RTOM selection
+                        const selectedRtom = e.target.value;
+                        const region = getRegionForRtom(selectedRtom);
+                        if (region) {
+                          setFormData(prev => ({ ...prev, region: region }));
+                        }
+                      }}
+                      required
+                    >
+                      <option value="">Select RTOM</option>
+                      {ALL_RTOMS.map(rtom => (
+                        <option key={rtom.code} value={rtom.code}>
+                          {rtom.display}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  {formData.rtom && formData.region && (
+                    <div className="form-group">
+                      <label>Region (Auto-assigned)</label>
+                      <input
+                        type="text"
+                        value={formData.region}
+                        disabled
+                        style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                      />
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="form-actions">

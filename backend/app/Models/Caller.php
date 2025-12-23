@@ -20,6 +20,7 @@ class Caller extends Authenticatable
         'currentLoad',
         'status',
         'taskStatus',
+        'region',
         'rtom',
         'created_by'
     ];
@@ -33,6 +34,7 @@ class Caller extends Authenticatable
         'currentLoad' => 'integer',
         'status' => 'string',
         'taskStatus' => 'string',
+        'region' => 'string',
         'rtom' => 'string'
     ];
 
