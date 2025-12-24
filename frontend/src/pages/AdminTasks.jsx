@@ -109,8 +109,10 @@ function AdminTasks() {
         allCallersData = [...allCallersData, ...unassignedCallers];
       }
         
-      setAvailableCallers(allCallersData);
-      console.log(`Loaded ${allCallersData.length} callers`);
+      // Filter out OFFLINE/disabled callers - they should not receive assignments
+      const enabledCallers = allCallersData.filter(caller => caller.status !== 'OFFLINE');
+      setAvailableCallers(enabledCallers);
+      console.log(`Loaded ${enabledCallers.length} enabled callers (filtered from ${allCallersData.length} total)`);
     } catch (error) {
       console.error('Error loading callers:', error);
     }

@@ -28,18 +28,19 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
         const result = await response.json();
         const callersData = result.data || result;
         
-        // Filter for active callers with available capacity
+        // Filter for enabled callers (not OFFLINE) with available capacity
         const availableCallers = callersData.filter(c => 
-          c.status === 'active' && c.currentLoad < c.maxLoad
+          c.status !== 'OFFLINE' && c.currentLoad < c.maxLoad
         ).map(c => ({
-          id: c.id,
+          id: c._id || c.id,
           name: c.name,
           callerId: c.callerId,
           region: c.region,
           rtom: c.rtom,
           currentLoad: c.currentLoad || 0,
           maxLoad: c.maxLoad || 0,
-          available: (c.maxLoad || 0) - (c.currentLoad || 0)
+          available: (c.maxLoad || 0) - (c.currentLoad || 0),
+          status: c.status
         }));
 
         setCallers(availableCallers);

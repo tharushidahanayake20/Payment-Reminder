@@ -14,6 +14,10 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Get current user role
+  const userRole = localStorage.getItem('role');
+  const isSupervisor = userRole === 'supervisor';
+
   useEffect(() => {
     if (caller) {
       setFormData({
@@ -82,90 +86,116 @@ function EditEmployeeModal({ show, caller, onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content edit-employee-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Edit Caller</h2>
+          <h2>{isSupervisor ? 'Enable/Disable Caller' : 'Edit Caller'}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="edit-employee-form">
           {error && <div className="error-message">{error}</div>}
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Name *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Caller Name"
-                required
-              />
+          {/* Supervisors only see status field */}
+          {isSupervisor ? (
+            <div className="supervisor-edit-section">
+              <p style={{ marginBottom: '20px', color: '#666' }}>
+                Caller: <strong>{formData.name}</strong> ({formData.callerId})
+              </p>
+              
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  style={{ fontSize: '16px', padding: '10px' }}
+                >
+                  <option value="AVAILABLE">Available</option>
+                  <option value="BUSY">Busy</option>
+                  <option value="OFFLINE">Offline</option>
+                </select>
+              </div>
             </div>
+          ) : (
+            <>
+              {/* Full edit form for rtom_admin and other roles */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Name *</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    placeholder="Caller Name"
+                    required
+                  />
+                </div>
 
-            <div className="form-group">
-              <label>Caller ID *</label>
-              <input
-                type="text"
-                name="callerId"
-                value={formData.callerId}
-                onChange={handleChange}
-                placeholder="Caller ID"
-                required
-              />
-            </div>
-          </div>
+                <div className="form-group">
+                  <label>Caller ID *</label>
+                  <input
+                    type="text"
+                    name="callerId"
+                    value={formData.callerId}
+                    onChange={handleChange}
+                    placeholder="Caller ID"
+                    required
+                  />
+                </div>
+              </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="caller@example.com"
-              />
-            </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="caller@example.com"
+                  />
+                </div>
 
-            <div className="form-group">
-              <label>Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="Phone number"
-              />
-            </div>
-          </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="Phone number"
+                  />
+                </div>
+              </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Max Load</label>
-              <input
-                type="number"
-                name="maxLoad"
-                value={formData.maxLoad}
-                onChange={handleChange}
-                min="1"
-                max="100"
-                placeholder="20"
-              />
-            </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Max Load</label>
+                  <input
+                    type="number"
+                    name="maxLoad"
+                    value={formData.maxLoad}
+                    onChange={handleChange}
+                    min="1"
+                    max="100"
+                    placeholder="20"
+                  />
+                </div>
 
-            <div className="form-group">
-              <label>Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="AVAILABLE">Available</option>
-                <option value="BUSY">Busy</option>
-                <option value="OFFLINE">Offline</option>
-              </select>
-            </div>
-          </div>
+                <div className="form-group">
+                  <label>Status</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                  >
+                    <option value="AVAILABLE">Available</option>
+                    <option value="BUSY">Busy</option>
+                    <option value="OFFLINE">Offline</option>
+                  </select>
+                </div>
+              </div>
+            </>
+          )}
 
           <div className="modal-actions">
             <button type="button" className="btn-cancel" onClick={onClose}>

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "./PODFilterComponent.css";
 import { showSuccess, showError } from "./Notifications";
 import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
 import API_BASE_URL from "../config/api";
 import { getRegionForRtom } from "../config/regionConfig";
 
@@ -12,6 +13,7 @@ function PODFilterComponent({ isOpen, onClose }) {
   const [distributing, setDistributing] = useState(false);
   const [results, setResults] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
+  const [showResultsModal, setShowResultsModal] = useState(false);
   
   // Configurable thresholds
   const [config, setConfig] = useState({
@@ -615,6 +617,7 @@ function PODFilterComponent({ isOpen, onClose }) {
       });
       
       setCurrentStep(6);
+      setShowResultsModal(true);
       
       if (allProcessedData.length === 0) {
         showError("All records were filtered out. Check console for details.");
@@ -630,56 +633,135 @@ function PODFilterComponent({ isOpen, onClose }) {
   };
 
   // Download results as Excel
-  const downloadResults = (type = 'all') => {
+  const downloadResults = async (type = 'all') => {
     if (!results) return;
 
-    const workbook = XLSX.utils.book_new();
     const date = new Date().toISOString().split('T')[0];
     
-    if (type === 'all' || type === 'vip') {
-      const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
-      XLSX.utils.book_append_sheet(workbook, vipSheet, "VIP Records");
+    try {
+      if (type === 'all') {
+        // Download all files as separate Excel files in a ZIP
+        const zip = new JSZip();
+        
+        if (results.vipData.length > 0) {
+          const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
+          const vipWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(vipWorkbook, vipSheet, "VIP Records");
+          const vipBuffer = XLSX.write(vipWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`VIP_Records_${date}.xlsx`, vipBuffer);
+        }
+        
+        if (results.enterpriseGovData.length > 0) {
+          const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
+          const govWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(govWorkbook, govSheet, "Enterprise-Gov");
+          const govBuffer = XLSX.write(govWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`Enterprise_Gov_${date}.xlsx`, govBuffer);
+        }
+        
+        if (results.enterpriseLargeData.length > 0) {
+          const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
+          const largeWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(largeWorkbook, largeSheet, "Enterprise-Large");
+          const largeBuffer = XLSX.write(largeWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`Enterprise_Large_${date}.xlsx`, largeBuffer);
+        }
+        
+        if (results.enterpriseMediumData.length > 0) {
+          const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
+          const mediumWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(mediumWorkbook, mediumSheet, "Enterprise-Medium");
+          const mediumBuffer = XLSX.write(mediumWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`Enterprise_Medium_${date}.xlsx`, mediumBuffer);
+        }
+        
+        if (results.wholesalesData.length > 0) {
+          const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
+          const wholesalesWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(wholesalesWorkbook, wholesalesSheet, "Wholesales");
+          const wholesalesBuffer = XLSX.write(wholesalesWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`Wholesales_${date}.xlsx`, wholesalesBuffer);
+        }
+        
+        if (results.smeData.length > 0) {
+          const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
+          const smeWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(smeWorkbook, smeSheet, "SME");
+          const smeBuffer = XLSX.write(smeWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`SME_${date}.xlsx`, smeBuffer);
+        }
+        
+        if (results.retailMicroData.length > 0) {
+          const retailSheet = XLSX.utils.json_to_sheet(results.retailMicroData);
+          const retailWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(retailWorkbook, retailSheet, "Retail-Micro");
+          const retailBuffer = XLSX.write(retailWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`Retail_Micro_${date}.xlsx`, retailBuffer);
+        }
+        
+        if (results.excludedData.length > 0) {
+          const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
+          const excludedWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(excludedWorkbook, excludedSheet, "Excluded (SU)");
+          const excludedBuffer = XLSX.write(excludedWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`Excluded_SU_${date}.xlsx`, excludedBuffer);
+        }
+        
+        if (results.allData.length > 0) {
+          const allSheet = XLSX.utils.json_to_sheet(results.allData);
+          const allWorkbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(allWorkbook, allSheet, "All Records");
+          const allBuffer = XLSX.write(allWorkbook, { bookType: 'xlsx', type: 'array' });
+          zip.file(`All_Records_${date}.xlsx`, allBuffer);
+        }
+        
+        // Generate ZIP and download
+        const zipContent = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipContent);
+        link.download = `POD_Report_All_${date}.zip`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        showSuccess('All results downloaded as ZIP file successfully');
+      } else {
+        // Download individual file type
+        const workbook = XLSX.utils.book_new();
+        
+        if (type === 'vip') {
+          const vipSheet = XLSX.utils.json_to_sheet(results.vipData);
+          XLSX.utils.book_append_sheet(workbook, vipSheet, "VIP Records");
+        } else if (type === 'enterprise') {
+          const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
+          XLSX.utils.book_append_sheet(workbook, govSheet, "Enterprise-Gov");
+          const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
+          XLSX.utils.book_append_sheet(workbook, largeSheet, "Enterprise-Large");
+          const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
+          XLSX.utils.book_append_sheet(workbook, mediumSheet, "Enterprise-Medium");
+          const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
+          XLSX.utils.book_append_sheet(workbook, wholesalesSheet, "Wholesales");
+        } else if (type === 'sme') {
+          const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
+          XLSX.utils.book_append_sheet(workbook, smeSheet, "SME");
+        } else if (type === 'retail') {
+          const retailSheet = XLSX.utils.json_to_sheet(results.retailMicroData);
+          XLSX.utils.book_append_sheet(workbook, retailSheet, "Retail-Micro");
+        } else if (type === 'excluded') {
+          const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
+          XLSX.utils.book_append_sheet(workbook, excludedSheet, "Excluded (SU)");
+        }
+        
+        const fileName = `POD_Report_${type}_${date}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+        
+        showSuccess(`${type.toUpperCase()} results downloaded successfully`);
+      }
+    } catch (error) {
+      console.error('Error downloading results:', error);
+      showError('Error downloading results. Please try again.');
     }
-    
-    if (type === 'all' || type === 'enterprise') {
-      // Combine Enterprise Gov, Large, Medium, and Wholesales into separate sheets in one workbook
-      const govSheet = XLSX.utils.json_to_sheet(results.enterpriseGovData);
-      XLSX.utils.book_append_sheet(workbook, govSheet, "Enterprise-Gov");
-      
-      const largeSheet = XLSX.utils.json_to_sheet(results.enterpriseLargeData);
-      XLSX.utils.book_append_sheet(workbook, largeSheet, "Enterprise-Large");
-      
-      const mediumSheet = XLSX.utils.json_to_sheet(results.enterpriseMediumData);
-      XLSX.utils.book_append_sheet(workbook, mediumSheet, "Enterprise-Medium");
-      
-      const wholesalesSheet = XLSX.utils.json_to_sheet(results.wholesalesData);
-      XLSX.utils.book_append_sheet(workbook, wholesalesSheet, "Wholesales");
-    }
-    
-    if (type === 'all' || type === 'sme') {
-      const smeSheet = XLSX.utils.json_to_sheet(results.smeData);
-      XLSX.utils.book_append_sheet(workbook, smeSheet, "SME");
-    }
-    
-    if (type === 'all' || type === 'retail') {
-      const retailSheet = XLSX.utils.json_to_sheet(results.retailMicroData);
-      XLSX.utils.book_append_sheet(workbook, retailSheet, "Retail-Micro");
-    }
-    
-    if (type === 'all' || type === 'excluded') {
-      const excludedSheet = XLSX.utils.json_to_sheet(results.excludedData);
-      XLSX.utils.book_append_sheet(workbook, excludedSheet, "Excluded (SU)");
-    }
-    
-    if (type === 'all') {
-      const allSheet = XLSX.utils.json_to_sheet(results.allData);
-      XLSX.utils.book_append_sheet(workbook, allSheet, "All Records");
-    }
-    
-    const fileName = `POD_Report_${type}_${date}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-    
-    showSuccess(`${type.toUpperCase()} results downloaded successfully`)``;
   };
 
   // Distribute filtered data to regions and RTOMs
@@ -798,6 +880,7 @@ function PODFilterComponent({ isOpen, onClose }) {
     setExcludeFiles([]);
     setResults(null);
     setCurrentStep(0);
+    setShowResultsModal(false);
     
     // Clear file input values
     const mainExcelInput = document.getElementById('mainExcel');
@@ -977,59 +1060,6 @@ function PODFilterComponent({ isOpen, onClose }) {
               )}
             </button>
 
-            {results && (
-              <>
-                <button className="download-btn" onClick={() => downloadResults('all')}>
-                  <i className="fas fa-download"></i>
-                  Download All
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('enterprise')}>
-                  <i className="fas fa-building"></i>
-                  Enterprise (Gov + Large + Wholesales)
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('sme')}>
-                  <i className="fas fa-briefcase"></i>
-                  SME
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('vip')}>
-                  <i className="fas fa-crown"></i>
-                  VIP Only
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('retail')}>
-                  <i className="fas fa-store"></i>
-                  Retail/Micro (FTTH Only)
-                </button>
-                <button className="download-btn" onClick={() => downloadResults('excluded')}>
-                  <i className="fas fa-ban"></i>
-                  Excluded (SU)
-                </button>
-                <button 
-                  className="distribute-btn" 
-                  onClick={distributeToRegionsAndRtoms}
-                  disabled={distributing || !results?.allData?.length}
-                  style={{
-                    backgroundColor: (!results?.allData?.length) ? '#ccc' : '#28a745',
-                    color: 'white',
-                    marginTop: '10px',
-                    cursor: (!results?.allData?.length) ? 'not-allowed' : 'pointer'
-                  }}
-                  title={!results?.allData?.length ? 'Process filtration first to enable distribution' : 'Distribute filtered data to database'}
-                >
-                  {distributing ? (
-                    <>
-                      <i className="fas fa-spinner fa-spin"></i>
-                      Distributing...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-share-alt"></i>
-                      Distribute to Regions & RTOMs {results?.allData?.length ? `(${results.allData.length})` : ''}
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-
             {(mainExcel || excludeFiles.length > 0) && (
               <button className="reset-btn" onClick={reset}>
                 <i className="fas fa-redo"></i>
@@ -1037,109 +1067,145 @@ function PODFilterComponent({ isOpen, onClose }) {
               </button>
             )}
           </div>
-
-          {/* Results Summary */}
-          {results && (
-            <div className="results-section">
-              <h3>Processing Results</h3>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-label">Total Records</div>
-                  <div className="stat-value">{results.stats.totalRecords}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Excluded Records</div>
-                  <div className="stat-value error">{results.stats.excludedAtStart}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">After Initial Filter</div>
-                  <div className="stat-value success">{results.stats.afterInitialFiltration}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">VIP Records</div>
-                  <div className="stat-value warning">{results.stats.vipRecords}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Non-VIP Records</div>
-                  <div className="stat-value">{results.stats.nonVipRecords}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">After Exclusions</div>
-                  <div className="stat-value">{results.stats.afterExclusion}</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-label">Retail/Micro (FTTH Only)</div>
-                  <div className="stat-value info">{results.stats.retailMicro}</div>
-                </div>
-              </div>
-
-              <div className="assignment-summary">
-                <h4>Enterprise Breakdown (Bill &gt; 5,000)</h4>
-                <div className="assignment-grid">
-                  <div className="assignment-item">
-                    <span>Enterprise - Government Inst.:</span>
-                    <strong>{results.stats.enterpriseGov}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>Enterprise - Large:</span>
-                    <strong>{results.stats.enterpriseLarge}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>Enterprise - Medium:</span>
-                    <strong>{results.stats.enterpriseMedium}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>Wholesales:</span>
-                    <strong>{results.stats.wholesales}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span><strong>Total Enterprise:</strong></span>
-                    <strong>{results.stats.totalEnterprise}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>SME (Separate):</span>
-                    <strong>{results.stats.sme}</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="assignment-summary">
-                <h4>Assignment Distribution (FTTH - Retail/Micro Business Only)</h4>
-                <div className="assignment-grid">
-                  <div className="assignment-item">
-                    <span>Call Center Staff:</span>
-                    <strong>{results.stats.callCenterStaff}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>Call Center:</span>
-                    <strong>{results.stats.cc}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>Staff:</span>
-                    <strong>{results.stats.staff}</strong>
-                  </div>
-                  <div className="assignment-item">
-                    <span>Region (Billing Center):</span>
-                    <strong>{results.stats.regionAssigned}</strong>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="export-info">
-                <h4>Export Options:</h4>
-                <ul>
-                  <li><strong>Enterprise (Gov + Large + Medium + Wholesales):</strong> One Excel with 4 sheets - Government Institutions, Large Enterprise, Medium Enterprise, and Wholesales (all with Bill Value &gt; 5,000)</li>
-                  <li><strong>SME:</strong> Separate Excel for Small & Medium Enterprises with Bill Value &gt; 5,000</li>
-                  <li><strong>VIP Only:</strong> All VIP credit class records</li>
-                  <li><strong>Retail/Micro (FTTH Only):</strong> Only FTTH medium with Retail or Micro Business sub-segment (all bill values)</li>
-                  <li><strong>Excluded (SU) Only:</strong> Records filtered out in initial filtration (likely Suspended status)</li>
-                  <li><strong>Download All:</strong> Complete processed dataset with all categories in separate sheets</li>
-                </ul>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Results Modal - Shows after filtering completes */}
+      {showResultsModal && results && (
+        <div className="pod-filter-overlay">
+          <div className="pod-filter-modal">
+            <div className="pod-filter-header">
+              <h2>Filtering Complete - Download Results</h2>
+              <button className="close-btn" onClick={() => setShowResultsModal(false)}>&times;</button>
+            </div>
+
+            <div className="pod-filter-body">
+              {/* Distribute Button - Top Right */}
+              <button
+                className="distribute-btn"
+                onClick={distributeToRegionsAndRtoms}
+                disabled={!results?.allData?.length}
+                style={{
+                  backgroundColor: (!results?.allData?.length) ? '#ccc' : '#dc2626',
+                  cursor: (!results?.allData?.length) ? 'not-allowed' : 'pointer'
+                }}
+                title={!results?.allData?.length ? 'Process filtration first to enable distribution' : 'Distribute filtered data to database'}
+              >
+                {distributing ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Distributing...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-share-alt"></i>
+                    Distribute to Regions & RTOMs {results?.allData?.length ? `(${results.allData.length})` : ''}
+                  </>
+                )}
+              </button>
+
+              {/* Success Message and Summary */}
+              <div className="results-summary">
+                <div className="success-message">
+                  <i className="fas fa-check-circle"></i>
+                  <p>Successfully processed <strong>{results.stats.totalRecords}</strong> records</p>
+                  <small>after filtering: <strong>{results.stats.afterInitialFiltration}</strong> records</small>
+                </div>
+
+                <div className="results-summary-section">
+                  <h3>Processing Summary</h3>
+                  <div className="summary-grid">
+                    <div className="summary-item">
+                      <span>Total Records Processed:</span>
+                      <strong>{results.stats.totalRecords}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>After Filtering:</span>
+                      <strong className="success">{results.stats.afterInitialFiltration}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>VIP Records:</span>
+                      <strong className="warning">{results.stats.vipRecords}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>Enterprise Accounts:</span>
+                      <strong>{results.stats.totalEnterprise}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>SME Accounts:</span>
+                      <strong>{results.stats.sme}</strong>
+                    </div>
+                    <div className="summary-item">
+                      <span>Retail/Micro (FTTH):</span>
+                      <strong className="info">{results.stats.retailMicro}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Download Buttons Section */}
+              <div className="action-section">
+                <button
+                  className="download-btn"
+                  onClick={() => downloadResults('all')}
+                  title="Download all categories as separate Excel files in a ZIP"
+                >
+                  <i className="fas fa-file-archive"></i>
+                  Download All as ZIP
+                </button>
+
+                <button
+                  className="download-btn"
+                  onClick={() => downloadResults('vip')}
+                >
+                  <i className="fas fa-crown"></i>
+                  VIP Only ({results.vip?.length || 0})
+                </button>
+
+                <button
+                  className="download-btn"
+                  onClick={() => downloadResults('enterprise')}
+                >
+                  <i className="fas fa-building"></i>
+                  Enterprise (Gov + Large + Medium + Wholesales) ({(results.enterpriseGov?.length || 0) + (results.enterpriseLarge?.length || 0) + (results.enterpriseMedium?.length || 0) + (results.wholesales?.length || 0)})
+                </button>
+
+                <button
+                  className="download-btn"
+                  onClick={() => downloadResults('sme')}
+                >
+                  <i className="fas fa-briefcase"></i>
+                  SME ({results.sme?.length || 0})
+                </button>
+
+                <button
+                  className="download-btn"
+                  onClick={() => downloadResults('retail')}
+                >
+                  <i className="fas fa-store"></i>
+                  Retail/Micro (FTTH Only) ({results.retail?.length || 0})
+                </button>
+
+                <button
+                  className="download-btn"
+                  onClick={() => downloadResults('excluded')}
+                >
+                  <i className="fas fa-ban"></i>
+                  Excluded (SU) ({results.excluded?.length || 0})
+                </button>
+
+                <button
+                  className="reset-btn"
+                  onClick={() => setShowResultsModal(false)}
+                >
+                  <i className="fas fa-arrow-left"></i>
+                  Back to Filtering
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

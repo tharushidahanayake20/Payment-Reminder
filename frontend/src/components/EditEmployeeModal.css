@@ -186,3 +186,47 @@
     width: 100%;
   }
 }
+/* Supervisor Edit Section */
+.supervisor-edit-section {
+  padding: 20px;
+  background: #f0f7ff;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.supervisor-edit-section p {
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.supervisor-edit-section .form-group {
+  margin-bottom: 0;
+}
+
+.supervisor-edit-section .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.supervisor-edit-section select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.supervisor-edit-section select:hover {
+  border-color: #999;
+}
+
+.supervisor-edit-section select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}

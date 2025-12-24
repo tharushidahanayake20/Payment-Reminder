@@ -13,6 +13,9 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedCaller, setSelectedCaller] = useState(null);
 
+  // Get current user role
+  const userRole = localStorage.getItem('role');
+
   useEffect(() => {
     fetchCallers();
   }, [refreshTrigger]);
@@ -92,11 +95,13 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
           method: 'DELETE'
         });
         
+        const data = await response.json();
+
         if (response.ok) {
           showSuccess('Caller deleted successfully');
           fetchCallers(); // Refresh the list
         } else {
-          showError('Failed to delete caller');
+          showError(data.error || 'Failed to delete caller');
         }
       } catch (error) {
         console.error('Error deleting caller:', error);
@@ -182,23 +187,26 @@ function EmployeeTable({ refreshTrigger, searchFilter = {} }) {
                         color: '#4CAF50',
                         fontSize: '18px'
                       }}
-                      title="Edit"
+                      title={userRole === 'supervisor' ? 'Enable/Disable' : 'Edit'}
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>
-                    <button 
-                      onClick={() => handleDelete(caller)}
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
-                        cursor: 'pointer',
-                        color: '#f44336',
-                        fontSize: '18px'
-                      }}
-                      title="Delete"
-                    >
-                      <i className="bi bi-trash-fill"></i>
-                    </button>
+                    {/* Delete button - Only visible to rtom_admin */}
+                    {userRole === 'rtom_admin' && (
+                      <button 
+                        onClick={() => handleDelete(caller)}
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          cursor: 'pointer',
+                          color: '#f44336',
+                          fontSize: '18px'
+                        }}
+                        title="Delete Caller"
+                      >
+                        <i className="bi bi-trash-fill"></i>
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

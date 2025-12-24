@@ -87,9 +87,27 @@ class CallerController extends Controller
         return response()->json($caller);
     }
 
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
-        Caller::findOrFail($id)->delete();
-        return response()->json(['message' => 'Caller deleted']);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        // Only rtom_admin can delete callers
+        if (!$user->isRtomAdmin()) {
+            return response()->json(['error' => 'Only RTOM Admins can delete callers'], 403);
+        }
+
+        $caller = Caller::findOrFail($id);
+
+        // RTOM admin can only delete callers in their RTOM
+        if ($caller->rtom !== $user->rtom) {
+            return response()->json(['error' => 'You can only delete callers in your RTOM'], 403);
+        }
+
+        $caller->delete();
+        return response()->json(['message' => 'Caller deleted successfully']);
     }
 }
