@@ -46,16 +46,15 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
   };
 
   const handleSave = () => {
-    // Validate that customerResponse is not empty
-    if (!customerResponse || customerResponse.trim() === '') {
-      toast.warning('Please enter a customer response before saving.');
-      return;
-    }
+    // Use callOutcome as fallback if customerResponse is empty
+    const response = customerResponse && customerResponse.trim() !== '' 
+      ? customerResponse 
+      : callOutcome;
     
     if (onSave) {
       onSave(customer._id || customer.id, {
         callOutcome,
-        customerResponse,
+        customerResponse: response,
         paymentMade,
         promisedDate: promisedDate,
       });
@@ -229,7 +228,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                     </button>
                   )}
                 </div>
-                <span className="supporting-text">Supporting text</span>
+                <span className="supporting-text">Optional - will default to "{callOutcome}" if empty</span>
               </div>
 
               <div className="form-group toggle-group">

@@ -152,7 +152,7 @@ export default function Sidebar() {
                     <span>Customers</span>
                   </NavLink>
                 </li>
-                {userRole === 'admin' && (
+                {(userRole === 'admin' || userRole === 'rtom_admin') && (
                   <li>
                     <NavLink
                       to="/employees"

@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/customers', [CustomerController::class, 'store']);
     Route::get('/customers/{id}', [CustomerController::class, 'show']);
     Route::put('/customers/{id}', [CustomerController::class, 'update']);
+    Route::put('/customers/{id}/contact', [CustomerController::class, 'updateContact']);
     Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
     Route::post('/customers/{id}/contact-history', [CustomerController::class, 'addContactHistory']);
     

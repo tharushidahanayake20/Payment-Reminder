@@ -236,4 +236,63 @@ class CustomerController extends Controller
         
         return response()->json($contactHistory, 201);
     }
+
+    public function updateContact(Request $request, $id)
+    {
+        try {
+            $user = $request->user();
+            $customer = FilteredCustomer::findOrFail($id);
+
+            // Validate that calling user is the assigned caller
+            if ($user && !$user instanceof Admin && $customer->assigned_to != $user->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. You are not the assigned caller for this customer.'
+                ], 403);
+            }
+
+            // Validate input - response is optional
+            $validated = $request->validate([
+                'callOutcome' => 'required|string',
+                'customerResponse' => 'nullable|string',
+                'paymentMade' => 'boolean',
+                'promisedDate' => 'nullable|date'
+            ]);
+
+            // Create contact history entry
+            $contactData = [
+                'customer_id' => $id,
+                'contact_date' => now()->format('Y-m-d'),
+                'outcome' => $validated['callOutcome'],
+                'remark' => $validated['customerResponse'] ?? null,
+                'promised_date' => $validated['promisedDate'] ?? null,
+                'payment_made' => $validated['paymentMade'] ?? false
+            ];
+
+            $contactHistory = ContactHistory::create($contactData);
+
+            // Update customer status
+            $customer->update(['status' => 'PENDING']);
+
+            return response()->json([
+                'success' => true,
+                'data' => $contactHistory,
+                'message' => 'Contact record saved successfully'
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Contact update error', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save contact record',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
