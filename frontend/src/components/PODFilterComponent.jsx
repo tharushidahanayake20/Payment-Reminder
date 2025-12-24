@@ -1079,128 +1079,156 @@ function PODFilterComponent({ isOpen, onClose }) {
               <button className="close-btn" onClick={() => setShowResultsModal(false)}>&times;</button>
             </div>
 
-            <div className="pod-filter-body">
-              {/* Distribute Button - Top Right */}
-              <button
-                className="distribute-btn"
-                onClick={distributeToRegionsAndRtoms}
-                disabled={!results?.allData?.length}
-                style={{
-                  backgroundColor: (!results?.allData?.length) ? '#ccc' : '#dc2626',
-                  cursor: (!results?.allData?.length) ? 'not-allowed' : 'pointer'
-                }}
-                title={!results?.allData?.length ? 'Process filtration first to enable distribution' : 'Distribute filtered data to database'}
-              >
-                {distributing ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin"></i>
-                    Distributing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-share-alt"></i>
-                    Distribute to Regions & RTOMs {results?.allData?.length ? `(${results.allData.length})` : ''}
-                  </>
-                )}
-              </button>
+            <div className="pod-filter-body results-split-layout">
+              {/* Left Side - Results Summary */}
+              <div className="results-left-column">
+                {/* Success Message and Summary */}
+                <div className="results-summary">
+                  <div className="success-message">
+                    <i className="fas fa-check-circle"></i>
+                    <p>Successfully processed <strong>{results.stats.totalRecords}</strong> records</p>
+                    <small>after filtering: <strong>{results.stats.afterInitialFiltration}</strong> records</small>
+                  </div>
 
-              {/* Success Message and Summary */}
-              <div className="results-summary">
-                <div className="success-message">
-                  <i className="fas fa-check-circle"></i>
-                  <p>Successfully processed <strong>{results.stats.totalRecords}</strong> records</p>
-                  <small>after filtering: <strong>{results.stats.afterInitialFiltration}</strong> records</small>
-                </div>
+                  <div className="results-summary-section">
+                    <h3>Processing Summary</h3>
+                    <div className="summary-grid">
+                      <div className="summary-item">
+                        <span>Total Records Processed:</span>
+                        <strong>{results.stats.totalRecords}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>After Filtering:</span>
+                        <strong className="success">{results.stats.afterInitialFiltration}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>VIP Records:</span>
+                        <strong className="warning">{results.stats.vipRecords}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>Enterprise Accounts:</span>
+                        <strong>{results.stats.totalEnterprise}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>SME Accounts:</span>
+                        <strong>{results.stats.sme}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>Retail/Micro (FTTH):</span>
+                        <strong className="info">{results.stats.retailMicro}</strong>
+                      </div>
+                    </div>
 
-                <div className="results-summary-section">
-                  <h3>Processing Summary</h3>
-                  <div className="summary-grid">
-                    <div className="summary-item">
-                      <span>Total Records Processed:</span>
-                      <strong>{results.stats.totalRecords}</strong>
-                    </div>
-                    <div className="summary-item">
-                      <span>After Filtering:</span>
-                      <strong className="success">{results.stats.afterInitialFiltration}</strong>
-                    </div>
-                    <div className="summary-item">
-                      <span>VIP Records:</span>
-                      <strong className="warning">{results.stats.vipRecords}</strong>
-                    </div>
-                    <div className="summary-item">
-                      <span>Enterprise Accounts:</span>
-                      <strong>{results.stats.totalEnterprise}</strong>
-                    </div>
-                    <div className="summary-item">
-                      <span>SME Accounts:</span>
-                      <strong>{results.stats.sme}</strong>
-                    </div>
-                    <div className="summary-item">
-                      <span>Retail/Micro (FTTH):</span>
-                      <strong className="info">{results.stats.retailMicro}</strong>
+                    <h4 style={{ marginTop: '25px', marginBottom: '15px', fontSize: '16px', color: '#1f2937', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px' }}>
+                      Distribution Breakdown (Retail/Micro)
+                    </h4>
+                    <div className="summary-grid">
+                      <div className="summary-item">
+                        <span>Call Center Staff:</span>
+                        <strong>{results.stats.callCenterStaff || 0}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>Call Center (CC):</span>
+                        <strong>{results.stats.cc || 0}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>Staff:</span>
+                        <strong>{results.stats.staff || 0}</strong>
+                      </div>
+                      <div className="summary-item">
+                        <span>Region (Billing Center):</span>
+                        <strong>{results.stats.regionAssigned || 0}</strong>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Download Buttons Section */}
-              <div className="action-section">
+              {/* Right Side - Download Buttons */}
+              <div className="results-right-column">
+                {/* Distribute Button */}
                 <button
-                  className="download-btn"
-                  onClick={() => downloadResults('all')}
-                  title="Download all categories as separate Excel files in a ZIP"
+                  className="distribute-btn"
+                  onClick={distributeToRegionsAndRtoms}
+                  disabled={!results?.allData?.length}
+                  style={{
+                    backgroundColor: (!results?.allData?.length) ? '#ccc' : '#dc2626',
+                    cursor: (!results?.allData?.length) ? 'not-allowed' : 'pointer'
+                  }}
+                  title={!results?.allData?.length ? 'Process filtration first to enable distribution' : 'Distribute filtered data to database'}
                 >
-                  <i className="fas fa-file-archive"></i>
-                  Download All as ZIP
+                  {distributing ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin"></i>
+                      Distributing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-share-alt"></i>
+                      Distribute to Regions & RTOMs {results?.allData?.length ? `(${results.allData.length})` : ''}
+                    </>
+                  )}
                 </button>
 
-                <button
-                  className="download-btn"
-                  onClick={() => downloadResults('vip')}
-                >
-                  <i className="fas fa-crown"></i>
-                  VIP Only ({results.vip?.length || 0})
-                </button>
+                {/* Download Buttons Section */}
+                <div className="action-section results-action-section">
+                  <button
+                    className="download-btn"
+                    onClick={() => downloadResults('all')}
+                    title="Download all categories as separate Excel files in a ZIP"
+                  >
+                    <i className="fas fa-file-archive"></i>
+                    Download All as ZIP
+                  </button>
 
-                <button
-                  className="download-btn"
-                  onClick={() => downloadResults('enterprise')}
-                >
-                  <i className="fas fa-building"></i>
-                  Enterprise (Gov + Large + Medium + Wholesales) ({(results.enterpriseGov?.length || 0) + (results.enterpriseLarge?.length || 0) + (results.enterpriseMedium?.length || 0) + (results.wholesales?.length || 0)})
-                </button>
+                  <button
+                    className="download-btn"
+                    onClick={() => downloadResults('vip')}
+                  >
+                    <i className="fas fa-crown"></i>
+                    VIP Only ({results.vip?.length || 0})
+                  </button>
 
-                <button
-                  className="download-btn"
-                  onClick={() => downloadResults('sme')}
-                >
-                  <i className="fas fa-briefcase"></i>
-                  SME ({results.sme?.length || 0})
-                </button>
+                  <button
+                    className="download-btn"
+                    onClick={() => downloadResults('enterprise')}
+                  >
+                    <i className="fas fa-building"></i>
+                    Enterprise (Gov + Large + Medium + Wholesales) ({(results.enterpriseGov?.length || 0) + (results.enterpriseLarge?.length || 0) + (results.enterpriseMedium?.length || 0) + (results.wholesales?.length || 0)})
+                  </button>
 
-                <button
-                  className="download-btn"
-                  onClick={() => downloadResults('retail')}
-                >
-                  <i className="fas fa-store"></i>
-                  Retail/Micro (FTTH Only) ({results.retail?.length || 0})
-                </button>
+                  <button
+                    className="download-btn"
+                    onClick={() => downloadResults('sme')}
+                  >
+                    <i className="fas fa-briefcase"></i>
+                    SME ({results.sme?.length || 0})
+                  </button>
 
-                <button
-                  className="download-btn"
-                  onClick={() => downloadResults('excluded')}
-                >
-                  <i className="fas fa-ban"></i>
-                  Excluded (SU) ({results.excluded?.length || 0})
-                </button>
+                  <button
+                    className="download-btn"
+                    onClick={() => downloadResults('retail')}
+                  >
+                    <i className="fas fa-store"></i>
+                    Retail/Micro (FTTH Only) ({results.retail?.length || 0})
+                  </button>
 
-                <button
-                  className="reset-btn"
-                  onClick={() => setShowResultsModal(false)}
-                >
-                  <i className="fas fa-arrow-left"></i>
-                  Back to Filtering
-                </button>
+                  <button
+                    className="download-btn"
+                    onClick={() => downloadResults('excluded')}
+                  >
+                    <i className="fas fa-ban"></i>
+                    Excluded (SU) ({results.excluded?.length || 0})
+                  </button>
+
+                  <button
+                    className="reset-btn"
+                    onClick={() => setShowResultsModal(false)}
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                    Back to Filtering
+                  </button>
+                </div>
               </div>
             </div>
           </div>

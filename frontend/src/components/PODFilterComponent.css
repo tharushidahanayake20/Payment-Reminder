@@ -83,6 +83,41 @@
   position: relative;
 }
 
+.pod-filter-body.results-split-layout {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+}
+
+.results-left-column {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 75vh;
+}
+
+.results-right-column {
+  flex: 0 0 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.results-action-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+}
+
+.results-action-section .download-btn,
+.results-action-section .reset-btn {
+  padding: 12px 16px;
+  font-size: 14px;
+  width: 100%;
+}
+
 /* Progress Steps */
 .progress-steps {
   display: flex;
@@ -477,9 +512,7 @@
   color: white;
   font-size: 14px;
   padding: 12px 24px;
-  position: absolute;
-  top: 20px;
-  right: 20px;
+  width: 100%;
   margin: 0;
 }
 
