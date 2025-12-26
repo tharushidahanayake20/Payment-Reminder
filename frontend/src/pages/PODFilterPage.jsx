@@ -11,7 +11,7 @@ function PODFilterPage() {
       <hr />
 
       <div className="page-content">
-        <div className="info-card">
+        <div className="info-card-pod">
           <div className="steps-info">
             <div className="step-info">
               <div className="step-icon">1</div>
