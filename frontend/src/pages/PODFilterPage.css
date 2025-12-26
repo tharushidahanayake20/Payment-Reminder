@@ -8,10 +8,11 @@
   font-size: 24px;
   font-weight: bold;
   text-align: center;
+  color: #0057B8;
 }
 
 .dark-mode .title {
-  color: #555;
+  color: #6DC43D;
 }
 
 hr {
@@ -31,20 +32,20 @@ hr {
   margin-bottom: 30px;
 }
 
-.info-card {
+info-card-pod {
   background: white;
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.info-card h2 {
+info-card-pod h2 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: #0057B8;
   font-size: 24px;
 }
 
-.info-card > p {
+info-card-pod > p {
   margin: 0 0 30px 0;
   color: #666;
   line-height: 1.6;
@@ -62,19 +63,19 @@ hr {
   padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #0057B8;
   transition: all 0.3s ease;
 }
 
 .step-info:hover {
   transform: translateX(5px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 87, 184, 0.15);
 }
 
 .step-icon {
   width: 50px;
   height: 50px;
-  background: #667eea;
+  background: #0057B8;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -91,7 +92,7 @@ hr {
 
 .step-content h3 {
   margin: 0 0 8px 0;
-  color: #333;
+  color: #0057B8;
   font-size: 18px;
 }
 
@@ -105,21 +106,21 @@ hr {
 .requirements-section {
   margin-top: 30px;
   padding: 20px;
-  background: #fff3cd;
+  background: #e8f5e9;
   border-radius: 8px;
-  border: 1px solid #ffc107;
+  border: 1px solid #6DC43D;
 }
 
 .requirements-section h3 {
   margin: 0 0 15px 0;
-  color: #856404;
+  color: #0057B8;
   font-size: 18px;
 }
 
 .requirements-section ul {
   margin: 0;
   padding-left: 20px;
-  color: #856404;
+  color: #333;
 }
 
 .requirements-section li {
@@ -133,6 +134,7 @@ hr {
 
 .requirements-section strong {
   font-weight: 600;
+  color: #0057B8;
 }
 
 .action-card {
@@ -145,7 +147,7 @@ hr {
 
 .start-filter-btn {
   padding: 14px 28px;
-  background: #667eea;
+  background: #0057B8;
   color: white;
   border: none;
   border-radius: 12px;
@@ -159,9 +161,13 @@ hr {
 }
 
 .start-filter-btn:hover {
-  background: #5568d3;
+  background: #003d82;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 87, 184, 0.3);
+}
+
+.start-filter-btn:active {
+  background: #6DC43D;
 }
 
 .start-filter-btn i {
@@ -186,7 +192,7 @@ hr {
     font-size: 16px;
   }
 
-  .info-card {
+  info-card-pod {
     padding: 20px;
   }
 
