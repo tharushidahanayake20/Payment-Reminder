@@ -44,7 +44,8 @@ function AddCustomerModal({ isOpen, onClose, onSuccess }) {
       const rtoms = getRtomsForRegion(value);
       setAvailableRtoms(rtoms);
       // Clear RTOM if it's not in the new region's RTOMs
-      if (!rtoms.includes(formData.rtom)) {
+      const rtomCodes = rtoms.map(r => r.code);
+      if (!rtomCodes.includes(formData.rtom)) {
         setFormData(prev => ({
           ...prev,
           rtom: ''
@@ -190,7 +191,9 @@ function AddCustomerModal({ isOpen, onClose, onSuccess }) {
                 >
                   <option value="">Select RTOM</option>
                   {availableRtoms.map(rtom => (
-                    <option key={rtom} value={rtom}>{rtom}</option>
+                    <option key={rtom.code} value={rtom.code}>
+                      {rtom.code} - {rtom.name}
+                    </option>
                   ))}
                 </select>
               </div>

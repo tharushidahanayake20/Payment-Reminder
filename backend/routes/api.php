@@ -1,0 +1,87 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CallerController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\UploadController;
+use App\Http\Controllers\RequestController;
+use App\Http\Controllers\DataDistributionController;
+use App\Http\Controllers\AutoAssignmentController;
+use App\Http\Controllers\SettingsController;
+
+// Public routes
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/send-otp', [AuthController::class, 'sendOtp']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+
+// Protected routes
+Route::middleware('auth:sanctum')->group(function () {
+    // Auth
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    
+    // Customers
+    Route::get('/customers', [CustomerController::class, 'index']);
+    Route::post('/customers', [CustomerController::class, 'store']);
+    Route::get('/customers/{id}', [CustomerController::class, 'show']);
+    Route::put('/customers/{id}', [CustomerController::class, 'update']);
+    Route::put('/customers/{id}/contact', [CustomerController::class, 'updateContact']);
+    Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
+    Route::post('/customers/{id}/contact-history', [CustomerController::class, 'addContactHistory']);
+    
+    // Callers
+    Route::get('/callers', [CallerController::class, 'index']);
+    Route::post('/callers', [CallerController::class, 'store']);
+    Route::get('/callers/next-id', [CallerController::class, 'nextCallerId']);
+    Route::get('/callers/{id}', [CallerController::class, 'show']);
+    Route::put('/callers/{id}', [CallerController::class, 'update']);
+    Route::delete('/callers/{id}', [CallerController::class, 'destroy']);
+    
+    // Requests
+    Route::get('/requests', [RequestController::class, 'index']);
+    Route::post('/requests', [RequestController::class, 'store']);
+    Route::get('/requests/{id}', [RequestController::class, 'show']);
+    Route::put('/requests/{id}', [RequestController::class, 'update']);
+    Route::post('/requests/{id}/accept', [RequestController::class, 'accept']);
+    Route::post('/requests/{id}/decline', [RequestController::class, 'decline']);
+    Route::post('/requests/{id}/cancel', [RequestController::class, 'cancel']);
+    
+    // Auto Assignment
+    Route::post('/auto-assign', [AutoAssignmentController::class, 'autoAssign']);
+    
+    // Admin
+    Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
+    Route::get('/admin/assigned-callers', [AdminController::class, 'getAssignedCallers']);
+    Route::get('/admin/weekly-calls', [AdminController::class, 'getWeeklyCalls']);
+    
+    // Settings
+    Route::get('/settings', [SettingsController::class, 'getSettings']);
+    Route::put('/settings/profile', [SettingsController::class, 'updateProfile']);
+    Route::put('/settings/password', [SettingsController::class, 'updatePassword']);
+    Route::put('/settings/preferences', [SettingsController::class, 'updatePreferences']);
+    
+    // Upload
+    Route::post('/upload/parse', [UploadController::class, 'parse']);
+    Route::post('/upload/import', [UploadController::class, 'import']);
+    Route::post('/upload/mark-paid', [UploadController::class, 'markPaid']);
+    
+    // Data Distribution
+    Route::post('/distribution/distribute', [DataDistributionController::class, 'distributeToRegionsAndRtoms']);
+    Route::get('/distribution/summary', [DataDistributionController::class, 'getDistributionSummary']);
+    
+    // Superadmin routes
+    Route::middleware('can:superadmin')->group(function () {
+        Route::get('/superadmin/admins', [AdminController::class, 'getAllAdmins']);
+        Route::post('/superadmin/admins', [AdminController::class, 'createAdmin']);
+        Route::put('/superadmin/admins/{id}', [AdminController::class, 'updateAdmin']);
+        Route::delete('/superadmin/admins/{id}', [AdminController::class, 'deleteAdmin']);
+        Route::get('/superadmin/rtoms', [AdminController::class, 'getRtoms']);
+    });
+
+    // Region admin routes
+    Route::middleware('can:region_admin')->group(function () {
+        Route::get('/region-admin/rtom-admins', [AdminController::class, 'getRtomAdminsForRegion']);
+    });
+});

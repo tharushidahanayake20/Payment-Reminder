@@ -47,18 +47,21 @@ function AdminDashboard() {
       }
       setError(null);
       
-      // Get logged-in admin ID
+      // Get logged-in admin ID and token
       const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const token = localStorage.getItem('token');
       const adminId = userData.id;
       
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      
       // Fetch all data in parallel
-      const [statsRes, assignedRes, unassignedRes, requestsRes, weeklyRes, paymentsRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/stats`),
-        fetch(`${API_BASE_URL}/admin/assigned-callers`),
-        fetch(`${API_BASE_URL}/admin/unassigned-callers`),
-        fetch(`${API_BASE_URL}/admin/sent-requests${adminId ? `?adminId=${adminId}` : ''}`),
-        fetch(`${API_BASE_URL}/admin/weekly-calls`),
-        fetch(`${API_BASE_URL}/admin/completed-payments?limit=5`)
+      const [statsRes, assignedRes, weeklyRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/admin/dashboard-stats`, { headers }),
+        fetch(`${API_BASE_URL}/admin/assigned-callers`, { headers }),
+        fetch(`${API_BASE_URL}/admin/weekly-calls`, { headers })
       ]);
 
       if (statsRes.ok) {
@@ -85,47 +88,9 @@ function AdminDashboard() {
         })));
       }
 
-      if (unassignedRes.ok) {
-        const unassignedData = await unassignedRes.json();
-        const unassignedArray = Array.isArray(unassignedData) ? unassignedData : (unassignedData.data || []);
-        setUnassignedCallers(unassignedArray.map(caller => ({
-          id: caller._id || caller.callerId || Math.random().toString(),
-          name: caller.name,
-          date: caller.joinedDate,
-          status: caller.status,
-          latestWork: caller.latestWork
-        })));
-      }
-
-      if (requestsRes.ok) {
-        const requestsData = await requestsRes.json();
-        const requestsArray = Array.isArray(requestsData) ? requestsData : (requestsData.data || []);
-        setSentRequests(requestsArray.map(req => ({
-          id: req.requestId || req._id || Math.random().toString(),
-          callerName: req.callerName,
-          callerId: req.callerId,
-          customersSent: req.customersSent,
-          sentDate: req.sentDate,
-          status: req.status,
-          respondedDate: req.respondedDate,
-          reason: req.declineReason || req.reason,
-          customers: req.customers
-        })));
-      }
-
       if (weeklyRes.ok) {
         const weeklyData = await weeklyRes.json();
         setWeeklyCalls(weeklyData.data || [0, 0, 0, 0, 0, 0, 0]);
-      }
-
-      if (paymentsRes.ok) {
-        const paymentsData = await paymentsRes.json();
-        const paymentsArray = Array.isArray(paymentsData) ? paymentsData : (paymentsData.data || []);
-        setCompletedPayments(paymentsArray.map((payment, index) => ({
-          id: payment._id || `${payment.accountNumber}-${index}` || Math.random().toString(),
-          name: payment.name,
-          date: payment.completedDate
-        })));
       }
 
       setLoading(false);
@@ -166,6 +131,15 @@ function AdminDashboard() {
     setIsRequestsModalOpen(false);
   };
 
+  const handleRequestCancelled = (requestId) => {
+    // Update the request status locally
+    setSentRequests(prev => 
+      prev.map(req => 
+        req.id === requestId ? { ...req, status: 'CANCELLED' } : req
+      )
+    );
+  };
+
   const handleShowCallerDetails = async (caller) => {
     try {
       setSelectedCaller(caller);
@@ -190,19 +164,7 @@ function AdminDashboard() {
     setCallerDetailsData(null);
   };
 
-  /**
-   * TESTING FLOW:
-   * 1. In Admin Dashboard: Click "Send Test Request" button
-   * 2. Request is stored in localStorage with status "PENDING"
-   * 3. Switch to Caller Dashboard (CallerDashboard)
-   * 4. Envelope icon will show badge with "1" notification
-   * 5. Click envelope icon to open AdminRequestsModal
-   * 6. Click "Accept" or "Decline" button
-   * 7. Response is stored in localStorage
-   * 8. Switch back to Admin Dashboard
-   * 9. Within 5 seconds, status will auto-update to "ACCEPTED" or "DECLINED"
-   * 10. Click envelope icon in Admin Dashboard to see updated status
-   */
+  
   
   // Function to send request to caller (for testing)
   const handleSendRequestToCaller = (callerName, callerId, customers) => {
@@ -256,7 +218,7 @@ function AdminDashboard() {
     <>
     <div className="admin-dashboard">
       <div className="admin-dashboard-header">
-        <h1>Admin Dashboard</h1>
+        <h1>Supervisor Dashboard</h1>
       </div>
 
       {loading ? (
@@ -570,6 +532,7 @@ function AdminDashboard() {
       isOpen={isRequestsModalOpen}
       onClose={handleCloseRequests}
       sentRequests={sentRequests}
+      onRequestCancelled={handleRequestCancelled}
     />
 
     <CallerDetailsModal

@@ -23,7 +23,11 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/customers`);
+      const response = await fetch(`${API_BASE_URL}/customers`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
       const result = await response.json();
       if (result.success && result.data) {
         // Show all customers including COMPLETED
@@ -44,10 +48,10 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(c =>
-        c.name?.toLowerCase().includes(term) ||
-        c.accountNumber?.toLowerCase().includes(term) ||
-        c.contactNumber?.toLowerCase().includes(term) ||
-        c.emailAddress?.toLowerCase().includes(term)
+        c.CUSTOMER_NAME?.toLowerCase().includes(term) ||
+        c.ACCOUNT_NUM?.toLowerCase().includes(term) ||
+        c.MOBILE_CONTACT_TEL?.toLowerCase().includes(term) ||
+        c.EMAIL_ADDRESS?.toLowerCase().includes(term)
       );
     }
 
@@ -170,24 +174,24 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
           <tbody>
             {filteredCustomers.length > 0 ? (
               filteredCustomers.map((customer) => (
-                <tr key={customer._id}>
-                  <td>{customer.accountNumber}</td>
-                  <td>{customer.name}</td>
-                  <td>{customer.region || '-'}</td>
-                  <td>{customer.rtom || '-'}</td>
-                  <td>{customer.productLabel || '-'}</td>
-                  <td>{customer.medium || '-'}</td>
-                  <td>{customer.latestBillAmount || '0'}</td>
-                  <td>{customer.newArrears || '0'}</td>
-                  <td>{customer.creditScore || '0'}</td>
-                  <td>{customer.creditClassName || '-'}</td>
-                  <td>{customer.contactNumber || '-'}</td>
-                  <td>{customer.mobileContactTel || '-'}</td>
-                  <td>{customer.emailAddress || '-'}</td>
-                  <td>{customer.billHandlingCodeName || '-'}</td>
-                  <td>{customer.accountManager || '-'}</td>
-                  <td>{customer.salesPerson || '-'}</td>
-                  <td>{customer.assignedTo ? customer.assignedTo.name : 'Unassigned'}</td>
+                <tr key={customer.id}>
+                  <td>{customer.ACCOUNT_NUM}</td>
+                  <td>{customer.CUSTOMER_NAME}</td>
+                  <td>{customer.REGION || '-'}</td>
+                  <td>{customer.RTOM || '-'}</td>
+                  <td>{customer.PRODUCT_LABEL || '-'}</td>
+                  <td>{customer.MEDIUM || '-'}</td>
+                  <td>{customer.LATEST_BILL_MNY || '0'}</td>
+                  <td>{customer.NEW_ARREARS || '0'}</td>
+                  <td>{customer.CREDIT_SCORE || '0'}</td>
+                  <td>{customer.CREDIT_CLASS_NAME || '-'}</td>
+                  <td>{customer.MOBILE_CONTACT_TEL || '-'}</td>
+                  <td>{customer.MOBILE_CONTACT_TEL || '-'}</td>
+                  <td>{customer.EMAIL_ADDRESS || '-'}</td>
+                  <td>{customer.BILL_HANDLING_CODE_NAME || '-'}</td>
+                  <td>{customer.ACCOUNT_MANAGER || '-'}</td>
+                  <td>{customer.SALES_PERSON || '-'}</td>
+                  <td>{customer.assigned_caller ? customer.assigned_caller.name : 'Unassigned'}</td>
                   <td className="status">
                     <span className={`status-badge ${(customer.status || '').toLowerCase()}`}>
                       {customer.status}
