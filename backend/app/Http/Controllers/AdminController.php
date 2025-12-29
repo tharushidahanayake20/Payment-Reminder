@@ -4,13 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Admin;
-
-// ...existing code...
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use App\Models\Admin;
 use App\Models\Caller;
 use App\Models\Customer;
 use App\Models\Request as TaskRequest;
@@ -227,11 +220,52 @@ class AdminController extends Controller
     }
 
     /**
+     * Get RTOM admins for the region admin's region
+     */
+    public function getRtomAdminsForRegion(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        // Get all RTOM admins in the region admin's region
+        $rtomAdmins = Admin::where('role', 'rtom_admin')
+            ->where('region', $user->region)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $rtomAdmins,
+            'count' => $rtomAdmins->count()
+        ]);
+    }
+
+    /**
      * Get region for a given RTOM code
      */
     private function getRegionForRtom($rtomCode)
     {
         $rtomToRegionMap = $this->getRtomToRegionMap();
         return $rtomToRegionMap[$rtomCode] ?? null;
+    }
+
+    /**
+     * Get RTOM to Region mapping
+     */
+    private function getRtomToRegionMap()
+    {
+        return [
+            'Colombo' => 'Western',
+            'Matara' => 'Southern',
+            'Negombo' => 'Western',
+            'Kandy' => 'Central',
+            'Kalutara' => 'Western'
+        ];
     }
 }

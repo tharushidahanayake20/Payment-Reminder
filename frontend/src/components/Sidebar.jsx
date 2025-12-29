@@ -17,7 +17,7 @@ export default function Sidebar() {
   // Get user role from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
-  
+
   // Define admin roles
   const adminRoles = ['superadmin', 'region_admin', 'rtom_admin', 'supervisor', 'admin', 'uploader'];
   const isAdminRole = adminRoles.includes(userRole);
@@ -142,17 +142,63 @@ export default function Sidebar() {
                 </NavLink>
               </li>
             ) : userRole === 'supervisor' ? (
-              <li>
-                <NavLink
-                  to="/admin"
-                  className={({ isActive }) =>
-                    `menu-item${isActive ? " active" : ""}`
-                  }
-                >
-                  <RiAdminLine />
-                  <span>Admin Dashboard</span>
-                </NavLink>
-              </li>
+              <>
+                <li>
+                  <NavLink
+                    to="/admin"
+                    className={({ isActive }) =>
+                      `menu-item${isActive ? " active" : ""}`
+                    }
+                  >
+                    <RiAdminLine />
+                    <span>Admin Dashboard</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/admin/tasks"
+                    className={({ isActive }) =>
+                      `menu-item${isActive ? " active" : ""}`
+                    }
+                  >
+                    <FaTasks />
+                    <span>Task</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/customers"
+                    className={({ isActive }) =>
+                      `menu-item${isActive ? " active" : ""}`
+                    }
+                  >
+                    <GoPeople />
+                    <span>Customers</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/employees"
+                    className={({ isActive }) =>
+                      `menu-item${isActive ? " active" : ""}`
+                    }
+                  >
+                    <TbPhoneCall />
+                    <span>Callers</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/admin/reports"
+                    className={({ isActive }) =>
+                      `menu-item${isActive ? " active" : ""}`
+                    }
+                  >
+                    <IoFileTrayFullOutline />
+                    <span>Report</span>
+                  </NavLink>
+                </li>
+              </>
             ) : (
               <>
                 <li>
@@ -188,7 +234,7 @@ export default function Sidebar() {
                     <span>Customers</span>
                   </NavLink>
                 </li>
-                {(userRole === 'admin' || userRole === 'rtom_admin') && (
+                {(userRole === 'admin' || userRole === 'rtom_admin' || userRole === 'supervisor') && (
                   <li>
                     <NavLink
                       to="/employees"
