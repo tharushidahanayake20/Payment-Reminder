@@ -28,25 +28,31 @@ function AdminTasks() {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/customers`);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/customers`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
       if (response.ok) {
         const result = await response.json();
         // Get data from the response (could be result.data or result directly)
         const customersData = result.data || result;
-        
+
         // Show all unassigned customers (not already assigned to a caller and not completed)
         const unassignedCustomers = customersData
-          .filter(c => !c.assignedTo && c.status !== 'COMPLETED')
+          .filter(c => !c.assigned_to && c.status !== 'COMPLETED')
           .map(customer => ({
-            id: customer._id,
-            accountNumber: customer.accountNumber,
-            name: customer.name,
-            contactNumber: customer.contactNumber || "N/A",
-            amountOverdue: customer.amountOverdue || 0,
-            daysOverdue: customer.daysOverdue || 0,
+            id: customer.id,
+            accountNumber: customer.ACCOUNT_NUM,
+            name: customer.CUSTOMER_NAME,
+            contactNumber: customer.MOBILE_CONTACT_TEL || "N/A",
+            amountOverdue: customer.NEW_ARREARS || 0,
+            daysOverdue: customer.AGE_MONTHS || 0,
             status: customer.status || "UNASSIGNED"
           }));
-        
+
         setAllCustomers(unassignedCustomers);
         setFilteredCustomers(unassignedCustomers);
         console.log(`Loaded ${unassignedCustomers.length} unassigned customers`);
@@ -62,57 +68,39 @@ function AdminTasks() {
 
   const loadCallers = async () => {
     try {
-      // Fetch both assigned and unassigned callers
-      const [assignedRes, unassignedRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/admin/assigned-callers`),
-        fetch(`${API_BASE_URL}/admin/unassigned-callers`)
-      ]);
-      
-      let allCallersData = [];
-      
-      // Process assigned callers with task info
-      if (assignedRes.ok) {
-        const assignedResult = await assignedRes.json();
-        const assignedData = assignedResult.data || assignedResult;
-        
-        const assignedCallers = assignedData.map(caller => {
-          // Parse customersContacted format "completed/total"
-          const [completed = '0', total = '0'] = (caller.customersContacted || '0/0').split('/');
-          
-          return {
-            id: caller.callerId,
-            name: caller.name,
-            status: caller.taskStatus,
-            taskId: caller.task,
-            completedInTask: parseInt(completed) || 0,
-            totalInTask: parseInt(total) || 0
-          };
-        });
-        
-        allCallersData = [...allCallersData, ...assignedCallers];
-      }
-      
-      // Process unassigned callers (no task info)
-      if (unassignedRes.ok) {
-        const unassignedResult = await unassignedRes.json();
-        const unassignedData = unassignedResult.data || unassignedResult;
-        
-        const unassignedCallers = unassignedData.map(caller => ({
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE_URL}/callers`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const callersData = Array.isArray(result) ? result : (result.data || []);
+
+        // Map callers to the format expected by the UI
+        const mappedCallers = callersData.map(caller => ({
           id: caller.callerId,
+          callerId: caller.callerId,
           name: caller.name,
-          status: caller.status,
+          status: caller.status || 'ACTIVE',
           taskId: null,
-          completedInTask: 0,
-          totalInTask: 0
+          completedInTask: caller.currentLoad || 0,
+          totalInTask: caller.maxLoad || 20
         }));
-        
-        allCallersData = [...allCallersData, ...unassignedCallers];
+
+        // Filter out OFFLINE/disabled callers - they should not receive assignments
+        const enabledCallers = mappedCallers.filter(caller =>
+          caller.status !== 'OFFLINE' && caller.status !== 'DISABLED'
+        );
+
+        setAvailableCallers(enabledCallers);
+        console.log(`Loaded ${enabledCallers.length} enabled callers (filtered from ${mappedCallers.length} total)`);
+      } else {
+        console.error('Failed to fetch callers');
       }
-        
-      // Filter out OFFLINE/disabled callers - they should not receive assignments
-      const enabledCallers = allCallersData.filter(caller => caller.status !== 'OFFLINE');
-      setAvailableCallers(enabledCallers);
-      console.log(`Loaded ${enabledCallers.length} enabled callers (filtered from ${allCallersData.length} total)`);
     } catch (error) {
       console.error('Error loading callers:', error);
     }
@@ -121,15 +109,15 @@ function AdminTasks() {
   // Filter customers based on search
   useEffect(() => {
     let filtered = allCustomers;
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(c => 
+      filtered = filtered.filter(c =>
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.accountNumber.includes(searchTerm) ||
         c.contactNumber.includes(searchTerm)
       );
     }
-    
+
     setFilteredCustomers(filtered);
   }, [searchTerm, allCustomers]);
 
@@ -155,7 +143,7 @@ function AdminTasks() {
       showError("Please enter a valid number");
       return;
     }
-    
+
     const customersToSelect = filteredCustomers.slice(0, count);
     setSelectedCustomers(customersToSelect.map(c => c.id));
   };
@@ -249,11 +237,11 @@ function AdminTasks() {
 
   const handleAutomateConfirm = async (selectedCallerIds) => {
     if (isAutomating) return;
-    
+
     setShowAutomateModal(false);
     setIsAutomating(true);
     showInfo("Starting automated customer assignment...");
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/auto-assign`, {
         method: 'POST',
@@ -265,19 +253,19 @@ function AdminTasks() {
           caller_ids: selectedCallerIds
         })
       });
-      
+
       const result = await response.json();
-      
+
       if (result.success) {
         const { assigned_count, remaining_count, assignments } = result.data;
-        
+
         // Build detailed message
         let message = `✅ Successfully assigned ${assigned_count} customer(s) to ${assignments.length} caller(s)`;
-        
+
         if (remaining_count > 0) {
           message += `\n⚠️ ${remaining_count} customer(s) could not be assigned (no available capacity)`;
         }
-        
+
         showSuccess(message);
         loadCustomers(); // Refresh the customer list
       } else {
@@ -350,7 +338,7 @@ function AdminTasks() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="selection-controls">
           <input
             type="number"
@@ -360,7 +348,7 @@ function AdminTasks() {
             min="1"
             placeholder="Enter number"
           />
-          <button 
+          <button
             className="select-count-btn"
             onClick={handleSelectCount}
           >
@@ -368,8 +356,8 @@ function AdminTasks() {
             Select {selectCount}
           </button>
         </div>
-        
-        <button 
+
+        <button
           className={`select-all-btn ${selectedCustomers.length === filteredCustomers.length && filteredCustomers.length > 0 ? 'active' : ''}`}
           onClick={handleSelectAll}
         >
@@ -401,8 +389,8 @@ function AdminTasks() {
           <tbody>
             {filteredCustomers.length > 0 ? (
               filteredCustomers.map((customer) => (
-                <tr 
-                  key={customer.id} 
+                <tr
+                  key={customer.id}
                   className={selectedCustomers.includes(customer.id) ? 'selected' : ''}
                   onClick={() => handleSelectCustomer(customer.id)}
                 >
@@ -485,8 +473,8 @@ function AdminTasks() {
                       </div>
                       <div className="caller-load">
                         <div className="load-bar">
-                          <div 
-                            className="load-fill" 
+                          <div
+                            className="load-fill"
                             style={{ width: caller.totalInTask > 0 ? `${(caller.completedInTask / caller.totalInTask) * 100}%` : '0%' }}
                           ></div>
                         </div>

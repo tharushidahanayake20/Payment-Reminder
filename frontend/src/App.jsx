@@ -2,7 +2,7 @@ import "./App.css";
 import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerManagement from "./pages/CustomerManagement";
-import EmployeeManagement from "./pages/CallerManagement";
+import CallerManagement from "./pages/CallerManagement";
 import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
@@ -25,12 +25,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login" || 
-                       location.pathname === "/auth-success" || 
-                       location.pathname === "/register" ||
-                       location.pathname === "/forgot-password" ||
-                       location.pathname === "/reset-password" ||
-                       location.pathname === "/logout";
+  const isLoginPage = location.pathname === "/login" ||
+    location.pathname === "/auth-success" ||
+    location.pathname === "/register" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname === "/reset-password" ||
+    location.pathname === "/logout";
 
   return (
     <>
@@ -49,7 +49,7 @@ function App() {
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
             <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />
             <Route path="/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
-            <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><EmployeeManagement /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><CallerManagement /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/display-data" element={<ProtectedRoute><DisplayDataPage /></ProtectedRoute>} />
@@ -59,15 +59,15 @@ function App() {
           </Routes>
         </div>
       </div>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          pauseOnHover
-          draggable
-        />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
+      />
     </>
   );
 }

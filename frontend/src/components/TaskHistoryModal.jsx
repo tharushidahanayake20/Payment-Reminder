@@ -89,7 +89,7 @@ function TaskHistoryModal({ show, caller, onClose }) {
         <div className="modal-header">
           <div>
             <h2>Task History</h2>
-            <p className="employee-name">{caller?.name}</p>
+            <p className="caller-name">{caller?.name}</p>
           </div>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
