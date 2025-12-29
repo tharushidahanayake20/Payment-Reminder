@@ -1,24 +1,24 @@
 <?php
 
-namespace App\Http\Controllers;
+    namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Caller;
-use App\Models\Request as TaskRequest;
+    use Illuminate\Http\Request;
+    use App\Models\Caller;
+    use App\Models\Request as TaskRequest;
 
-class CallerController extends Controller
-{
-    // Returns the next available callerId (e.g., caller002 if caller001 exists)
-    public function nextCallerId(Request $request)
+    class CallerController extends Controller
     {
-        // Get the highest numeric part of callerId (format: callerXXX)
-        $max = \App\Models\Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
-            ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
-            ->first();
-        $nextNum = ($max && $max->max_num) ? ((int) $max->max_num + 1) : 1;
-        $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-        return response()->json(['nextCallerId' => $nextId]);
-    }
+        // Returns the next available callerId (e.g., caller002 if caller001 exists)
+        public function nextCallerId(Request $request)
+        {
+            // Get the highest numeric part of callerId (format: callerXXX)
+            $max = \App\Models\Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
+                ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
+                ->first();
+            $nextNum = ($max && $max->max_num) ? ((int)$max->max_num + 1) : 1;
+            $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+            return response()->json(['nextCallerId' => $nextId]);
+        }
     public function index(Request $request)
     {
         $user = $request->user();
@@ -27,7 +27,7 @@ class CallerController extends Controller
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
-        $query = Caller::with(['creator']);
+        $query = Caller::with(['creator', 'customers']);
 
         // Apply role-based filtering if user is admin
         if (get_class($user) === 'App\Models\Admin') {
@@ -38,7 +38,6 @@ class CallerController extends Controller
                 $query->where('region', $user->region);
             } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $user->rtom) {
                 // RTOM admin and supervisor see only callers in their RTOM
-                \Log::info('Filtering callers by RTOM', ['user_rtom' => $user->rtom, 'user_role' => $user->role]);
                 $query->where('rtom', $user->rtom);
             } elseif ($user->rtom) {
                 // Legacy admin role with RTOM
@@ -47,8 +46,6 @@ class CallerController extends Controller
         }
 
         $callers = $query->get();
-
-        \Log::info('Callers query result', ['count' => $callers->count(), 'user_email' => $user->email]);
 
         // Calculate currentLoad from active requests
         foreach ($callers as $caller) {

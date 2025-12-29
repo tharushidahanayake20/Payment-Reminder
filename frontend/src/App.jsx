@@ -2,8 +2,7 @@ import "./App.css";
 import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerManagement from "./pages/CustomerManagement";
-import CallerManagement from "./pages/CallerManagement";
-
+import EmployeeManagement from "./pages/EmployeeManagement";
 import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
@@ -30,12 +29,12 @@ import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const location = useLocation();
-  const isLoginPage = location.pathname === "/login" ||
-    location.pathname === "/auth-success" ||
-    location.pathname === "/register" ||
-    location.pathname === "/forgot-password" ||
-    location.pathname === "/reset-password" ||
-    location.pathname === "/logout";
+  const isLoginPage = location.pathname === "/login" || 
+                       location.pathname === "/auth-success" || 
+                       location.pathname === "/register" ||
+                       location.pathname === "/forgot-password" ||
+                       location.pathname === "/reset-password" ||
+                       location.pathname === "/logout";
 
   return (
     <>
@@ -52,13 +51,14 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="caller"><CallerDashboard /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
             <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />
-            <Route path="/admin/reports" element={<ProtectedRoute requiredRole={["admin", "supervisor"]}><AdminReport /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole={["admin", "supervisor"]}><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/superadmin" element={<ProtectedRoute requiredRole="superadmin"><SuperAdminDashboard /></ProtectedRoute>} />
-            <Route path="/region-admin" element={<ProtectedRoute requiredRole="region_admin"><RegionAdminDashboard /></ProtectedRoute>} />
-            <Route path="/rtom-admin" element={<ProtectedRoute requiredRole="rtom_admin"><RTOMAdminDashboard /></ProtectedRoute>} />
+            <Route path="/region-admin-dashboard" element={<ProtectedRoute requiredRole="region_admin"><RegionAdminDashboard /></ProtectedRoute>} />
+            <Route path="/rtom-admin-dashboard" element={<ProtectedRoute requiredRole="rtom_admin"><RTOMAdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="supervisor"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
-            <Route path="/employees" element={<ProtectedRoute requiredRole={["admin", "supervisor"]}><CallerManagement /></ProtectedRoute>} />
+            <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><EmployeeManagement /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/display-data" element={<ProtectedRoute><DisplayDataPage /></ProtectedRoute>} />
@@ -68,15 +68,15 @@ function App() {
           </Routes>
         </div>
       </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-        draggable
-      />
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnHover
+          draggable
+        />
     </>
   );
 }

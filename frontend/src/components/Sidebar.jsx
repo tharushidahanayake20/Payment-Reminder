@@ -17,7 +17,7 @@ export default function Sidebar() {
   // Get user role from localStorage
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const userRole = userData.role || 'caller';
-
+  
   // Define admin roles
   const adminRoles = ['superadmin', 'region_admin', 'rtom_admin', 'supervisor', 'admin', 'uploader'];
   const isAdminRole = adminRoles.includes(userRole);
@@ -120,7 +120,7 @@ export default function Sidebar() {
             ) : userRole === 'region_admin' ? (
               <li>
                 <NavLink
-                  to="/region-admin"
+                  to="/region-admin-dashboard"
                   className={({ isActive }) =>
                     `menu-item${isActive ? " active" : ""}`
                   }
@@ -142,41 +142,17 @@ export default function Sidebar() {
                 </NavLink>
               </li>
             ) : userRole === 'supervisor' ? (
-              <>
-                <li>
-                  <NavLink
-                    to="/admin"
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <RiAdminLine />
-                    <span>Supervisor Dashboard</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink
-                    to="/employees"
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <TbPhoneCall />
-                    <span>Callers</span>
-                  </NavLink>
-                </li>
-                <li>
-                  <NavLink
-                    to="/admin/reports"
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <IoFileTrayFullOutline />
-                    <span>Admin Report</span>
-                  </NavLink>
-                </li>
-              </>
+              <li>
+                <NavLink
+                  to="/admin"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <RiAdminLine />
+                  <span>Admin Dashboard</span>
+                </NavLink>
+              </li>
             ) : (
               <>
                 <li>
