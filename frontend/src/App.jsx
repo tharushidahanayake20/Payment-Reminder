@@ -2,7 +2,7 @@ import "./App.css";
 import Sidebar from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerManagement from "./pages/CustomerManagement";
-import EmployeeManagement from "./pages/EmployeeManagement";
+import EmployeeManagement from "./pages/CallerManagement";
 import CallerDashboard from "./pages/CallerDashboard";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
