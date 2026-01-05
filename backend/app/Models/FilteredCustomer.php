@@ -35,7 +35,8 @@ class FilteredCustomer extends Model
         'MOBILE_NO_CONFIRMATION',
         // System columns
         'status',
-        'assigned_to'
+        'assigned_to',
+        'assignment_type'
     ];
 
     protected $casts = [

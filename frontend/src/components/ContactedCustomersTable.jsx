@@ -44,6 +44,7 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
             <thead>
               <tr>
                 <th>CUSTOMER NAME & OVERDUE PAYMENT DATE</th>
+                <th>ASSIGNMENT TYPE</th>
                 <th>PAYMENT STATUS</th>
                 <th>LATEST RESPONSE</th>
                 <th>ACTIONS</th>
@@ -60,13 +61,18 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
                     </div>
                   </td>
                   <td>
+                    <span className="assignment-type">
+                      {customer.assignment_type || '-'}
+                    </span>
+                  </td>
+                  <td>
                     <span className={`status-badge ${customer.status.toLowerCase()}`}>
                       {customer.status}
                     </span>
                   </td>
                   <td className="response-text">{getLatestResponse(customer)}</td>
                   <td>
-                    <button 
+                    <button
                       className="action-button"
                       onClick={() => handleShowDetails(customer)}
                     >

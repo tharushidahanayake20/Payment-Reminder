@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CustomerTable.css";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import EditCustomerModal from "./EditCustomerModal";
 import { showSuccess, showError, showWarning } from "./Notifications";
 
@@ -23,7 +24,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/customers`, {
+      const response = await secureFetch(`/customers`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -92,7 +93,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
       // Second click - proceed with delete
       setDeleteConfirmation(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/customers/${customer._id}`, {
+        const response = await secureFetch(`/customers/${customer._id}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -109,7 +110,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
       // First click - show confirmation toast
       setDeleteConfirmation(customer._id);
       showWarning(`Click delete again to confirm deletion of ${customer.name}`);
-      
+
       // Reset confirmation after 3 seconds
       setTimeout(() => setDeleteConfirmation(null), 3000);
     }
@@ -146,7 +147,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
 
   return (
     <>
-      <div className="table-card" style={{ overflowX: 'auto', width: '100%' , border: 'none'}}>
+      <div className="table-card" style={{ overflowX: 'auto', width: '100%', border: 'none' }}>
         <table className="custom-table" style={{ minWidth: '1200px' }}>
           <thead>
             <tr>
@@ -167,6 +168,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
               <th>Account Manager</th>
               <th>Sales Person</th>
               <th>Caller</th>
+              <th>Assignment Type</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -192,17 +194,18 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
                   <td>{customer.ACCOUNT_MANAGER || '-'}</td>
                   <td>{customer.SALES_PERSON || '-'}</td>
                   <td>{customer.assigned_caller ? customer.assigned_caller.name : 'Unassigned'}</td>
+                  <td>{customer.assignment_type || '-'}</td>
                   <td className="status">
                     <span className={`status-badge ${(customer.status || '').toLowerCase()}`}>
                       {customer.status}
                     </span>
                   </td>
                   <td>
-                    <button 
+                    <button
                       onClick={() => handleEdit(customer)}
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
+                      style={{
+                        background: 'none',
+                        border: 'none',
                         cursor: 'pointer',
                         marginRight: '10px',
                         color: '#4CAF50',
@@ -212,11 +215,11 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(customer)}
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
+                      style={{
+                        background: 'none',
+                        border: 'none',
                         cursor: 'pointer',
                         color: '#f44336',
                         fontSize: '18px'
@@ -230,7 +233,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
               ))
             ) : (
               <tr>
-                <td colSpan="19" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                <td colSpan="20" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                   <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
                   {searchFilter.searchTerm ? 'No customers match your search' : 'No customers found'}
                 </td>

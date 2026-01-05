@@ -22,6 +22,7 @@ class Caller extends Authenticatable
         'taskStatus',
         'region',
         'rtom',
+        'assignment_type',
         'created_by',
         'avatar',
         'email_notifications',

@@ -19,6 +19,7 @@ class Admin extends Authenticatable
         'role',
         'region',
         'rtom',
+        'assignment_type',
         'status',
         'avatar',
         'email_notifications',
@@ -97,13 +98,28 @@ class Admin extends Authenticatable
             return $query;
         } elseif ($this->isRegionAdmin() && $this->region) {
             // Region admin can see all customers in their region
-            return $query->where('REGION', $this->region);
+            $regionQuery = $query->where('REGION', $this->region);
+            // If region admin has assignment_type, filter by it
+            if ($this->assignment_type) {
+                $regionQuery->where('assignment_type', $this->assignment_type);
+            }
+            return $regionQuery;
         } elseif ($this->isRtomAdmin() && $this->rtom) {
             // RTOM admin can see only customers in their RTOM
-            return $query->where('RTOM', $this->rtom);
+            $rtomQuery = $query->where('RTOM', $this->rtom);
+            // If RTOM admin has assignment_type, filter by it
+            if ($this->assignment_type) {
+                $rtomQuery->where('assignment_type', $this->assignment_type);
+            }
+            return $rtomQuery;
         } elseif ($this->isSupervisor() && $this->rtom) {
             // Supervisor can see customers in their RTOM
-            return $query->where('RTOM', $this->rtom);
+            $supervisorQuery = $query->where('RTOM', $this->rtom);
+            // If supervisor has assignment_type, filter by it
+            if ($this->assignment_type) {
+                $supervisorQuery->where('assignment_type', $this->assignment_type);
+            }
+            return $supervisorQuery;
         }
 
         // Default: no access

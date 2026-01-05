@@ -32,18 +32,34 @@ class CustomerController extends Controller
                     if ($user->isRegionAdmin() && $user->region) {
                         // Region admin sees all customers in their region
                         $query->where('REGION', $user->region);
+                        // If region admin has assignment_type, filter by it
+                        if ($user->assignment_type) {
+                            $query->where('assignment_type', $user->assignment_type);
+                        }
                     } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $user->rtom) {
                         // RTOM admin and supervisor see only their RTOM
                         $query->where('RTOM', $user->rtom);
+                        // If admin/supervisor has assignment_type, filter by it
+                        if ($user->assignment_type) {
+                            $query->where('assignment_type', $user->assignment_type);
+                        }
                     } elseif ($user->rtom) {
                         // Legacy admin role with RTOM
                         $query->where('RTOM', $user->rtom);
+                        // If admin has assignment_type, filter by it
+                        if ($user->assignment_type) {
+                            $query->where('assignment_type', $user->assignment_type);
+                        }
                     }
                 }
                 // Superadmin sees all customers (no filter)
             } else {
                 // Caller sees only assigned customers
                 $query->where('assigned_to', $user->id);
+                // If caller has assignment_type, filter by it
+                if ($user->assignment_type) {
+                    $query->where('assignment_type', $user->assignment_type);
+                }
             }
 
             // Additional filters from request
