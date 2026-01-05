@@ -1,4 +1,13 @@
+<?php
+
+require __DIR__.'/vendor/autoload.php';
+
+$app = require_once __DIR__.'/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
 use App\Models\Caller;
+
+echo "Creating Callers...\n\n";
 
 // Create caller 1
 $caller1 = Caller::create([
@@ -45,5 +54,10 @@ $caller3 = Caller::create([
 'created_by' => 1
 ]);
 
-echo "Created 3 callers in RTOM KA (Kandy - Region 1)\n";
-echo "Caller IDs: caller001, caller002, caller003\n";
+echo "\n✅ Created 3 callers in RTOM KA (Kandy - Region 1)\n";
+echo "Caller IDs: caller001, caller002, caller003\n\n";
+echo "=== CALLER DETAILS ===\n";
+echo "All callers have password: password123\n";
+echo "Max Load: 20 each\n";
+echo "Status: AVAILABLE\n";
+echo "Region: Region 1\n";
