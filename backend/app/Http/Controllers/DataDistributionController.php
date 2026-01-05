@@ -34,7 +34,7 @@ class DataDistributionController extends Controller
                 \Log::error('Distribution validation failed', [
                     'errors' => $validator->errors()->toArray()
                 ]);
-                
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -43,15 +43,15 @@ class DataDistributionController extends Controller
             }
 
             $customersData = $request->customers;
-            
+
             // Normalize account field names
-            $customersData = array_map(function($customer) {
+            $customersData = array_map(function ($customer) {
                 if (isset($customer['ACCOUNT_NUM']) && !isset($customer['ACCOUNT_NUMBER'])) {
                     $customer['ACCOUNT_NUMBER'] = $customer['ACCOUNT_NUM'];
                 }
                 return $customer;
             }, $customersData);
-            
+
             $created = 0;
             $updated = 0;
             $errors = [];
@@ -66,7 +66,7 @@ class DataDistributionController extends Controller
             foreach ($customersData as $customerData) {
                 try {
                     // Helper function to clean and convert numeric values
-                    $cleanNumeric = function($value) {
+                    $cleanNumeric = function ($value) {
                         if ($value === null || $value === '' || $value === 'NULL') {
                             return null;
                         }
@@ -74,7 +74,7 @@ class DataDistributionController extends Controller
                         $cleaned = str_replace(',', '', trim($value));
                         return $cleaned !== '' ? floatval($cleaned) : null;
                     };
-                    
+
                     // Find NEW_ARREARS column dynamically (can be NEW_ARREAR_S_20251221, NEW_ARREARS_20260121, etc.)
                     $newArrearsValue = null;
                     $newArrearsKey = null;
@@ -85,7 +85,7 @@ class DataDistributionController extends Controller
                             break;
                         }
                     }
-                    
+
                     // Log first record to debug
                     static $logged = false;
                     if (!$logged) {
@@ -99,7 +99,7 @@ class DataDistributionController extends Controller
                         ]);
                         $logged = true;
                     }
-                    
+
                     // Step 1: Save to filtered_customers with essential columns for caller work
                     $filteredCustomer = FilteredCustomer::updateOrCreate(
                         ['ACCOUNT_NUM' => $customerData['ACCOUNT_NUMBER']],
@@ -122,6 +122,7 @@ class DataDistributionController extends Controller
                             'CREDIT_CLASS_NAME' => $customerData['CREDIT_CLASS_NAME'] ?? null,
                             'REMARK' => $customerData['Remark'] ?? null,
                             'status' => 'pending',
+                            'assignment_type' => $customerData['assignedTo'] ?? null,
                         ]
                     );
 

@@ -44,6 +44,7 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
             <thead>
               <tr>
                 <th>CUSTOMER NAME & OVERDUE PAYMENT DATE</th>
+                <th>ASSIGNMENT TYPE</th>
                 <th>PAYMENT STATUS</th>
                 <th>LATEST RESPONSE</th>
                 <th>ACTIONS</th>
@@ -60,13 +61,18 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
                     </div>
                   </td>
                   <td>
+                    <span className="assignment-type">
+                      {payment.assignment_type || '-'}
+                    </span>
+                  </td>
+                  <td>
                     <span className="status-badge overdue">
                       {payment.status}
                     </span>
                   </td>
                   <td className="response-text">{getLatestResponse(payment)}</td>
                   <td>
-                    <button 
+                    <button
                       className="action-button"
                       onClick={() => handleShowDetails(payment)}
                     >

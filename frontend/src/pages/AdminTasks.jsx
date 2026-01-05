@@ -307,7 +307,7 @@ function AdminTasks() {
       <div className="admin-tasks-stats">
         <div className="stat-item">
           <i className="bi bi-people-fill"></i>
-          <div>
+        <div>
             <h3>{allCustomers.length}</h3>
             <p>Total Customers</p>
           </div>

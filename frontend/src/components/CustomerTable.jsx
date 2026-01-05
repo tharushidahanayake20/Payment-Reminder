@@ -168,6 +168,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
               <th>Account Manager</th>
               <th>Sales Person</th>
               <th>Caller</th>
+              <th>Assignment Type</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -193,6 +194,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
                   <td>{customer.ACCOUNT_MANAGER || '-'}</td>
                   <td>{customer.SALES_PERSON || '-'}</td>
                   <td>{customer.assigned_caller ? customer.assigned_caller.name : 'Unassigned'}</td>
+                  <td>{customer.assignment_type || '-'}</td>
                   <td className="status">
                     <span className={`status-badge ${(customer.status || '').toLowerCase()}`}>
                       {customer.status}
@@ -231,7 +233,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
               ))
             ) : (
               <tr>
-                <td colSpan="19" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
+                <td colSpan="20" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>
                   <i className="bi bi-inbox" style={{ fontSize: '48px', display: 'block', marginBottom: '10px' }}></i>
                   {searchFilter.searchTerm ? 'No customers match your search' : 'No customers found'}
                 </td>
