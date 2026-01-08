@@ -13,7 +13,7 @@ export const secureFetch = async (url, options = {}) => {
     // Merge headers with security headers
     const headers = {
         'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest', // Prevents direct browser access
+        'X-Requested-With': 'XMLHttpRequest', 
         ...(token && { Authorization: `Bearer ${token}` }),
         ...(options.headers || {}),
     };
