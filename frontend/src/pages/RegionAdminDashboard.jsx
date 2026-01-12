@@ -32,7 +32,7 @@ function RegionAdminDashboard() {
 
   const fetchRtomAdmins = async () => {
     try {
-      const response = await secureFetch(`/region-admin/rtom-admins`);
+      const response = await secureFetch(`/api/region-admin/rtom-admins`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch RTOM admins');
@@ -72,8 +72,8 @@ function RegionAdminDashboard() {
 
     try {
       const url = editingAdmin
-        ? `/region-admin/rtom-admins/${editingAdmin.id}`
-        : `/region-admin/rtom-admins`;
+        ? `/api/region-admin/rtom-admins/${editingAdmin.id}`
+        : `/api/region-admin/rtom-admins`;
 
       const method = editingAdmin ? 'PUT' : 'POST';
 
@@ -126,7 +126,7 @@ function RegionAdminDashboard() {
     }
 
     try {
-      const response = await secureFetch(`/region-admin/rtom-admins/${adminId}`, {
+      const response = await secureFetch(`/api/region-admin/rtom-admins/${adminId}`, {
         method: 'DELETE'
       });
 

@@ -34,7 +34,7 @@ const Login = () => {
     setMessage('');
     setLoading(true);
     try {
-      const endpoint = '/login';
+      const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
       console.log('Login attempt:', { email, userType }); // Debug log
       const res = await secureFetch(`${endpoint}`, {
@@ -86,7 +86,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await secureFetch(`/send-otp`, {
+      const res = await secureFetch(`/api/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, userType })
@@ -115,7 +115,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await secureFetch(`/verify-otp`, {
+      const res = await secureFetch(`/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, userType })

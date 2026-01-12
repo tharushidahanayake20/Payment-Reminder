@@ -90,4 +90,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/region-admin/rtom-admins/{id}', [AdminController::class, 'updateRtomAdmin']);
         Route::delete('/region-admin/rtom-admins/{id}', [AdminController::class, 'deleteRtomAdmin']);
     });
+
+    // RTOM admin routes
+    Route::middleware('can:rtom_admin')->group(function () {
+        Route::get('/rtom-admin/supervisors', [AdminController::class, 'getSupervisorsForRtom']);
+        Route::post('/rtom-admin/supervisors', [AdminController::class, 'createSupervisor']);
+        Route::put('/rtom-admin/supervisors/{id}', [AdminController::class, 'updateSupervisor']);
+        Route::delete('/rtom-admin/supervisors/{id}', [AdminController::class, 'deleteSupervisor']);
+    });
 });
