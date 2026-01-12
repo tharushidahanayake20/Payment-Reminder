@@ -13,8 +13,30 @@ return new class extends Migration
     public function up(): void
     {
         // Update admins table with new role structure and region support
+        // Drop indices that might reference the role and rtom columns
+        try {
+            DB::statement("DROP INDEX admins_role_rtom_index ON admins");
+        } catch (\Exception $e) {
+            // Index might not exist
+        }
+        try {
+            DB::statement("DROP INDEX admins_role_index ON admins");
+        } catch (\Exception $e) {
+            // Index might not exist
+        }
+        try {
+            DB::statement("DROP INDEX admins_rtom_index ON admins");
+        } catch (\Exception $e) {
+            // Index might not exist
+        }
+        try {
+            DB::statement("DROP INDEX admins_status_index ON admins");
+        } catch (\Exception $e) {
+            // Index might not exist
+        }
+        
         Schema::table('admins', function (Blueprint $table) {
-            // First, drop the existing enum column
+            // Drop the existing enum column
             $table->dropColumn('role');
         });
 

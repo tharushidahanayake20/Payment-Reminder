@@ -34,7 +34,7 @@ const Login = () => {
     setMessage('');
     setLoading(true);
     try {
-      const endpoint = '/login';
+      const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
       console.log('Login attempt:', { email, userType }); // Debug log
       const res = await secureFetch(`${endpoint}`, {
@@ -61,9 +61,9 @@ const Login = () => {
         } else if (data.user.role === 'uploader') {
           navigate('/upload');
         } else if (data.user.role === 'region_admin') {
-          navigate('/region-admin');
+          navigate('/region-admin-dashboard');
         } else if (data.user.role === 'rtom_admin') {
-          navigate('/rtom-admin');
+          navigate('/rtom-admin-dashboard');
         } else if (data.user.role === 'supervisor' || data.user.role === 'admin') {
           navigate('/admin');
         } else if (data.user.userType === 'caller') {
@@ -86,7 +86,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await secureFetch(`/send-otp`, {
+      const res = await secureFetch(`/api/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, userType })
@@ -115,7 +115,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await secureFetch(`/verify-otp`, {
+      const res = await secureFetch(`/api/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp, userType })
@@ -136,9 +136,9 @@ const Login = () => {
         } else if (data.user.role === 'uploader') {
           navigate('/upload');
         } else if (data.user.role === 'region_admin') {
-          navigate('/region-admin');
+          navigate('/region-admin-dashboard');
         } else if (data.user.role === 'rtom_admin') {
-          navigate('/rtom-admin');
+          navigate('/rtom-admin-dashboard');
         } else if (data.user.role === 'supervisor' || data.user.role === 'admin') {
           navigate('/admin');
         } else if (data.user.userType === 'caller') {

@@ -1,24 +1,24 @@
 <?php
 
-    namespace App\Http\Controllers;
+namespace App\Http\Controllers;
 
-    use Illuminate\Http\Request;
-    use App\Models\Caller;
-    use App\Models\Request as TaskRequest;
+use Illuminate\Http\Request;
+use App\Models\Caller;
+use App\Models\Request as TaskRequest;
 
-    class CallerController extends Controller
+class CallerController extends Controller
+{
+    // Returns the next available callerId (e.g., caller002 if caller001 exists)
+    public function nextCallerId(Request $request)
     {
-        // Returns the next available callerId (e.g., caller002 if caller001 exists)
-        public function nextCallerId(Request $request)
-        {
-            // Get the highest numeric part of callerId (format: callerXXX)
-            $max = \App\Models\Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
-                ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
-                ->first();
-            $nextNum = ($max && $max->max_num) ? ((int)$max->max_num + 1) : 1;
-            $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
-            return response()->json(['nextCallerId' => $nextId]);
-        }
+        // Get the highest numeric part of callerId (format: callerXXX)
+        $max = Caller::selectRaw("MAX(CAST(SUBSTRING(callerId, 7) AS UNSIGNED)) as max_num")
+            ->whereRaw("callerId REGEXP '^caller[0-9]+$'")
+            ->first();
+        $nextNum = ($max && $max->max_num) ? ((int) $max->max_num + 1) : 1;
+        $nextId = 'caller' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+        return response()->json(['nextCallerId' => $nextId]);
+    }
     public function index(Request $request)
     {
         $user = $request->user();
@@ -86,15 +86,65 @@
         return response()->json(Caller::create($validated), 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        return response()->json(Caller::with(['customers', 'requests'])->findOrFail($id));
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $caller = Caller::with(['customers', 'requests'])->findOrFail($id);
+
+        // Authorization check - ensure user can only view callers in their scope
+        if (get_class($user) === 'App\Models\Admin') {
+            if ($user->isSuperAdmin()) {
+                // Superadmin can view all callers
+            } elseif ($user->isRegionAdmin() && $caller->region !== $user->region) {
+                return response()->json(['error' => 'You can only view callers in your region'], 403);
+            } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $caller->rtom !== $user->rtom) {
+                return response()->json(['error' => 'You can only view callers in your RTOM'], 403);
+            }
+        }
+
+        return response()->json($caller);
     }
 
     public function update(Request $request, $id)
     {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
         $caller = Caller::findOrFail($id);
-        $caller->update($request->except(['region', 'rtom', 'created_by']));
+
+        // Authorization: Only allow updates for callers in same RTOM/region
+        if (get_class($user) === 'App\Models\Admin') {
+            if ($user->isRegionAdmin() && $caller->region !== $user->region) {
+                return response()->json(['error' => 'You can only update callers in your region'], 403);
+            } elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $caller->rtom !== $user->rtom) {
+                return response()->json(['error' => 'You can only update callers in your RTOM'], 403);
+            }
+        }
+
+        // Validate input
+        $validated = $request->validate([
+            'name' => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:callers,email,' . $id,
+            'password' => 'sometimes|nullable|min:6',
+            'callerId' => 'sometimes|required|unique:callers,callerId,' . $id,
+            'phone' => 'nullable|string|max:20',
+            'maxLoad' => 'sometimes|required|integer|min:1|max:100',
+            'status' => 'sometimes|in:active,inactive',
+            'taskStatus' => 'sometimes|string',
+            'assignment_type' => 'sometimes|nullable|string'
+        ]);
+
+        // Update caller with validated data only (excluding protected fields)
+        $caller->update($validated);
+
         return response()->json($caller);
     }
 

@@ -47,7 +47,8 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
 
   const getPaymentCountForDate = (date) => {
     const dateString = formatDate(date);
-    return (promisedPayments || []).filter((p) => p.promisedDate === dateString).length;
+    return (promisedPayments || []).filter((p) => p.promisedDate === dateString)
+      .length;
   };
 
   const handlePrevMonth = () => {
@@ -131,7 +132,10 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
 
               <div className="calendar-days">
                 {Array.from({ length: startingDayOfWeek }).map((_, index) => (
-                  <div key={`empty-${index}`} className="calendar-day empty"></div>
+                  <div
+                    key={`empty-${index}`}
+                    className="calendar-day empty"
+                  ></div>
                 ))}
 
                 {Array.from({ length: daysInMonth }).map((_, index) => {
@@ -164,36 +168,42 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
 
           <div className="calendar-right">
             <div className="calendar-customers">
-            <h4>
-              Payments Due on {formatDate(selectedDate)}
-              {selectedDateCustomers.length > 0 && (
-                <span className="count-badge">{selectedDateCustomers.length}</span>
+              <h4>
+                Payments Due on {formatDate(selectedDate)}
+                {selectedDateCustomers.length > 0 && (
+                  <span className="count-badge">
+                    {selectedDateCustomers.length}
+                  </span>
+                )}
+              </h4>
+              {selectedDateCustomers.length > 0 ? (
+                <div className="customer-list">
+                  {selectedDateCustomers.map((customer, index) => (
+                    <div key={index} className="customer-item">
+                      <div className="customer-details">
+                        <div>
+                          <strong>{customer.name}</strong>
+                          <div className="account-number-small">
+                            Account: {customer.accountNumber}
+                          </div>
+                        </div>
+                        <span className="customer-amount">
+                          {customer.amountOverdue}
+                        </span>
+                      </div>
+                      <div className="customer-contact">
+                        <i className="bi bi-telephone"></i>
+                        {customer.contactNumber}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-customers">
+                  <i className="bi bi-calendar-check"></i>
+                  <p>No payments scheduled for this date</p>
+                </div>
               )}
-            </h4>
-            {selectedDateCustomers.length > 0 ? (
-              <div className="customer-list">
-                {selectedDateCustomers.map((customer, index) => (
-                  <div key={index} className="customer-item">
-                    <div className="customer-details">
-                      <strong>{customer.name}</strong>
-                      <span className="account-number-small">Account Number: {customer.accountNumber}</span>
-                      <span className="customer-amount">
-                        {customer.amountOverdue}
-                      </span>
-                    </div>
-                    <div className="customer-contact">
-                      <i className="bi bi-telephone"></i>
-                      {customer.contactNumber}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="no-customers">
-                <i className="bi bi-calendar-check"></i>
-                <p>No payments scheduled for this date</p>
-              </div>
-            )}
             </div>
           </div>
         </div>
