@@ -269,4 +269,123 @@ class AdminController extends Controller
             'Kalutara' => 'Western'
         ];
     }
+
+    /**
+     * Create a new RTOM admin (Region Admin only)
+     */
+    public function createRtomAdmin(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        // Validate inputs
+        $validated = $request->validate([
+            'adminId' => 'required|unique:admins',
+            'name' => 'required',
+            'email' => 'required|email|unique:admins',
+            'phone' => 'nullable',
+            'password' => 'required|min:6',
+            'rtom' => 'required|string'
+        ]);
+
+        // Force role to rtom_admin and region to the region admin's region
+        $validated['role'] = 'rtom_admin';
+        $validated['region'] = $user->region;
+        $validated['status'] = 'active';
+
+        $admin = Admin::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'RTOM admin created successfully',
+            'data' => $admin
+        ], 201);
+    }
+
+    /**
+     * Update an RTOM admin (Region Admin only)
+     */
+    public function updateRtomAdmin(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $admin = Admin::findOrFail($id);
+
+        // Ensure the RTOM admin belongs to the region admin's region
+        if ($admin->region !== $user->region || $admin->role !== 'rtom_admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only update RTOM admins in your region'
+            ], 403);
+        }
+
+        $validated = $request->validate([
+            'name' => 'nullable',
+            'email' => 'nullable|email|unique:admins,email,' . $id,
+            'phone' => 'nullable',
+            'password' => 'nullable|min:6',
+            'rtom' => 'nullable|string'
+        ]);
+
+        // Don't allow changing role or region
+        unset($validated['role'], $validated['region']);
+
+        // Only update password if provided
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
+
+        $admin->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'RTOM admin updated successfully',
+            'data' => $admin
+        ]);
+    }
+
+    /**
+     * Delete an RTOM admin (Region Admin only)
+     */
+    public function deleteRtomAdmin(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user || !$user->isRegionAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
+        $admin = Admin::findOrFail($id);
+
+        // Ensure the RTOM admin belongs to the region admin's region
+        if ($admin->region !== $user->region || $admin->role !== 'rtom_admin') {
+            return response()->json([
+                'success' => false,
+                'message' => 'You can only delete RTOM admins in your region'
+            ], 403);
+        }
+
+        $admin->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'RTOM admin deleted successfully'
+        ]);
+    }
 }

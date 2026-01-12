@@ -52,7 +52,7 @@ function App() {
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
             <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+           
             <Route path="/superadmin" element={<ProtectedRoute requiredRole="superadmin"><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/region-admin-dashboard" element={<ProtectedRoute requiredRole="region_admin"><RegionAdminDashboard /></ProtectedRoute>} />
             <Route path="/rtom-admin-dashboard" element={<ProtectedRoute requiredRole="rtom_admin"><RTOMAdminDashboard /></ProtectedRoute>} />

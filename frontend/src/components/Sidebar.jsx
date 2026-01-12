@@ -45,7 +45,7 @@ export default function Sidebar() {
                   <span>Upload</span>
                 </NavLink>
               </li>
-              <li>
+              {/* <li>
                 <NavLink
                   to="/pod-filter"
                   className={({ isActive }) =>
@@ -55,7 +55,7 @@ export default function Sidebar() {
                   <FaFilter />
                   <span>POD Filter</span>
                 </NavLink>
-              </li>
+              </li> */}
               <li>
                 <NavLink
                   to="/customers"

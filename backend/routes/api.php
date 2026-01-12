@@ -86,5 +86,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Region admin routes
     Route::middleware('can:region_admin')->group(function () {
         Route::get('/region-admin/rtom-admins', [AdminController::class, 'getRtomAdminsForRegion']);
+        Route::post('/region-admin/rtom-admins', [AdminController::class, 'createRtomAdmin']);
+        Route::put('/region-admin/rtom-admins/{id}', [AdminController::class, 'updateRtomAdmin']);
+        Route::delete('/region-admin/rtom-admins/{id}', [AdminController::class, 'deleteRtomAdmin']);
     });
 });

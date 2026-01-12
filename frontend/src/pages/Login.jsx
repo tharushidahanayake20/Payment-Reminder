@@ -61,9 +61,9 @@ const Login = () => {
         } else if (data.user.role === 'uploader') {
           navigate('/upload');
         } else if (data.user.role === 'region_admin') {
-          navigate('/region-admin');
+          navigate('/region-admin-dashboard');
         } else if (data.user.role === 'rtom_admin') {
-          navigate('/rtom-admin');
+          navigate('/rtom-admin-dashboard');
         } else if (data.user.role === 'supervisor' || data.user.role === 'admin') {
           navigate('/admin');
         } else if (data.user.userType === 'caller') {
@@ -136,9 +136,9 @@ const Login = () => {
         } else if (data.user.role === 'uploader') {
           navigate('/upload');
         } else if (data.user.role === 'region_admin') {
-          navigate('/region-admin');
+          navigate('/region-admin-dashboard');
         } else if (data.user.role === 'rtom_admin') {
-          navigate('/rtom-admin');
+          navigate('/rtom-admin-dashboard');
         } else if (data.user.role === 'supervisor' || data.user.role === 'admin') {
           navigate('/admin');
         } else if (data.user.userType === 'caller') {
