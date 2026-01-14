@@ -2,16 +2,25 @@ import React, { useState } from "react";
 import "./AdminSentRequestsModal.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import API_BASE_URL from "../config/api";
+import { secureFetch } from "../utils/api";
 import { showSuccess, showError } from "./Notifications";
 
 function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [], onRequestCancelled }) {
   const [expandedRequestId, setExpandedRequestId] = useState(null);
+  const [expandedCustomerLists, setExpandedCustomerLists] = useState({});
   const [cancellingRequestId, setCancellingRequestId] = useState(null);
 
   if (!isOpen) return null;
 
   const toggleExpand = (requestId) => {
     setExpandedRequestId(expandedRequestId === requestId ? null : requestId);
+  };
+
+  const toggleCustomerList = (requestId) => {
+    setExpandedCustomerLists(prev => ({
+      ...prev,
+      [requestId]: !prev[requestId]
+    }));
   };
 
   const handleCancelRequest = async (requestId) => {
@@ -145,36 +154,54 @@ function AdminSentRequestsModal({ isOpen, onClose, sentRequests = [], onRequestC
                         </div>
 
                         <div className="admin-sent-customers-section">
-                          <h4>
-                            <i className="bi bi-list-ul"></i> Customers Assigned ({request.customers?.length || request.customersSent || 0})
-                          </h4>
-                          {request.customers && request.customers.length > 0 ? (
-                            <div className="admin-sent-customers-table">
-                              <table>
-                                <thead>
-                                  <tr>
-                                    <th>Account Number</th>
-                                    <th>Customer Name</th>
-                                    <th>Amount Overdue</th>
-                                    <th>Days Overdue</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {request.customers.map((customer) => (
-                                    <tr key={customer.id}>
-                                      <td>{customer.accountNumber}</td>
-                                      <td>{customer.name}</td>
-                                      <td className="admin-sent-amount">{customer.amountOverdue}</td>
-                                      <td className="admin-sent-days">{customer.daysOverdue} days</td>
+                          <div
+                            className="admin-sent-customers-header"
+                            onClick={() => toggleCustomerList(request.id)}
+                            style={{
+                              cursor: 'pointer',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '12px',
+                              backgroundColor: '#f8f9fa',
+                              borderRadius: '6px',
+                              marginBottom: expandedCustomerLists[request.id] ? '12px' : '0'
+                            }}
+                          >
+                            <h4 style={{ margin: 0 }}>
+                              <i className="bi bi-list-ul"></i> Customers Assigned ({request.customers?.length || request.customersSent || 0})
+                            </h4>
+                            <i className={`bi bi-chevron-${expandedCustomerLists[request.id] ? 'up' : 'down'}`}></i>
+                          </div>
+                          {expandedCustomerLists[request.id] && (
+                            request.customers && request.customers.length > 0 ? (
+                              <div className="admin-sent-customers-table">
+                                <table>
+                                  <thead>
+                                    <tr>
+                                      <th>Account Number</th>
+                                      <th>Customer Name</th>
+                                      <th>Amount Overdue</th>
+                                      <th>Days Overdue</th>
                                     </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : (
-                            <div className="admin-empty-state">
-                              <p>Customer details not available. {request.customersSent} customers were assigned.</p>
-                            </div>
+                                  </thead>
+                                  <tbody>
+                                    {request.customers.map((customer) => (
+                                      <tr key={customer.id}>
+                                        <td>{customer.accountNumber}</td>
+                                        <td>{customer.name}</td>
+                                        <td className="admin-sent-amount">{customer.amountOverdue}</td>
+                                        <td className="admin-sent-days">{customer.daysOverdue} days</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <div className="admin-empty-state">
+                                <p>Customer details not available. {request.customersSent} customers were assigned.</p>
+                              </div>
+                            )
                           )}
                         </div>
                       </div>

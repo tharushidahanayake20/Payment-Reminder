@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./PODFilterComponent.css";
 import { showSuccess, showError } from "./Notifications";
 import { readExcelFile as readExcel, jsonToExcelBuffer, downloadExcelFile, createMultiSheetWorkbook } from '../utils/excelUtils';
@@ -15,8 +15,9 @@ function PODFilterComponent({ isOpen, onClose }) {
   const [results, setResults] = useState(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [showResultsModal, setShowResultsModal] = useState(false);
+  const [configLoading, setConfigLoading] = useState(true);
 
-  // Configurable thresholds
+  // Configurable thresholds - now fetched from backend
   const [config, setConfig] = useState({
     billMin: 3000,
     billMax: 10000,
@@ -25,14 +26,37 @@ function PODFilterComponent({ isOpen, onClose }) {
     staffLimit: 3000
   });
 
-  const steps = [
-    "Upload Main Excel",
-    "VIP Separation",
-    "Initial Filtration (Non-VIP)",
-    "Apply Exclusions",
-    "SLT Sub Segment Classification",
-    "Bill Value Assignment"
-  ];
+  // Fetch configuration from backend on component mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        setConfigLoading(true);
+        const response = await secureFetch('/api/pod-filter-config');
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setConfig({
+              billMin: data.data.bill_min,
+              billMax: data.data.bill_max,
+              callCenterStaffLimit: data.data.call_center_staff_limit,
+              ccLimit: data.data.cc_limit,
+              staffLimit: data.data.staff_limit
+            });
+          }
+        } else {
+          console.warn('Failed to fetch POD filter config, using defaults');
+        }
+      } catch (error) {
+        console.error('Error fetching POD filter config:', error);
+        showError('Failed to load filter configuration. Using default values.');
+      } finally {
+        setConfigLoading(false);
+      }
+    };
+
+    fetchConfig();
+  }, []);
 
   const handleMainExcelUpload = (e) => {
     const file = e.target.files[0];

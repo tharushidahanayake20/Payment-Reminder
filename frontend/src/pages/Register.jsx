@@ -70,7 +70,7 @@ const Register = () => {
       clearSession();
       localStorage.setItem('token', data.token);
       
-      // First, save decoded token data as baseline
+      // save decoded token data as baseline
       const baseUserData = {
         id: decoded.id,
         email: decoded.email,
@@ -81,7 +81,7 @@ const Register = () => {
       clearSession();
       localStorage.setItem('userData', JSON.stringify(baseUserData));
       
-      // Then, try to fetch full user profile to get additional fields like callerId
+      //  try to fetch full user profile to get additional fields like callerId
       try {
         const profileRes = await fetch(`${API_BASE_URL}/users/profile`, {
           headers: { 
@@ -98,7 +98,7 @@ const Register = () => {
           const completeUserData = {
             id: user._id || decoded.id,
             _id: user._id || decoded.id,
-            callerId: user.callerId || decoded.callerId,  // Get callerId from profile!
+            callerId: user.callerId || decoded.callerId, 
             email: user.email || decoded.email,
             name: user.name || decoded.name,
             phone: user.phone || user.number,

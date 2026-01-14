@@ -36,14 +36,14 @@ const Login = () => {
     try {
       const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
-      console.log('Login attempt:', { email, userType }); // Debug log
+      console.log('Login attempt:', { email, userType }); 
       const res = await secureFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType })
       });
       const data = await res.json();
-      console.log('Backend response:', data); // Debug log
+      console.log('Backend response:', data); 
       if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
       // Check if OTP is required (2FA flow)
