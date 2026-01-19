@@ -63,10 +63,11 @@ function CallerTasks() {
 
     // Apply search filter
     if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
       filtered = filtered.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.accountNumber.includes(searchTerm) ||
-        c.contactNumber.includes(searchTerm)
+        (c.name || "").toLowerCase().includes(lowerSearch) ||
+        (c.accountNumber || "").includes(searchTerm) ||
+        (c.contactNumber || "").includes(searchTerm)
       );
     }
 
@@ -125,7 +126,9 @@ function CallerTasks() {
   };
 
   const getStatusBadgeClass = (status) => {
-    switch (status) {
+    if (!status) return "";
+    const s = status.toUpperCase();
+    switch (s) {
       case "COMPLETED":
         return "status-completed";
       case "PENDING":
@@ -201,7 +204,7 @@ function CallerTasks() {
       {/* Customer Cards Grid */}
       <div className="tasks-grid">
         {loading ? (
-          <div className="loading-container">
+          <div className="loading-container" key="loading">
             <div className="loading-content">
               <div className="spinner"></div>
               <h3>Loading Tasks</h3>
@@ -210,7 +213,7 @@ function CallerTasks() {
           </div>
         ) : filteredCustomers.length > 0 ? (
           filteredCustomers.map((customer) => (
-            <div key={customer._id} className={`task-card ${getPriorityClass(customer.daysOverdue)}`}>
+            <div key={customer.id || customer._id} className={`task-card ${getPriorityClass(customer.daysOverdue)}`}>
               <div className="task-card-header">
                 <div className="customer-info">
                   <h3>{customer.name}</h3>
@@ -219,7 +222,7 @@ function CallerTasks() {
                   </span>
                 </div>
                 <span className={`status-badge ${getStatusBadgeClass(customer.status)}`}>
-                  {customer.status === "OVERDUE" ? "NOT CONTACTED" : customer.status}
+                  {(customer.status || "").toUpperCase() === "OVERDUE" ? "NOT CONTACTED" : customer.status}
                 </span>
               </div>
 
@@ -273,7 +276,7 @@ function CallerTasks() {
                   View Details
                 </button>
                 <a
-                  href={`tel:${customer.contactNumber.replace(/\s/g, '')}`}
+                  href={`tel:${(customer.contactNumber || "").replace(/\s/g, "")}`}
                   className="btn-call"
                 >
                   Call Customer
@@ -282,7 +285,7 @@ function CallerTasks() {
             </div>
           ))
         ) : (
-          <div className="no-customers">
+          <div className="no-customers" key="no-customers">
             <h3>No customers found</h3>
             <p>
               {searchTerm || statusFilter !== "ALL"

@@ -52,7 +52,7 @@ function OverduePaymentsTable({ payments, onSaveDetails }) {
             </thead>
             <tbody>
               {payments.map((payment, index) => (
-                <tr key={payment._id || index}>
+                <tr key={payment.id || payment._id || index}>
                   <td>
                     <div className="customer-info">
                       <strong>{payment.name}</strong>

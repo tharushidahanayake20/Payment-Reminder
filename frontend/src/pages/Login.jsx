@@ -36,14 +36,14 @@ const Login = () => {
     try {
       const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
-      console.log('Login attempt:', { email, userType }); // Debug log
+      console.log('Login attempt:', { email, userType }); 
       const res = await secureFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType })
       });
       const data = await res.json();
-      console.log('Backend response:', data); // Debug log
+      console.log('Backend response:', data); 
       if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
       // Check if OTP is required (2FA flow)
@@ -51,11 +51,11 @@ const Login = () => {
         setMessage(data.message || 'OTP sent to your phone');
         setShowOtpInput(true);
       } else {
-        // Direct login success (legacy flow) - store token and user data
+       
         localStorage.setItem('token', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user));
 
-        // Redirect based on role
+      
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
         } else if (data.user.role === 'uploader') {
@@ -97,7 +97,7 @@ const Login = () => {
       setMessage('OTP sent to your email!');
       setShowOtpInput(true);
 
-      // Debug mode: show OTP if returned (remove in production)
+      //show OTP if returned 
       if (data.otp) {
 
       }

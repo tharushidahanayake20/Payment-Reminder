@@ -49,19 +49,19 @@ function CallerDashboard() {
       if (data.success && data.data) {
         // Separate customers by status
         const contacted = data.data.filter(c =>
-          c.status === 'PENDING' &&
+          (c.status === 'PENDING' || c.status === 'pending') &&
           c.contactHistory &&
           c.contactHistory.length > 0
         );
         const overdue = data.data.filter(c =>
-          c.status === 'OVERDUE' ||
-          (c.status === 'PENDING' && (!c.contactHistory || c.contactHistory.length === 0))
+          c.status === 'OVERDUE' || c.status === 'overdue' ||
+          ((c.status === 'PENDING' || c.status === 'pending') && (!c.contactHistory || c.contactHistory.length === 0))
         );
-        const completed = data.data.filter(c => c.status === 'COMPLETED');
+        const completed = data.data.filter(c => c.status === 'COMPLETED' || c.status === 'completed' || c.status === 'paid' || c.status === 'PAID');
         // Map MongoDB _id to id for frontend compatibility
-        const formattedContacted = contacted.map(c => ({ ...c, id: c._id }));
-        const formattedOverdue = overdue.map(c => ({ ...c, id: c._id }));
-        const formattedCompleted = completed.map(c => ({ ...c, id: c._id }));
+        const formattedContacted = contacted.map(c => ({ ...c, id: c.id || c._id }));
+        const formattedOverdue = overdue.map(c => ({ ...c, id: c.id || c._id }));
+        const formattedCompleted = completed.map(c => ({ ...c, id: c.id || c._id }));
         setContactedCustomers(formattedContacted);
         setOverduePayments(formattedOverdue);
         setCompletedCustomers(formattedCompleted);
@@ -123,7 +123,7 @@ function CallerDashboard() {
       return;
     }
 
-    console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer._id);
+    console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer.id);
 
     try {
       const requestBody = {
@@ -134,12 +134,12 @@ function CallerDashboard() {
       };
 
       console.log('Sending request to backend:', {
-        url: `${API_BASE_URL}/customers/${existingCustomer._id}/contact`,
+        url: `${API_BASE_URL}/customers/${existingCustomer.id}/contact`,
         body: requestBody
       });
 
       // Save to backend API using the contact endpoint
-      const response = await secureFetch(`/api/customers/${existingCustomer._id}/contact`, {
+      const response = await secureFetch(`/api/customers/${existingCustomer.id}/contact`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

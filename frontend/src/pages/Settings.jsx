@@ -95,7 +95,7 @@ const Settings = () => {
     };
 
     fetchSettings();
-  }, [darkMode]); // Run once on mount
+  }, [darkMode]); 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

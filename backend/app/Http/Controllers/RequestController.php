@@ -181,7 +181,10 @@ class RequestController extends Controller
         // This is crucial now that we don't assign them during creation
         if ($taskRequest->customer_ids) {
             FilteredCustomer::whereIn('id', $taskRequest->customer_ids)
-                ->update(['assigned_to' => $taskRequest->caller_id]);
+                ->update([
+                    'assigned_to' => $taskRequest->caller_id,
+                    'status' => 'pending'
+                ]);
         }
 
         // Update caller's currentLoad

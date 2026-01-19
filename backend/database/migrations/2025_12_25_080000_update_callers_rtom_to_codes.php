@@ -22,6 +22,7 @@ return new class extends Migration {
 
         // Now change the column to use 2-letter codes
         DB::statement("ALTER TABLE callers MODIFY rtom ENUM('CO', 'MA', 'NE', 'KA', 'KL')");
+        
     }
 
     /**

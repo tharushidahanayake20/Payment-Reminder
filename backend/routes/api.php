@@ -10,6 +10,8 @@ use App\Http\Controllers\RequestController;
 use App\Http\Controllers\DataDistributionController;
 use App\Http\Controllers\AutoAssignmentController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\PodFilterConfigController;
+use App\Http\Controllers\ExcelUploadHistoryController;
 
 
 // Public routes with rate limiting to prevent brute force attacks
@@ -81,6 +83,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/superadmin/admins/{id}', [AdminController::class, 'updateAdmin']);
         Route::delete('/superadmin/admins/{id}', [AdminController::class, 'deleteAdmin']);
         Route::get('/superadmin/rtoms', [AdminController::class, 'getRtoms']);
+
+        // POD Filter Configuration
+        Route::get('/pod-filter-config', [PodFilterConfigController::class, 'index']);
+        Route::put('/pod-filter-config', [PodFilterConfigController::class, 'update']);
+        Route::post('/pod-filter-config/reset', [PodFilterConfigController::class, 'reset']);
+
+        // Excel Upload History
+        Route::get('/excel-upload-history', [ExcelUploadHistoryController::class, 'index']);
+        Route::get('/excel-upload-history/latest', [ExcelUploadHistoryController::class, 'latest']);
+        Route::get('/excel-upload-history/{id}', [ExcelUploadHistoryController::class, 'show']);
+        Route::get('/excel-upload-history/{id}/download', [ExcelUploadHistoryController::class, 'download']);
+        Route::delete('/excel-upload-history/{id}', [ExcelUploadHistoryController::class, 'destroy']);
     });
 
     // Region admin routes

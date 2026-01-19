@@ -10,6 +10,7 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedRequests, setExpandedRequests] = useState({});
+  const [expandedCustomerLists, setExpandedCustomerLists] = useState({});
   const [decliningRequestId, setDecliningRequestId] = useState(null);
   const [declineReason, setDeclineReason] = useState('');
 
@@ -100,21 +101,24 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     }));
   };
 
+  const toggleCustomerList = (requestId) => {
+    setExpandedCustomerLists(prev => ({
+      ...prev,
+      [requestId]: !prev[requestId]
+    }));
+  };
+
   const handleAcceptRequest = async (requestId) => {
     const request = requests.find(r => r.id === requestId);
     if (!request) return;
 
     try {
-      // Update request status in backend
-      const response = await secureFetch(`/api/requests/${request.id}`, {
-        method: 'PUT',
+      // Update request status in backend using the dedicated accept endpoint
+      const response = await secureFetch(`/api/requests/${request.id}/accept`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'ACCEPTED',
-          respondedAt: new Date().toISOString()
-        })
+        }
       });
 
       if (response.ok) {
@@ -183,14 +187,12 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
       console.log('Declining request with ID:', request.id);
       // Update request status in backend
 
-      const response = await secureFetch(`/api/requests/${request.id}`, {
-        method: 'PUT',
+      const response = await secureFetch(`/api/requests/${request.id}/decline`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: 'DECLINED',
-          respondedAt: new Date().toISOString(),
           declineReason: declineReason.trim()
         })
       });
@@ -284,14 +286,35 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
                       </div>
 
                       <div className="customer-list">
-                        <h4>Customers in this request:</h4>
-                        <ul>
-                          {request.customers.map((customer, idx) => (
-                            <li key={idx}>
-                              {customer.name} - {customer.accountNumber}
-                            </li>
-                          ))}
-                        </ul>
+                        <div
+                          className="customer-list-header"
+                          onClick={() => toggleCustomerList(request.id)}
+                          style={{
+                            cursor: 'pointer',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '10px',
+                            backgroundColor: '#f8f9fa',
+                            borderRadius: '6px',
+                            marginBottom: expandedCustomerLists[request.id] ? '10px' : '0'
+                          }}
+                        >
+                          <h4 style={{ margin: 0 }}>
+                            <i className="bi bi-list-ul" style={{ marginRight: '8px' }}></i>
+                            Customers in this request ({request.customerCount})
+                          </h4>
+                          <i className={`bi bi-chevron-${expandedCustomerLists[request.id] ? 'up' : 'down'}`}></i>
+                        </div>
+                        {expandedCustomerLists[request.id] && (
+                          <ul>
+                            {request.customers.map((customer, idx) => (
+                              <li key={idx}>
+                                {customer.name} - {customer.accountNumber}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </div>
 
 

@@ -56,15 +56,12 @@ class CustomerController extends Controller
             } else {
                 // Caller sees only assigned customers
                 $query->where('assigned_to', $user->id);
-                // If caller has assignment_type, filter by it
-                if ($user->assignment_type) {
-                    $query->where('assignment_type', $user->assignment_type);
-                }
             }
 
             // Additional filters from request
             if ($request->has('status')) {
-                $query->where('status', $request->status);
+                $status = strtolower($request->status);
+                $query->where('status', $status);
             }
 
             if ($request->has('region')) {
@@ -79,11 +76,44 @@ class CustomerController extends Controller
                 $query->where('assigned_to', $request->callerId);
             }
 
-            $customers = $query->orderBy('created_at', 'desc')->get();
+            $customers = $query->with('contactHistory')->orderBy('created_at', 'desc')->get();
+
+            // Transform to match frontend expectations (consistent with RequestController)
+            $mappedCustomers = $customers->map(function ($customer) {
+                // Determine status for frontend display (handle case)
+                $displayStatus = strtoupper($customer->status);
+
+                // Format contact history items
+                $history = $customer->contactHistory->map(function ($item) {
+                    return [
+                        'contactDate' => $item->contact_date ? $item->contact_date->format('Y-m-d') : null,
+                        'promisedDate' => $item->promised_date ? $item->promised_date->format('Y-m-d') : null,
+                        'outcome' => $item->outcome,
+                        'remark' => $item->remark,
+                        'paymentMade' => (bool) $item->payment_made
+                    ];
+                });
+
+                return array_merge($customer->toArray(), [
+                    'id' => $customer->id,
+                    'accountNumber' => $customer->ACCOUNT_NUM,
+                    'name' => $customer->CUSTOMER_NAME,
+                    'contactNumber' => $customer->MOBILE_CONTACT_TEL,
+                    'amountOverdue' => $customer->NEW_ARREARS,
+                    'daysOverdue' => $customer->AGE_MONTHS,
+                    'region' => $customer->REGION,
+                    'rtom' => $customer->RTOM,
+                    'productLabel' => $customer->PRODUCT_LABEL,
+                    'medium' => $customer->MEDIUM,
+                    // Keep original status but also provide uppercase for some frontend parts
+                    'displayStatus' => $displayStatus,
+                    'contactHistory' => $history,
+                ]);
+            });
 
             return response()->json([
                 'success' => true,
-                'data' => $customers,
+                'data' => $mappedCustomers,
                 'count' => $customers->count()
             ]);
 

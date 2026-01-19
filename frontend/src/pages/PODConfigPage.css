@@ -1,0 +1,56 @@
+.pod-config-page {
+    padding: 30px;
+    background-color: #f8fafc;
+    min-height: 100vh;
+}
+
+.pod-config-page .page-header {
+    margin-bottom: 20px;
+}
+
+.pod-config-page h1 {
+    font-size: 24px;
+    color: #1e293b;
+    margin: 0;
+    font-weight: 600;
+}
+
+.pod-config-page p {
+    color: #64748b;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.pod-config-page hr {
+    border: 0;
+    border-top: 1px solid #e2e8f0;
+    margin-bottom: 30px;
+}
+
+.pod-config-page .page-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Override modal styles when used as a page */
+.pod-config-page .pod-config-modal {
+    position: relative !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+    width: 100% !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+}
+
+.pod-config-page .pod-config-modal-overlay {
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+    position: static !important;
+}
+
+.pod-config-page .pod-config-close {
+    display: none !important;
+}
