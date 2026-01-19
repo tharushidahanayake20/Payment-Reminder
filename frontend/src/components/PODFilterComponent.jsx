@@ -7,6 +7,16 @@ import API_BASE_URL from "../config/api";
 import { secureFetch } from "../utils/api";
 import { getRegionForRtom } from "../config/regionConfig";
 
+const steps = [
+  "Upload Files",
+  "VIP Separation",
+  "Initial Filtration",
+  "Exclusion List",
+  "Enterprise Path",
+  "Retail/Micro Path",
+  "Complete"
+];
+
 function PODFilterComponent({ isOpen, onClose }) {
   const [mainExcel, setMainExcel] = useState(null);
   const [excludeFiles, setExcludeFiles] = useState([]);
@@ -1186,7 +1196,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                     onClick={() => downloadResults('vip')}
                   >
                     <i className="fas fa-crown"></i>
-                    VIP Only ({results.vip?.length || 0})
+                    VIP Only ({results.vipData?.length || 0})
                   </button>
 
                   <button
@@ -1194,7 +1204,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                     onClick={() => downloadResults('enterprise')}
                   >
                     <i className="fas fa-building"></i>
-                    Enterprise (Gov + Large + Medium + Wholesales) ({(results.enterpriseGov?.length || 0) + (results.enterpriseLarge?.length || 0) + (results.enterpriseMedium?.length || 0) + (results.wholesales?.length || 0)})
+                    Enterprise (Gov + Large + Medium + Wholesales) ({(results.enterpriseGovData?.length || 0) + (results.enterpriseLargeData?.length || 0) + (results.enterpriseMediumData?.length || 0) + (results.wholesalesData?.length || 0)})
                   </button>
 
                   <button
@@ -1202,7 +1212,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                     onClick={() => downloadResults('sme')}
                   >
                     <i className="fas fa-briefcase"></i>
-                    SME ({results.sme?.length || 0})
+                    SME ({results.smeData?.length || 0})
                   </button>
 
                   <button
@@ -1210,7 +1220,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                     onClick={() => downloadResults('retail')}
                   >
                     <i className="fas fa-store"></i>
-                    Retail/Micro (FTTH Only) ({results.retail?.length || 0})
+                    Retail/Micro (FTTH Only) ({results.retailMicroData?.length || 0})
                   </button>
 
                   <button
@@ -1218,7 +1228,7 @@ function PODFilterComponent({ isOpen, onClose }) {
                     onClick={() => downloadResults('excluded')}
                   >
                     <i className="fas fa-ban"></i>
-                    Excluded (SU) ({results.excluded?.length || 0})
+                    Excluded (SU) ({results.excludedData?.length || 0})
                   </button>
 
                   <button

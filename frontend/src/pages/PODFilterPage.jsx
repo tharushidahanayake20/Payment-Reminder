@@ -12,47 +12,7 @@ function PODFilterPage() {
 
       <div className="page-content">
         <div className="info-card-pod">
-          <div className="steps-info">
-            <div className="step-info">
-              <div className="step-icon">1</div>
-              <div className="step-content">
-                <h3>Initial Filtration</h3>
-                <p>Filters customers by Medium - COPPER & FTTH, Product Status OK (Voice), and Total Outstanding &gt; 2,400</p>
-              </div>
-            </div>
 
-            <div className="step-info">
-              <div className="step-icon">2</div>
-              <div className="step-content">
-                <h3>Credit Class Check</h3>
-                <p>Classifies records as VIP or Other Credit Classes based on credit class status</p>
-              </div>
-            </div>
-
-            <div className="step-info">
-              <div className="step-icon">3</div>
-              <div className="step-content">
-                <h3>Exclusions</h3>
-                <p>Removes Special Exclusions and Bulk SU FTTH No List accounts (End & Mid Cycle)</p>
-              </div>
-            </div>
-
-            <div className="step-info">
-              <div className="step-icon">4</div>
-              <div className="step-content">
-                <h3>SLT Sub Segment Classification</h3>
-                <p>Categorizes based on bill value and sub-segment (Enterprise, Retail, Micro Business)</p>
-              </div>
-            </div>
-
-            <div className="step-info">
-              <div className="step-icon">5</div>
-              <div className="step-content">
-                <h3>Bill Value Assignment</h3>
-                <p>Assigns accounts to appropriate teams based on bill value and arrears amount</p>
-              </div>
-            </div>
-          </div>
 
           <div className="requirements-section">
             <ul>

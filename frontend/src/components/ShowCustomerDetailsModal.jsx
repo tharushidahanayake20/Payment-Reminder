@@ -47,10 +47,10 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
   const handleSave = () => {
     // Use callOutcome as fallback if customerResponse is empty
-    const response = customerResponse && customerResponse.trim() !== '' 
-      ? customerResponse 
+    const response = customerResponse && customerResponse.trim() !== ''
+      ? customerResponse
       : callOutcome;
-    
+
     if (onSave) {
       onSave(customer._id || customer.id, {
         callOutcome,
@@ -69,7 +69,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
-      <div className="modal-content">
+      <div className="modal-content customer-details-modal-content">
         <div className="modal-header">
           <h2>Customer Details</h2>
           <button className="modal-close" onClick={onClose}>
@@ -100,7 +100,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                 <i className="bi bi-person-badge"></i>
                 Account Number: {customer.accountNumber}
               </div>
-              
+
               {!showAllResponses ? (
                 <>
                   <div className="previous-response">
@@ -108,7 +108,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                     <span className="response-text">{getLatestResponse()}</span>
                   </div>
                   {customer.contactHistory && customer.contactHistory.length > 0 && (
-                    <button 
+                    <button
                       className="show-all-responses"
                       onClick={() => setShowAllResponses(true)}
                     >
@@ -122,7 +122,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                   <div className="all-responses-section">
                     <div className="responses-header">
                       <h4>All Responses</h4>
-                      <button 
+                      <button
                         className="hide-responses-btn"
                         onClick={() => setShowAllResponses(false)}
                       >
@@ -162,7 +162,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                       )}
                     </div>
                   </div>
-                  <button 
+                  <button
                     className="show-all-responses"
                     onClick={() => setShowAllResponses(false)}
                   >
@@ -196,8 +196,8 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
             <div className="form-section">
               <div className="form-group">
                 <label>Call Outcome</label>
-                <select 
-                  value={callOutcome} 
+                <select
+                  value={callOutcome}
                   onChange={(e) => setCallOutcome(e.target.value)}
                   className="form-select"
                 >
@@ -220,7 +220,7 @@ function ShowCustomerDetailsModal({ isOpen, onClose, customer, onSave }) {
                     className="form-input"
                   />
                   {customerResponse && (
-                    <button 
+                    <button
                       className="clear-button"
                       onClick={() => setCustomerResponse("")}
                     >

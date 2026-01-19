@@ -54,5 +54,13 @@ class FilteredCustomer extends Model
     {
         return $this->belongsTo(Caller::class, 'assigned_to');
     }
+
+    /**
+     * Get the contact history for this customer
+     */
+    public function contactHistory()
+    {
+        return $this->hasMany(ContactHistory::class, 'customer_id');
+    }
 }
 

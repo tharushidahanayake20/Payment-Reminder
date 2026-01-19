@@ -52,7 +52,7 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
             </thead>
             <tbody>
               {customers.map((customer, index) => (
-                <tr key={customer._id || index}>
+                <tr key={customer.id || customer._id || index}>
                   <td>
                     <div className="customer-info">
                       <strong>{customer.name}</strong>
@@ -66,7 +66,7 @@ function ContactedCustomersTable({ customers, onSaveDetails }) {
                     </span>
                   </td>
                   <td>
-                    <span className={`status-badge ${customer.status.toLowerCase()}`}>
+                    <span className={`status-badge ${(customer.status || "").toLowerCase()}`}>
                       {customer.status}
                     </span>
                   </td>

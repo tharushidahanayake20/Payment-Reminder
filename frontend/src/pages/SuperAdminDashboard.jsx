@@ -27,7 +27,7 @@ function SuperAdminDashboard() {
 
   const fetchAdmins = async () => {
     try {
-      const response = await secureFetch(`/superadmin/admins`, {
+      const response = await secureFetch(`/api/superadmin/admins`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -81,8 +81,8 @@ function SuperAdminDashboard() {
 
     try {
       const url = editingAdmin
-        ? `/superadmin/admins/${editingAdmin._id}`
-        : `/superadmin/admins`;
+        ? `/api/superadmin/admins/${editingAdmin._id}`
+        : `/api/superadmin/admins`;
 
       const method = editingAdmin ? 'PUT' : 'POST';
 
@@ -138,7 +138,7 @@ function SuperAdminDashboard() {
     }
 
     try {
-      const response = await secureFetch(`/superadmin/admins/${adminId}`, {
+      const response = await secureFetch(`/api/superadmin/admins/${adminId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

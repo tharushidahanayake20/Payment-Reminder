@@ -23,6 +23,7 @@ import SuperAdminDashboard from "./pages/SuperAdminDashboard";
 import PODFilterPage from "./pages/PODFilterPage";
 import RegionAdminDashboard from "./pages/RegionAdminDashboard";
 import RTOMAdminDashboard from "./pages/RTOMAdminDashboard";
+import PODConfigPage from "./pages/PODConfigPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -52,7 +53,7 @@ function App() {
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
             <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
-           
+
             <Route path="/superadmin" element={<ProtectedRoute requiredRole="superadmin"><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/region-admin-dashboard" element={<ProtectedRoute requiredRole="region_admin"><RegionAdminDashboard /></ProtectedRoute>} />
             <Route path="/rtom-admin-dashboard" element={<ProtectedRoute requiredRole="rtom_admin"><RTOMAdminDashboard /></ProtectedRoute>} />
@@ -63,6 +64,7 @@ function App() {
             <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
             <Route path="/display-data" element={<ProtectedRoute><DisplayDataPage /></ProtectedRoute>} />
             <Route path="/pod-filter" element={<ProtectedRoute><PODFilterPage /></ProtectedRoute>} />
+            <Route path="/pod-config" element={<ProtectedRoute requiredRole="superadmin"><PODConfigPage /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/logout" element={<Logout />} />
           </Routes>

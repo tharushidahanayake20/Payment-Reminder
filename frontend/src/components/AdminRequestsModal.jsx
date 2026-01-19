@@ -113,16 +113,12 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
     if (!request) return;
 
     try {
-      // Update request status in backend
-      const response = await secureFetch(`/api/requests/${request.id}`, {
-        method: 'PUT',
+      // Update request status in backend using the dedicated accept endpoint
+      const response = await secureFetch(`/api/requests/${request.id}/accept`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'ACCEPTED',
-          respondedAt: new Date().toISOString()
-        })
+        }
       });
 
       if (response.ok) {
@@ -191,14 +187,12 @@ function AdminRequestsModal({ isOpen, onClose, onAccept, onDecline, onRequestPro
       console.log('Declining request with ID:', request.id);
       // Update request status in backend
 
-      const response = await secureFetch(`/api/requests/${request.id}`, {
-        method: 'PUT',
+      const response = await secureFetch(`/api/requests/${request.id}/decline`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: 'DECLINED',
-          respondedAt: new Date().toISOString(),
           declineReason: declineReason.trim()
         })
       });

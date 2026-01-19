@@ -51,11 +51,11 @@ const Login = () => {
         setMessage(data.message || 'OTP sent to your phone');
         setShowOtpInput(true);
       } else {
-        // Direct login success (legacy flow) - store token and user data
+       
         localStorage.setItem('token', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user));
 
-        // Redirect based on role
+      
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
         } else if (data.user.role === 'uploader') {
@@ -97,7 +97,7 @@ const Login = () => {
       setMessage('OTP sent to your email!');
       setShowOtpInput(true);
 
-      // Debug mode: show OTP if returned (remove in production)
+      //show OTP if returned 
       if (data.otp) {
 
       }

@@ -95,17 +95,41 @@ export default function Sidebar() {
         <h4>Overview</h4>
         <ul>
           {userRole === "superadmin" ? (
-            <li>
-              <NavLink
-                to="/superadmin"
-                className={({ isActive }) =>
-                  `menu-item${isActive ? " active" : ""}`
-                }
-              >
-                <RiAdminLine />
-                <span>Admin Management</span>
-              </NavLink>
-            </li>
+            <>
+              <li>
+                <NavLink
+                  to="/superadmin"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <RiAdminLine />
+                  <span>Admin Management</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/pod-filter"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <FaFilter />
+                  <span>POD Filter</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/pod-config"
+                  className={({ isActive }) =>
+                    `menu-item${isActive ? " active" : ""}`
+                  }
+                >
+                  <RiSettings4Line />
+                  <span>POD Config</span>
+                </NavLink>
+              </li>
+            </>
           ) : userRole === "region_admin" ? (
             <li>
               <NavLink
@@ -242,18 +266,18 @@ export default function Sidebar() {
               {(userRole === "admin" ||
                 userRole === "rtom_admin" ||
                 userRole === "supervisor") && (
-                <li>
-                  <NavLink
-                    to="/employees"
-                    className={({ isActive }) =>
-                      `menu-item${isActive ? " active" : ""}`
-                    }
-                  >
-                    <TbPhoneCall />
-                    <span>Callers</span>
-                  </NavLink>
-                </li>
-              )}
+                  <li>
+                    <NavLink
+                      to="/employees"
+                      className={({ isActive }) =>
+                        `menu-item${isActive ? " active" : ""}`
+                      }
+                    >
+                      <TbPhoneCall />
+                      <span>Callers</span>
+                    </NavLink>
+                  </li>
+                )}
 
               <li>
                 <NavLink
