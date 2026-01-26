@@ -24,9 +24,9 @@ function PaymentCalendar({ isOpen, onClose, promisedPayments = [] }) {
   // Update selected date customers whenever data or selected date changes
   useEffect(() => {
     const dateString = formatDate(selectedDate);
-    console.log('📅 Calendar: Looking for payments on', dateString);
-    console.log('📅 Calendar: Total promisedPayments:', promisedPayments.length);
-    console.log('📅 Calendar: All promisedPayments:', promisedPayments);
+    console.log('Calendar: Looking for payments on', dateString);
+    console.log('Calendar: Total promisedPayments:', promisedPayments.length);
+    console.log('Calendar: All promisedPayments:', promisedPayments);
 
     const customers = promisedPayments.filter(
       (payment) => {

@@ -12,6 +12,7 @@ use App\Http\Controllers\AutoAssignmentController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\PodFilterConfigController;
 use App\Http\Controllers\ExcelUploadHistoryController;
+use App\Http\Controllers\ReportController;
 
 
 // Public routes with rate limiting to prevent brute force attacks
@@ -43,6 +44,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/callers/{id}', [CallerController::class, 'show']);
     Route::put('/callers/{id}', [CallerController::class, 'update']);
     Route::delete('/callers/{id}', [CallerController::class, 'destroy']);
+    Route::post('/callers/{id}/report', [ReportController::class, 'submitReport']);
+    Route::get('/reports', [ReportController::class, 'index']);
 
     // Requests
     Route::get('/requests', [RequestController::class, 'index']);

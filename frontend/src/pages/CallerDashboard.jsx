@@ -101,7 +101,6 @@ function CallerDashboard() {
   // Handle accepting customer request from admin
   const handleAcceptRequest = async () => {
     // After accepting requests via API, refetch all customers from backend
-    console.log('Requests accepted, refetching customers from database...');
     await fetchCustomers();
   };
 
@@ -109,21 +108,14 @@ function CallerDashboard() {
   const handleSaveCustomerDetails = async (accountNumber, data) => {
     const { callOutcome, customerResponse, paymentMade, promisedDate } = data;
 
-    console.log('=== SAVING CUSTOMER DETAILS (CallerDashboard) ===');
-    console.log('Account/ID:', accountNumber);
-    console.log('Data:', data);
-
     // Check if customer is in overdue list
     const overdueCustomer = overduePayments.find(p => p.id === accountNumber);
     const existingCustomer = overdueCustomer || contactedCustomers.find(c => c.id === accountNumber);
 
     if (!existingCustomer) {
-      console.error('Customer not found');
       toast.error('Customer not found');
       return;
     }
-
-    console.log('Found customer:', existingCustomer.name, 'ID:', existingCustomer.id);
 
     try {
       // Convert date from DD/MM/YYYY to YYYY-MM-DD format for Laravel
@@ -140,11 +132,6 @@ function CallerDashboard() {
         promisedDate: formattedDate
       };
 
-      console.log('Sending request to backend:', {
-        url: `${API_BASE_URL}/customers/${existingCustomer.id}/contact`,
-        body: requestBody
-      });
-
       // Save to backend API using the contact endpoint
       const response = await secureFetch(`/api/customers/${existingCustomer.id}/contact`, {
         method: 'PUT',
@@ -155,20 +142,14 @@ function CallerDashboard() {
       });
 
       const result = await response.json();
-      console.log('Backend response:', result);
 
       if (result.success) {
-        console.log(' Customer updated successfully in database');
-
         // Refetch all customers from backend to get the latest data
         await fetchCustomers();
-        console.log(' Customers refreshed from database');
       } else {
-        console.error(' Failed to update customer:', result.message);
         toast.error('Failed to save: ' + result.message);
       }
     } catch (error) {
-      console.error(' Error saving customer details to backend:', error);
       toast.error('Failed to save customer details. Please try again.');
     }
   };
@@ -242,15 +223,10 @@ function CallerDashboard() {
   const promisedPayments = useMemo(() => {
     const paymentsWithDates = [];
 
-    console.log('🔍 DEBUG: Building promisedPayments from contactedCustomers:', contactedCustomers.length, 'customers');
-
     contactedCustomers.forEach(customer => {
-      console.log('🔍 Customer:', customer.name, 'Status:', customer.status, 'Has history:', !!customer.contactHistory);
-
       // Only include customers with PENDING status (not COMPLETED)
       if (customer.status.toLowerCase() === "pending" && customer.contactHistory && customer.contactHistory.length > 0) {
         const latestContact = customer.contactHistory[customer.contactHistory.length - 1];
-        console.log('  Latest contact promisedDate:', latestContact.promisedDate);
 
         if (latestContact.promisedDate) {
           const payment = {
@@ -260,13 +236,11 @@ function CallerDashboard() {
             amountOverdue: customer.amountOverdue,
             promisedDate: latestContact.promisedDate,
           };
-          console.log('  ✅ Adding to promisedPayments:', payment);
           paymentsWithDates.push(payment);
         }
       }
     });
 
-    console.log('🎯 Final promisedPayments array:', paymentsWithDates);
     return paymentsWithDates;
   }, [contactedCustomers]);
 
