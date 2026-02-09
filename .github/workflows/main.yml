@@ -72,6 +72,9 @@ jobs:
 
             PROJECT_DIR="/home/dpd/payment_reminder/Payment-Reminder"
 
+            # Ensure the runner user owns the project files to allow git operations
+            sudo chown -R $(whoami):$(whoami) $PROJECT_DIR || true
+
             cd $PROJECT_DIR
 
             echo "📥 Pulling latest code"
