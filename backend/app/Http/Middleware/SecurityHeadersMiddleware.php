@@ -17,20 +17,45 @@ class SecurityHeadersMiddleware
     {
         $response = $next($request);
 
+        // Detect environment
+        $isDev = config('app.env') !== 'production';
+
         // Content Security Policy - Prevents XSS attacks
-        // This is a permissive policy that allows the app to function while providing security
-        $csp = implode('; ', [
-            "default-src 'self'",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Allow inline scripts for React
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com", // Allow inline styles and Google Fonts
-            "font-src 'self' https://fonts.gstatic.com data:", // Allow Google Fonts
-            "img-src 'self' data: https:", // Allow images from self, data URIs, and HTTPS
-            "connect-src 'self' http://localhost:* http://127.0.0.1:*", // Allow API connections
-            "frame-ancestors 'none'", // Prevent clickjacking (same as X-Frame-Options: DENY)
-            "base-uri 'self'",
-            "form-action 'self'",
-        ]);
-        $response->headers->set('Content-Security-Policy', $csp);
+        if ($isDev) {
+            // IN DEV: Priority goes to existing headers to avoid Nonce mismatches.
+            if ($response->headers->has('Content-Security-Policy')) {
+                // Header already exists, do not touch it.
+            } else {
+                // Fallback for direct backend pages
+                $nonce = base64_encode(random_bytes(16));
+                $cspDirectives = [
+                    "default-src 'self'",
+                    "script-src 'self' 'nonce-{$nonce}' 'unsafe-eval'",
+                    "style-src 'self' 'unsafe-inline'",
+                    "font-src 'self' data:",
+                    "img-src 'self' data:",
+                    "connect-src 'self' http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*",
+                    "frame-ancestors 'none'",
+                    "base-uri 'self'",
+                    "form-action 'self'",
+                ];
+                $response->headers->set('Content-Security-Policy', implode('; ', $cspDirectives));
+            }
+        } else {
+            // Production CSP: Strict security
+            $cspDirectives = [
+                "default-src 'self'",
+                "script-src 'self'",
+                "style-src 'self'",
+                "font-src 'self' data:",
+                "img-src 'self' data:",
+                "connect-src 'self'",
+                "frame-ancestors 'none'",
+                "base-uri 'self'",
+                "form-action 'self'",
+            ];
+            $response->headers->set('Content-Security-Policy', implode('; ', $cspDirectives));
+        }
 
         // Prevent clickjacking attacks
         $response->headers->set('X-Frame-Options', 'DENY');
@@ -54,7 +79,10 @@ class SecurityHeadersMiddleware
 
         // Remove X-Powered-By header to hide server technology
         $response->headers->remove('X-Powered-By');
-        header_remove('X-Powered-By');
+        $response->headers->set('X-Powered-By', '');
+        if (function_exists('header_remove')) {
+            @header_remove('X-Powered-By');
+        }
 
         return $response;
     }

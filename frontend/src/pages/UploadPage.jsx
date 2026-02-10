@@ -35,7 +35,7 @@ const UploadPage = () => {
 
   // Save paidData to localStorage whenever it changes
   React.useEffect(() => {
-    console.log('Paid Data State Changed:', paidData);
+    // State change logging removed
     if (paidData) {
       localStorage.setItem('uploadedPaidData', JSON.stringify(paidData));
     } else {
@@ -107,38 +107,25 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', fileItem.file);
 
-      const token = localStorage.getItem('token');
-      console.log('Uploading paid customers file to:', `${API_BASE_URL}/upload/parse`);
-
       const response = await secureFetch(`/upload/parse`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
-      console.log('Paid Response status:', response.status);
       const result = await response.json();
-      console.log('Paid Response data:', result);
 
       if (response.ok && result.success) {
-        console.log('Paid data received:', result.data);
-
         setPaidFiles(prev => prev.map(f =>
           f.id === fileItem.id ? { ...f, status: 'completed', progress: 100 } : f
         ));
 
         setPaidData(result.data);
         setPaidSearchTerm("");
-
-        console.log('Paid data state updated');
       } else {
         const errorMsg = result.error || result.message || 'Upload failed';
         throw new Error(errorMsg);
       }
     } catch (error) {
-      console.error('Paid upload error:', error);
       const errorMessage = error.message.includes('zip file')
         ? 'Invalid Excel file format. Please ensure the file is a valid .xlsx or .xls file.'
         : error.message;
@@ -173,19 +160,12 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', completedFile.file);
 
-      const token = localStorage.getItem('token');
-      console.log('Importing paid customers to database...');
-
       const response = await secureFetch(`/upload/mark-paid`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 
       const result = await response.json();
-      console.log('Paid import result:', result);
 
       if (response.ok && result.success) {
         toast.success(`Successfully marked ${result.data.marked} customers as paid! (${result.data.skipped || 0} records skipped)`);
@@ -199,7 +179,6 @@ const UploadPage = () => {
         throw new Error(result.message || 'Import failed');
       }
     } catch (error) {
-      console.error('Paid import error:', error);
       toast.error(`Import failed: ${error.message}`);
     } finally {
       setPaidImporting(false);

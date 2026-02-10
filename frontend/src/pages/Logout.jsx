@@ -11,12 +11,9 @@ const Logout = () => {
     const performLogout = async () => {
       try {
         // Call backend logout endpoint if token exists
-        const token = localStorage.getItem('token');
-        if (token) {
-          await secureFetch(`/api/logout`, {
-            method: 'POST'
-          }).catch(err => logger.log('Logout API call failed:', err));
-        }
+        await secureFetch(`/api/logout`, {
+          method: 'POST'
+        }).catch(err => logger.log('Logout API call failed:', err));
       } catch (error) {
         logger.log('Error during logout:', error);
       } finally {

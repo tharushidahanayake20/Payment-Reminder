@@ -1,3 +1,10 @@
+# Security Headers
+<IfModule mod_headers.c>
+    # Remove X-Powered-By header
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

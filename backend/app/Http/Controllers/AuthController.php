@@ -57,14 +57,8 @@ class AuthController extends Controller
             return response()->json(['error' => 'Account is inactive'], 403);
         }
 
-        $otpResult = $this->otpService->generateOtp($request->email, $userType);
-
-        $response = [
-            'message' => 'Password verified. OTP sent to your phone.',
-            'requiresOtp' => true
-        ];
-
-        return response()->json($response);
+        $this->otpService->generateOtp($request->email, $userType);
+        return response()->json(['success' => true]);
     }
 
     public function me(Request $request)
@@ -166,11 +160,8 @@ class AuthController extends Controller
             );
 
             return response()->json([
-                'message' => 'Login successful',
                 'user' => [
                     'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
                     'userType' => $userType,
                     'role' => $userType === 'admin' ? $user->role : 'caller',
                     'region' => $userType === 'admin' ? $user->region : null,

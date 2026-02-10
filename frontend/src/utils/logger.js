@@ -3,8 +3,7 @@
  * Only logs in development mode to avoid information disclosure in production
  */
 
-const isDevelopment = import.meta.env.MODE === 'development' ||
-    import.meta.env.VITE_ENABLE_LOGGING === 'true';
+const isDevelopment = false; // Silenced by user request
 
 export const logger = {
     log: (...args) => {

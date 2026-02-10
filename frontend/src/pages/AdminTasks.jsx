@@ -47,15 +47,13 @@ function AdminTasks() {
             status: customer.status || "UNASSIGNED"
           }));
 
-        setAllCustomers(unassignedCustomers);
-        setFilteredCustomers(unassignedCustomers);
-        console.log(`Loaded ${unassignedCustomers.length} unassigned customers`);
+        logger.info(`Loaded ${unassignedCustomers.length} unassigned customers`);
       } else {
-        console.error('Failed to fetch customers');
+        logger.error('Failed to fetch customers');
       }
       setLoading(false);
     } catch (error) {
-      console.error('Error loading customers:', error);
+      logger.error('Error loading customers:', error);
       setLoading(false);
     }
   };
@@ -85,12 +83,12 @@ function AdminTasks() {
         );
 
         setAvailableCallers(enabledCallers);
-        console.log(`Loaded ${enabledCallers.length} enabled callers (filtered from ${mappedCallers.length} total)`);
+        logger.info(`Loaded ${enabledCallers.length} enabled callers (filtered from ${mappedCallers.length} total)`);
       } else {
-        console.error('Failed to fetch callers');
+        logger.error('Failed to fetch callers');
       }
     } catch (error) {
-      console.error('Error loading callers:', error);
+      logger.error('Error loading callers:', error);
     }
   };
 
@@ -174,7 +172,7 @@ function AdminTasks() {
       const caller = availableCallers.find(c => c.callerId === callerId || c.id === callerId);
 
       if (!caller) {
-        console.error('Caller not found:', callerId);
+        logger.error('Caller not found:', callerId);
         toast.error('Failed to find caller. Please try again.');
         return;
       }
@@ -190,7 +188,7 @@ function AdminTasks() {
       const callerFromDB = callersArray.find(c => c.callerId === callerId);
 
       if (!callerFromDB) {
-        console.error('Caller not found in database:', callerId);
+        logger.error('Caller not found in database:', callerId);
         toast.error('Failed to find caller in database. Please try again.');
         return;
       }
@@ -199,10 +197,6 @@ function AdminTasks() {
         caller_id: callerFromDB.id, // Use numeric ID from database
         customer_ids: customers.map(c => c.id) // Array of customer IDs
       };
-
-      // Debug: log callerId and requestData
-      console.log('Sending request to backend with caller_id:', callerFromDB.id);
-      console.log('Request payload:', requestData);
 
       // Save request to backend
       const createResponse = await secureFetch(`/api/requests`, {
@@ -214,14 +208,14 @@ function AdminTasks() {
       });
 
       if (createResponse.ok) {
-        console.log('Request sent to caller:', callerName);
+        logger.info('Request sent to caller:', callerName);
       } else {
         const errorData = await createResponse.json();
-        console.error('Failed to save request to backend:', errorData);
+        logger.error('Failed to save request to backend:', errorData);
         toast.error(errorData.message || 'Failed to send request. Please try again.');
       }
     } catch (error) {
-      console.error('Error sending request to caller:', error);
+      logger.error('Error sending request to caller:', error);
       toast.error('Failed to send request. Please try again.');
     }
   };
@@ -266,7 +260,6 @@ function AdminTasks() {
         showError(result.message || "Failed to auto-assign customers");
       }
     } catch (error) {
-      console.error('Error during auto-assignment:', error);
       showError("Error during automated assignment");
     } finally {
       setIsAutomating(false);

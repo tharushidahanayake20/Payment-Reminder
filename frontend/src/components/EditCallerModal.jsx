@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './EditCallerModal.css';
 import API_BASE_URL from '../config/api';
 import { secureFetch } from '../utils/api';
+import { getCurrentUser } from '../utils/auth';
 
 function EditCallerModal({ show, caller, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -16,8 +17,8 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
   const [error, setError] = useState('');
 
   // Get current user role
-  const userRole = localStorage.getItem('role');
-  const isSupervisor = userRole === 'supervisor';
+  const user = getCurrentUser();
+  const isSupervisor = user?.role === 'supervisor';
 
   useEffect(() => {
     if (caller) {
@@ -66,8 +67,7 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
       const response = await secureFetch(`/api/callers/${callerId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
       });
@@ -82,7 +82,6 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
       onClose();
     } catch (err) {
       setError(err.message || 'Error updating Caller');
-      console.error('Error updating Caller:', err);
     } finally {
       setLoading(false);
     }

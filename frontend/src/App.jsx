@@ -26,10 +26,18 @@ import RTOMAdminDashboard from "./pages/RTOMAdminDashboard";
 import PODConfigPage from "./pages/PODConfigPage";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { sanitizeUrl } from './utils/urlSanitizer';
+import { useEffect } from 'react';
 
 
 function App() {
   const location = useLocation();
+
+  // Security: Sanitize URL on every navigation/load
+  useEffect(() => {
+    sanitizeUrl();
+  }, [location.pathname]);
+
   const isLoginPage = location.pathname === "/login" ||
     location.pathname === "/auth-success" ||
     location.pathname === "/register" ||

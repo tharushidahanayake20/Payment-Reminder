@@ -47,7 +47,6 @@ function AutomateConfigModal({ isOpen, onClose, onConfirm }) {
         showError("Failed to fetch callers");
       }
     } catch (error) {
-      console.error('Error fetching callers:', error);
       showError("Error fetching available callers");
     } finally {
       setLoading(false);

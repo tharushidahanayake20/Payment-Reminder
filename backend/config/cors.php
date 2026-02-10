@@ -7,6 +7,6 @@ return [
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['Content-Type', 'X-Requested-With', 'Authorization', 'Accept', 'Origin', 'X-CSRF-TOKEN', 'X-XSRF-TOKEN'],
     'exposed_headers' => ['Authorization'],
-    'max_age' => 0,  
+    'max_age' => 0,
     'supports_credentials' => true,
 ];

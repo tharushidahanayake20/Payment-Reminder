@@ -17,12 +17,6 @@ class RequestController extends Controller
         try {
             $user = $request->user();
 
-            Log::info('RequestController index called', [
-                'user' => $user ? get_class($user) : 'null',
-                'user_id' => $user ? $user->id : 'null',
-                'query_params' => $request->all()
-            ]);
-
             if (!$user) {
                 return response()->json(['error' => 'Unauthorized'], 401);
             }
@@ -30,14 +24,12 @@ class RequestController extends Controller
             $query = TaskRequest::query();
 
             if ($user instanceof Caller) {
-                Log::info('User is a Caller', ['caller_id' => $user->id]);
                 $query->where('caller_id', $user->id);
 
                 if ($request->has('status')) {
                     $query->where('status', $request->status);
                 }
             } elseif ($user instanceof Admin) {
-                Log::info('User is an Admin', ['admin_id' => $user->id]);
                 if ($request->has('callerId')) {
                     $query->where('caller_id', $request->callerId);
                 }
@@ -64,7 +56,7 @@ class RequestController extends Controller
                     }
                 }
             } else {
-                Log::warning('User is neither Caller nor Admin', ['user_class' => get_class($user)]);
+                // Not authorized logic
             }
 
             $results = $query->orderBy('sent_date', 'desc')->get();
@@ -93,13 +85,10 @@ class RequestController extends Controller
                 return $req;
             });
 
-            Log::info('Returning results', ['count' => $results->count()]);
+            $results = $query->orderBy('sent_date', 'desc')->get();
 
             return response()->json($results);
         } catch (\Exception $e) {
-            Log::error('Request index error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
             return response()->json([
                 'error' => 'Failed to fetch requests',
                 'message' => $e->getMessage()
@@ -117,19 +106,11 @@ class RequestController extends Controller
         $caller = Caller::findOrFail($validated['caller_id']);
 
         $user = $request->user();
-        Log::info('Creating request - authenticated user:', [
-            'user' => $user,
-            'user_id' => $user ? $user->id : null,
-            'user_name' => $user ? $user->name : null,
-            'user_type' => $user ? get_class($user) : null
-        ]);
 
         $sentBy = 'Admin';
         if ($user) {
             $sentBy = $user->name ?? $user->username ?? $user->email ?? 'Admin';
         }
-
-        Log::info('Determined sent_by value:', ['sent_by' => $sentBy]);
 
         $taskRequest = TaskRequest::create([
             'task_id' => 'TASK-' . time() . '-' . rand(1000, 9999),

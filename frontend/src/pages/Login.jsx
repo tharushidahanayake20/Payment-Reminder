@@ -33,21 +33,19 @@ const Login = () => {
     try {
       const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
-      logger.log('Login attempt:', { email, userType });
       const res = await secureFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType })
       });
       const data = await res.json();
-      logger.log('Backend response:', data);
       if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
-      // Check if OTP is required (2FA flow)
-      if (data.requiresOtp) {
-        toast.success(data.message || 'OTP sent successfully!', { autoClose: 5000 });
+      // Check if login requires OTP (if user not returned, it's the first step)
+      if (data.success && !data.user) {
+        toast.success('Check your email for OTP', { autoClose: 5000 });
         setShowOtpInput(true);
-      } else {
+      } else if (data.user) {
         // Direct login without OTP (session already created by backend)
         localStorage.setItem('userData', JSON.stringify(data.user));
 
@@ -89,11 +87,6 @@ const Login = () => {
 
       toast.success('OTP sent to your email!', { autoClose: 5000 });
       setShowOtpInput(true);
-
-      //show OTP if returned 
-      if (data.otp) {
-        logger.log('OTP:', data.otp);
-      }
     } catch (err) {
       toast.error(err.message, { autoClose: 5000 });
     } finally {
@@ -106,7 +99,6 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      logger.log('Verifying OTP:', { email, otp, userType });
 
       const res = await secureFetch(`/api/verify-otp`, {
         method: 'POST',
@@ -114,24 +106,16 @@ const Login = () => {
         body: JSON.stringify({ email, otp, userType })
       });
       const data = await res.json();
-      logger.log('OTP Verification Response:', data);
 
       if (!res.ok) throw new Error(data.error || data.message || 'OTP verification failed');
 
       // Login success - session created by backend via cookies
-      logger.log('Login successful, storing user data');
-      logger.log('User data:', data.user);
-
       localStorage.setItem('userData', JSON.stringify(data.user));
-
-      // Verify storage
-      logger.log('UserData stored:', localStorage.getItem('userData'));
 
       toast.success('Login successful!', { autoClose: 5000 });
 
       // Redirect based on role
       setTimeout(() => {
-        logger.log('Redirecting user with role:', data.user.role);
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
         } else if (data.user.role === 'uploader') {

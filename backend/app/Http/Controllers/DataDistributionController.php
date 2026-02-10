@@ -20,10 +20,9 @@ class DataDistributionController extends Controller
     public function distributeToRegionsAndRtoms(Request $request)
     {
         try {
-            // Log incoming request for debugging
+            // Log distribution request (counts only)
             \Log::info('Distribution request received', [
                 'customer_count' => count($request->input('customers', [])),
-                'sample_data' => array_slice($request->input('customers', []), 0, 2)
             ]);
 
             $validator = Validator::make($request->all(), [
@@ -86,20 +85,7 @@ class DataDistributionController extends Controller
                         }
                     }
 
-                    // Log first record to debug
-                    static $logged = false;
-                    if (!$logged) {
-                        \Log::info('Sample customer data:', [
-                            'LATEST_BILL_MNY_raw' => $customerData['LATEST_BILL_MNY'] ?? 'NOT_FOUND',
-                            'LATEST_BILL_MNY_cleaned' => $cleanNumeric($customerData['LATEST_BILL_MNY'] ?? null),
-                            'NEW_ARREARS_key' => $newArrearsKey,
-                            'NEW_ARREARS_raw' => $newArrearsKey ? $customerData[$newArrearsKey] : 'NOT_FOUND',
-                            'NEW_ARREARS_cleaned' => $newArrearsValue,
-                            'assignedTo' => $customerData['assignedTo'] ?? 'NOT_FOUND',
-                            'all_keys' => array_keys($customerData)
-                        ]);
-                        $logged = true;
-                    }
+                    // Sample logging removed for security in production-ready build
 
                     // Extract assignment_type value
                     $assignmentType = $customerData['assignedTo'] ?? null;

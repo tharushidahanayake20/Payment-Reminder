@@ -12,15 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Global middleware (runs for ALL requests including OPTIONS)
+        $middleware->prepend([
+            \App\Http\Middleware\AddSecurityHeadersToOptions::class, // Add CSP to OPTIONS requests
+            \App\Http\Middleware\SecurityHeadersMiddleware::class,    // Add security headers globally
+        ]);
+
         // Enable session and CSRF for API routes (required for Sanctum SPA authentication)
-        // IMPORTANT: CORS must be handled FIRST, before session middleware
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\ValidateApiRequest::class,
-            \App\Http\Middleware\SecurityHeadersMiddleware::class, // Add security headers
         ]);
 
         // Also ensure stateful API middleware is enabled for Sanctum
