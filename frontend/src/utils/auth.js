@@ -1,16 +1,16 @@
 // Authentication utility functions
+import API_BASE_URL from '../config/api';
 
-// Check if user is authenticated
+// Check if user is authenticated by verifying session with backend
 export const isAuthenticated = () => {
-  const token = localStorage.getItem('token');
   const userData = localStorage.getItem('userData');
-  
-  if (!token || !userData) {
+
+  if (!userData) {
     return false;
   }
 
-  // Sanctum tokens don't expire on the client side
-  // Token validity is checked by the backend on each request
+  // Session validity is checked by the backend on each request
+  // We rely on cookies for authentication, not tokens
   return true;
 };
 

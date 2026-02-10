@@ -3,7 +3,6 @@ import './Register.css';
 import logo from '../assets/logo.png';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config/api';
-import { jwtDecode } from 'jwt-decode';
 import { clearSession } from '../utils/auth';
 import { MdOutlineMailOutline } from 'react-icons/md';
 import { FaUser, FaPhone } from 'react-icons/fa';
@@ -65,26 +64,17 @@ const Register = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'OTP verification failed');
 
-      // OTP verified - decode token and save it
-      const decoded = jwtDecode(data.token);
+      // OTP verified - session created by backend via cookies
       clearSession();
-      localStorage.setItem('token', data.token);
 
-      // save decoded token data as baseline
-      const baseUserData = {
-        id: decoded.id,
-        email: decoded.email,
-        name: decoded.name,
-        avatar: decoded.avatar,
-        role: decoded.role || 'caller'
-      };
-      localStorage.setItem('userData', JSON.stringify(baseUserData));
+      // Store user data in localStorage for UI purposes
+      localStorage.setItem('userData', JSON.stringify(data.user));
 
-      //  try to fetch full user profile to get additional fields like callerId
+      // Try to fetch full user profile to get additional fields like callerId
       try {
         const profileRes = await fetch(`${API_BASE_URL}/users/profile`, {
+          credentials: 'include', // Send cookies
           headers: {
-            'Authorization': `Bearer ${data.token}`,
             'Content-Type': 'application/json'
           }
         });
@@ -93,16 +83,16 @@ const Register = () => {
           const profileData = await profileRes.json();
           const user = profileData.user || profileData;
 
-          // Merge profile data with decoded data (profile takes priority)
+          // Merge profile data with response data (profile takes priority)
           const completeUserData = {
-            id: user._id || decoded.id,
-            _id: user._id || decoded.id,
-            callerId: user.callerId || decoded.callerId,
-            email: user.email || decoded.email,
-            name: user.name || decoded.name,
+            id: user._id || data.user.id,
+            _id: user._id || data.user.id,
+            callerId: user.callerId || data.user.callerId,
+            email: user.email || data.user.email,
+            name: user.name || data.user.name,
             phone: user.phone || user.number,
-            avatar: user.avatar || decoded.avatar,
-            role: user.role || decoded.role || 'caller'
+            avatar: user.avatar || data.user.avatar,
+            role: user.role || data.user.role || 'caller'
           };
 
           clearSession();
@@ -114,11 +104,11 @@ const Register = () => {
             email: completeUserData.email
           });
         } else {
-          console.warn('Could not fetch full profile, using token data only');
+          console.warn('Could not fetch full profile, using response data only');
         }
       } catch (profileErr) {
         console.error('Profile fetch error:', profileErr);
-        console.log('Using decoded token data as fallback');
+        console.log('Using response data as fallback');
       }
 
       navigate('/dashboard');

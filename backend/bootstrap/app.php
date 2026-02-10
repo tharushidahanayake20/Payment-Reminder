@@ -12,15 +12,31 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Enable CORS for React frontend
+        // Enable session and CSRF for API routes (required for Sanctum SPA authentication)
+        // IMPORTANT: CORS must be handled FIRST, before session middleware
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\ValidateApiRequest::class,
+        ]);
+
+        // Also ensure stateful API middleware is enabled for Sanctum
+        $middleware->statefulApi();
+
+        // Exclude authentication routes from CSRF validation
+        // These routes are called before the user has a session/CSRF token
+        $middleware->validateCsrfTokens(except: [
+            'api/login',
+            'api/send-otp',
+            'api/verify-otp',
+            'sanctum/csrf-cookie',
         ]);
 
         // Override redirect for unauthenticated API requests
         $middleware->redirectGuestsTo(function ($request) {
-           
+
             return null;
         });
     })

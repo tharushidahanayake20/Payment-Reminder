@@ -1,24 +1,33 @@
 import API_BASE_URL from '../config/api';
+import { getCsrfToken } from './csrf';
 
 /**
- * Enhanced fetch wrapper that adds security headers to prevent direct browser access
+ * Enhanced fetch wrapper that uses cookie-based authentication with CSRF protection
  * @param {string} url - The API endpoint (will be prefixed with API_BASE_URL)
  * @param {object} options - Fetch options
  * @returns {Promise<Response>}
  */
 export const secureFetch = async (url, options = {}) => {
-    
-    const token = localStorage.getItem('token');
 
-    
+    // For state-changing requests, fetch CSRF token first
+    // EXCEPT for authentication routes which are excluded from CSRF validation
+    const method = options.method?.toUpperCase() || 'GET';
+    const csrfExcludedRoutes = ['/api/login', '/api/send-otp', '/api/verify-otp'];
+    const needsCsrf = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) &&
+        !csrfExcludedRoutes.some(route => url.includes(route));
+
+    if (needsCsrf) {
+        await getCsrfToken();
+    }
+
+
     const headers = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...(options.headers || {}),
     };
 
-    
+
     if (options.body instanceof FormData) {
         delete headers['Content-Type'];
     }
@@ -26,6 +35,7 @@ export const secureFetch = async (url, options = {}) => {
     const config = {
         ...options,
         headers,
+        credentials: 'include', // Send cookies with every request
     };
 
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
@@ -36,7 +46,6 @@ export const secureFetch = async (url, options = {}) => {
         // Handle 401 Unauthorized - automatically redirect to login
         if (response.status === 401) {
             console.warn('401 Unauthorized - clearing auth and redirecting to login');
-            localStorage.removeItem('token');
             localStorage.removeItem('userData');
             window.location.href = '/login';
             throw new Error('Unauthorized - Please login again');
@@ -55,7 +64,7 @@ export const secureFetch = async (url, options = {}) => {
             console.error('500 Internal Server Error:', errorData);
             throw new Error(errorData.error || errorData.message || 'Server error occurred. Please try again.');
         }
-        
+
 
         return response;
     } catch (error) {

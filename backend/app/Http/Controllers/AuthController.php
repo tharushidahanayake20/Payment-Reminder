@@ -8,6 +8,7 @@ use App\Models\Caller;
 use App\Services\OtpService;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -101,7 +102,10 @@ class AuthController extends Controller
                 request: $request
             );
 
-            $request->user()->currentAccessToken()->delete();
+            // Logout from session and invalidate
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return response()->json(['message' => 'Logged out successfully']);
         } catch (\Exception $e) {
@@ -145,7 +149,15 @@ class AuthController extends Controller
             $user = $result['user'];
             $userType = $result['userType'];
 
-            $token = $user->createToken('auth-token', [$userType])->plainTextToken;
+            // Use session-based authentication instead of tokens
+            if ($userType === 'admin') {
+                Auth::guard('web')->login($user);
+            } else {
+                Auth::guard('web')->login($user);
+            }
+
+            // Regenerate session to prevent session fixation attacks
+            $request->session()->regenerate();
 
             AuditLogger::log(
                 action: 'login_success',
@@ -156,7 +168,7 @@ class AuthController extends Controller
             );
 
             return response()->json([
-                'token' => $token,
+                'message' => 'Login successful',
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
