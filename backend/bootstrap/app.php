@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \App\Http\Middleware\ValidateApiRequest::class,
+            \App\Http\Middleware\SecurityHeadersMiddleware::class, // Add security headers
         ]);
 
         // Also ensure stateful API middleware is enabled for Sanctum

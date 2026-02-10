@@ -103,7 +103,8 @@ class AuthController extends Controller
             );
 
             // Logout from session and invalidate
-            Auth::guard('web')->logout();
+            $userType = $user instanceof Admin ? 'admin' : 'caller';
+            Auth::guard($userType)->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
@@ -149,12 +150,9 @@ class AuthController extends Controller
             $user = $result['user'];
             $userType = $result['userType'];
 
-            // Use session-based authentication instead of tokens
-            if ($userType === 'admin') {
-                Auth::guard('web')->login($user);
-            } else {
-                Auth::guard('web')->login($user);
-            }
+            // Use session-based authentication with appropriate guard
+            $guard = $userType === 'admin' ? 'admin' : 'caller';
+            Auth::guard($guard)->login($user);
 
             // Regenerate session to prevent session fixation attacks
             $request->session()->regenerate();

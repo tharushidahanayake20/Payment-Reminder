@@ -7,6 +7,7 @@ import { clearSession } from '../utils/auth';
 import { MdOutlineMailOutline } from 'react-icons/md';
 import { FaUser, FaPhone } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+import logger from '../utils/logger';
 
 const Register = () => {
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '' });
@@ -98,17 +99,17 @@ const Register = () => {
           clearSession();
           localStorage.setItem('userData', JSON.stringify(completeUserData));
 
-          console.log('Registration complete - User data saved to localStorage:', {
+          logger.log('Registration complete - User data saved to localStorage:', {
             callerId: completeUserData.callerId,
             name: completeUserData.name,
             email: completeUserData.email
           });
         } else {
-          console.warn('Could not fetch full profile, using response data only');
+          logger.warn('Could not fetch full profile, using response data only');
         }
       } catch (profileErr) {
-        console.error('Profile fetch error:', profileErr);
-        console.log('Using response data as fallback');
+        logger.error('Profile fetch error:', profileErr);
+        logger.log('Using response data as fallback');
       }
 
       navigate('/dashboard');

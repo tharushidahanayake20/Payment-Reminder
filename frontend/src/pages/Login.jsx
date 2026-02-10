@@ -9,6 +9,7 @@ import { secureFetch } from '../utils/api';
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { toast } from "react-toastify";
+import logger from '../utils/logger';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -32,14 +33,14 @@ const Login = () => {
     try {
       const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
-      console.log('Login attempt:', { email, userType });
+      logger.log('Login attempt:', { email, userType });
       const res = await secureFetch(`${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, userType })
       });
       const data = await res.json();
-      console.log('Backend response:', data);
+      logger.log('Backend response:', data);
       if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
       // Check if OTP is required (2FA flow)
@@ -91,7 +92,7 @@ const Login = () => {
 
       //show OTP if returned 
       if (data.otp) {
-        console.log('OTP:', data.otp);
+        logger.log('OTP:', data.otp);
       }
     } catch (err) {
       toast.error(err.message, { autoClose: 5000 });
@@ -105,7 +106,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      console.log('Verifying OTP:', { email, otp, userType });
+      logger.log('Verifying OTP:', { email, otp, userType });
 
       const res = await secureFetch(`/api/verify-otp`, {
         method: 'POST',
@@ -113,24 +114,24 @@ const Login = () => {
         body: JSON.stringify({ email, otp, userType })
       });
       const data = await res.json();
-      console.log('OTP Verification Response:', data);
+      logger.log('OTP Verification Response:', data);
 
       if (!res.ok) throw new Error(data.error || data.message || 'OTP verification failed');
 
       // Login success - session created by backend via cookies
-      console.log('Login successful, storing user data');
-      console.log('User data:', data.user);
+      logger.log('Login successful, storing user data');
+      logger.log('User data:', data.user);
 
       localStorage.setItem('userData', JSON.stringify(data.user));
 
       // Verify storage
-      console.log('UserData stored:', localStorage.getItem('userData'));
+      logger.log('UserData stored:', localStorage.getItem('userData'));
 
       toast.success('Login successful!', { autoClose: 5000 });
 
       // Redirect based on role
       setTimeout(() => {
-        console.log('Redirecting user with role:', data.user.role);
+        logger.log('Redirecting user with role:', data.user.role);
         if (data.user.role === 'superadmin') {
           navigate('/superadmin');
         } else if (data.user.role === 'uploader') {
@@ -148,7 +149,7 @@ const Login = () => {
         }
       }, 500);
     } catch (err) {
-      console.error('OTP Verification Error:', err);
+      logger.error('OTP Verification Error:', err);
       toast.error(err.message, { autoClose: 5000 });
     } finally {
       setLoading(false);
