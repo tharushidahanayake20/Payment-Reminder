@@ -19,8 +19,20 @@ const UploadPage = () => {
   const [paidFiles, setPaidFiles] = useState([]);
   const [paidDragActive, setPaidDragActive] = useState(false);
   const [paidData, setPaidData] = useState(() => {
-    const saved = localStorage.getItem('uploadedPaidData');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('uploadedPaidData');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      // Validate structure: must have headers and rows
+      if (parsed && typeof parsed === 'object' && parsed.headers && parsed.rows) {
+        return parsed;
+      }
+      // If invalid format, clear it
+      localStorage.removeItem('uploadedPaidData');
+      return null;
+    } catch (e) {
+      return null;
+    }
   });
   const [paidUploading, setPaidUploading] = useState(false);
   const [paidImporting, setPaidImporting] = useState(false);
@@ -492,13 +504,14 @@ const UploadPage = () => {
                   <thead>
                     <tr>
                       <th className="row-number-header">#</th>
-                      {paidData.headers.map((header, index) => (
+                      {paidData?.headers?.map?.((header, index) => (
                         <th key={index}>{header}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {(() => {
+                      if (!paidData || !paidData.headers || !paidData.rows) return null;
                       const { headers, rows } = paidData;
                       const filteredRows = rows.filter(row => {
                         if (!paidSearchTerm.trim()) return true;
