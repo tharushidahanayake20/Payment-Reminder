@@ -107,7 +107,7 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', fileItem.file);
 
-      const response = await secureFetch(`/upload/parse`, {
+      const response = await secureFetch(`/api/upload/parse`, {
         method: 'POST',
         body: formData
       });
@@ -160,7 +160,7 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', completedFile.file);
 
-      const response = await secureFetch(`/upload/mark-paid`, {
+      const response = await secureFetch(`/api/upload/mark-paid`, {
         method: 'POST',
         body: formData
       });
