@@ -104,7 +104,10 @@ class DataDistributionController extends Controller
                         ?? null;
 
                     if ($accountNumber !== null) {
-                        $accountNumber = trim((string) $accountNumber);
+                        // Aggressively strip BOM and non-printable characters
+                        $accountNumber = preg_replace('/[\x00-\x1f\x7f-\xff]/', '', (string) $accountNumber);
+                        $accountNumber = trim($accountNumber);
+
                         if (is_numeric($accountNumber) && strlen($accountNumber) < 10) {
                             $accountNumber = str_pad($accountNumber, 10, '0', STR_PAD_LEFT);
                         }

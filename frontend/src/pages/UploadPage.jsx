@@ -172,12 +172,14 @@ const UploadPage = () => {
       const formData = new FormData();
       formData.append('file', completedFile.file);
 
+      console.log('Sending mark-paid request for file:', completedFile.file.name);
       const response = await secureFetch(`/api/upload/mark-paid`, {
         method: 'POST',
         body: formData
       });
 
       const result = await response.json();
+      console.log('mark-paid API response:', result);
 
       if (response.ok && result.success) {
         toast.success(`Successfully marked ${result.data.marked} customers as paid! (${result.data.skipped || 0} records skipped)`);

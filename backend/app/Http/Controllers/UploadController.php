@@ -86,6 +86,7 @@ class UploadController extends Controller
         ]);
 
         try {
+            \Illuminate\Support\Facades\DB::enableQueryLog();
             $file = $request->file('file');
             $data = (new FastExcel)->import($file);
 
@@ -101,6 +102,22 @@ class UploadController extends Controller
 
             foreach ($data as $index => $row) {
                 try {
+                    // Pre-clean all keys in the row (strip BOM/non-printable chars from headers)
+                    $cleanRow = [];
+                    foreach ($row as $k => $v) {
+                        $cleanK = preg_replace('/[\x00-\x1f\x7f-\xff]/', '', (string) $k);
+                        $cleanK = trim($cleanK);
+                        $cleanRow[$cleanK] = $v;
+                    }
+                    $row = $cleanRow;
+
+                    if ($index === 0) {
+                        \Illuminate\Support\Facades\Log::info('markPaid first row content (cleaned keys)', [
+                            'keys' => array_keys($row),
+                            'row' => $row
+                        ]);
+                    }
+
                     // Extract account number using proven logic from 'parse' method
                     $accountNumber = $row['ACCOUNT_NUM']
                         ?? $row['ACCOUNT_NUMBER']
@@ -111,7 +128,9 @@ class UploadController extends Controller
 
                     // Clean and normalize account number (handle leading zeros and types)
                     if ($accountNumber !== null) {
-                        $accountNumber = trim((string) $accountNumber);
+                        // Aggressively strip BOM and non-printable characters
+                        $accountNumber = preg_replace('/[\x00-\x1f\x7f-\xff]/', '', (string) $accountNumber);
+                        $accountNumber = trim($accountNumber);
 
                         // Handle potential leading zero loss from Excel (assume 10 digits)
                         if (is_numeric($accountNumber) && strlen($accountNumber) < 10) {
@@ -119,22 +138,18 @@ class UploadController extends Controller
                         }
                     }
 
-                    if ($accountNumber === '0038630092') {
-                        \Illuminate\Support\Facades\Log::info('DEBUG: Found target account in markPaid row', [
-                            'original_account' => $row['ACCOUNT_NUM'] ?? 'N/A',
-                            'normalized_account' => $accountNumber,
-                            'row_keys' => array_keys((array) $row)
-                        ]);
-                    }
-
                     if (!$accountNumber) {
+                        \Illuminate\Support\Facades\Log::warning('markPaid: No accountNumber found in row', [
+                            'index' => $index,
+                            'keys' => array_keys((array) $row)
+                        ]);
                         $skipped++;
                         continue;
                     }
 
-                    // Find customer in both tables
-                    $customer = Customer::where('ACCOUNT_NUM', $accountNumber)->first();
-                    $filteredCustomer = FilteredCustomer::where('ACCOUNT_NUM', $accountNumber)->first();
+                    // Find customer in both tables with robust matching (handle trailing spaces)
+                    $customer = Customer::whereRaw('TRIM(ACCOUNT_NUM) = ?', [$accountNumber])->first();
+                    $filteredCustomer = FilteredCustomer::whereRaw('TRIM(ACCOUNT_NUM) = ?', [$accountNumber])->first();
 
                     if (!$customer && !$filteredCustomer) {
                         \Illuminate\Support\Facades\Log::warning('Customer not found for markPaid', [
@@ -145,6 +160,12 @@ class UploadController extends Controller
                         $skipped++;
                         continue;
                     }
+
+                    \Illuminate\Support\Facades\Log::info('markPaid customer found', [
+                        'account' => $accountNumber,
+                        'customer_id' => $customer->id ?? 'N/A',
+                        'filtered_id' => $filteredCustomer->id ?? 'N/A'
+                    ]);
 
                     // Extract payment amount using direct row access
                     $paymentAmount = $row['PAYMENT_AMOUNT']
@@ -163,7 +184,7 @@ class UploadController extends Controller
                         $paymentAmount = floatval(str_replace(',', '', trim($paymentAmount)));
                     }
 
-                    // Extract arrears from Excel (user mentioned NEW_ARREARS is in the file)
+                    // Extract arrears from Excel (handles dynamic names like NEW_ARREARS_20251122)
                     $excelArrears = $row['NEW_ARREARS']
                         ?? $row['NEW_ARREAR_S']
                         ?? $row['NEW ARREARS']
@@ -171,7 +192,26 @@ class UploadController extends Controller
                         ?? $row['new_arrears']
                         ?? null;
 
+                    if ($excelArrears === null) {
+                        // Normalize the keys to uppercase for easier lookup
+                        $rowUpper = array_change_key_case((array) $row, CASE_UPPER);
+                        foreach ($rowUpper as $key => $value) {
+                            if (preg_match('/^NEW_ARREAR[S]?_\d{8}$/', $key)) {
+                                $excelArrears = $value;
+                                break;
+                            }
+                        }
+                    }
+
                     // Calculate new arrears
+                    \Illuminate\Support\Facades\Log::info('markPaid processing status', [
+                        'account' => $accountNumber,
+                        'excelArrears_raw' => $excelArrears,
+                        'paymentAmount_raw' => $paymentAmount,
+                        'customer_exists' => (bool) $customer,
+                        'filtered_exists' => (bool) $filteredCustomer
+                    ]);
+
                     if ($excelArrears !== null) {
                         $newArrears = floatval(str_replace(',', '', trim($excelArrears)));
                     } elseif ($paymentAmount !== null && $paymentAmount > 0) {
@@ -182,36 +222,40 @@ class UploadController extends Controller
                         $newArrears = 0;
                     }
 
-                    // Determine status based on remaining arrears
-                    $newStatus = $newArrears <= 0 ? 'COMPLETED' : 'pending';
+                    \Illuminate\Support\Facades\Log::info('markPaid calculation result', [
+                        'account' => $accountNumber,
+                        'newArrears' => $newArrears
+                    ]);
 
-                    // Safely get AGE_MONTHS from whichever record exists
-                    $currentAgeMonths = $customer->AGE_MONTHS ?? $filteredCustomer->AGE_MONTHS ?? 0;
-                    $newAgeMonths = $newArrears <= 0 ? 0 : $currentAgeMonths;
+                    // Standardize status for both tables as 'completed' as requested by user
+                    $newStatus = 'completed';
 
-                    // Update Customer record if it exists
+                    // Age months logic: if completed, age is 0
+                    $newAgeMonths = 0;
+
+                    // Update Customer record if it exists (only update Arrears if status column is missing)
                     if ($customer) {
                         $customer->update([
-                            'status' => $newStatus,
-                            'NEW_ARREARS' => $newArrears,
-                            'AGE_MONTHS' => $newAgeMonths
+                            'NEW_ARREARS' => $newArrears
                         ]);
                     }
 
-                    // Update FilteredCustomer record if it exists
+                    // Update FilteredCustomer record if it exists (has status column)
                     if ($filteredCustomer) {
                         $filteredCustomer->update([
-                            'status' => strtolower($newStatus) === 'completed' ? 'paid' : $newStatus,
+                            'status' => $newStatus, // filtered_customers uses lowercase
                             'NEW_ARREARS' => $newArrears,
                             'AGE_MONTHS' => $newAgeMonths
                         ]);
                     }
 
-                    if ($newArrears <= 0) {
-                        $markedPaid++;
-                    } else {
-                        $updated++;
-                    }
+                    \Illuminate\Support\Facades\Log::info('markPaid update confirmed', [
+                        'account' => $accountNumber,
+                        'new_arrears' => $newArrears,
+                        'status' => $newStatus
+                    ]);
+
+                    $markedPaid++;
 
                 } catch (\Exception $e) {
                     $errors[] = [
@@ -220,6 +264,10 @@ class UploadController extends Controller
                     ];
                 }
             }
+
+            \Illuminate\Support\Facades\Log::info('markPaid completed queries', [
+                'queries' => \Illuminate\Support\Facades\DB::getQueryLog()
+            ]);
 
             return response()->json([
                 'success' => true,

@@ -8,7 +8,8 @@ export const REGIONS_AND_RTOMS = {
     { code: 'KX', name: 'Kotte' },
     { code: 'WT', name: 'Wattala' },
     { code: 'RM', name: 'Ratmalana' },
-    { code: 'MD', name: 'Moratuwa/Mt. Lavinia' }
+    { code: 'MD', name: 'Moratuwa/Mt. Lavinia' },
+    { code: 'ML', name: 'Mount Lavinia' }
   ],
   'Region 1': [
     { code: 'AN', name: 'Anuradhapura' },
@@ -59,8 +60,11 @@ export const getRtomsForRegion = (region) => {
 
 // Get region for a specific RTOM code
 export const getRegionForRtom = (rtomCode) => {
+  if (!rtomCode) return null;
+  const upperCode = rtomCode.toString().trim().toUpperCase();
+
   for (const [region, rtoms] of Object.entries(REGIONS_AND_RTOMS)) {
-    if (rtoms.find(r => r.code === rtomCode)) {
+    if (rtoms.find(r => r.code.toUpperCase() === upperCode)) {
       return region;
     }
   }
