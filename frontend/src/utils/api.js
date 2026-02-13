@@ -37,7 +37,12 @@ export const secureFetch = async (url, options = {}) => {
         for (let i = 0; i < ca.length; i++) {
             let c = ca[i].trim();
             if (c.indexOf(name) === 0) {
-                return c.substring(name.length, c.length);
+                let token = c.substring(name.length, c.length);
+                // Occasionally tokens reach the client with surrounding quotes
+                if (token.startsWith('"') && token.endsWith('"')) {
+                    token = token.substring(1, token.length - 1);
+                }
+                return token;
             }
         }
         return null;

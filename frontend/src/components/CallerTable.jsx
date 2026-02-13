@@ -204,7 +204,7 @@ function CallerTable({ refreshTrigger, searchFilter = {} }) {
                         color: '#4CAF50',
                         fontSize: '18px'
                       }}
-                      title={userRole === 'supervisor' ? 'Enable/Disable' : 'Edit'}
+                      title={userRole === 'supervisor' ? 'Edit Capacity/Status' : 'Edit'}
                     >
                       <i className="bi bi-pencil-square"></i>
                     </button>

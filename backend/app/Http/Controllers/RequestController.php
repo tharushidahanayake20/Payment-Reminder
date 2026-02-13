@@ -85,10 +85,13 @@ class RequestController extends Controller
                 return $req;
             });
 
-            $results = $query->orderBy('sent_date', 'desc')->get();
-
             return response()->json($results);
         } catch (\Exception $e) {
+            Log::error('Requests API Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $request->user()?->id
+            ]);
             return response()->json([
                 'error' => 'Failed to fetch requests',
                 'message' => $e->getMessage()

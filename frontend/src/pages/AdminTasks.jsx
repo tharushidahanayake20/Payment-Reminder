@@ -36,18 +36,30 @@ function AdminTasks() {
 
         // Show all unassigned customers (not already assigned to a caller and not completed)
         const unassignedCustomers = customersData
-          .filter(c => !c.assigned_to && c.status !== 'COMPLETED')
+          .filter(c => {
+            // Robustly check assigned_to (can be null, 0, or undefined)
+            const isUnassigned = !c.assigned_to || c.assigned_to === 0 || c.assigned_to === '0';
+
+            // Case-insensitive status check
+            const status = (c.status || '').toUpperCase();
+            const isNotCompleted = status !== 'COMPLETED';
+
+            return isUnassigned && isNotCompleted;
+          })
           .map(customer => ({
             id: customer.id,
-            accountNumber: customer.ACCOUNT_NUM,
-            name: customer.CUSTOMER_NAME,
-            contactNumber: customer.MOBILE_CONTACT_TEL || "N/A",
-            amountOverdue: customer.NEW_ARREARS || 0,
-            daysOverdue: customer.AGE_MONTHS || 0,
+            accountNumber: customer.ACCOUNT_NUM || customer.accountNumber || "N/A",
+            name: customer.CUSTOMER_NAME || customer.name || "N/A",
+            contactNumber: customer.MOBILE_CONTACT_TEL || customer.contactNumber || "N/A",
+            amountOverdue: customer.NEW_ARREARS || customer.amountOverdue || 0,
+            daysOverdue: customer.AGE_MONTHS || customer.daysOverdue || 0,
             status: customer.status || "UNASSIGNED"
           }));
 
-        console.log(`Loaded ${unassignedCustomers.length} unassigned customers`);
+        console.log(`Debug: Filtered ${unassignedCustomers.length} unassigned customers from ${customersData.length} total fetched`);
+        if (customersData.length > 0 && unassignedCustomers.length === 0) {
+          console.log("Sample customer from API:", customersData[0]);
+        }
         setAllCustomers(unassignedCustomers);
       } else {
         console.error('Failed to fetch customers');
@@ -270,6 +282,8 @@ function AdminTasks() {
   const getSelectedCustomersData = () => {
     return allCustomers.filter(c => selectedCustomers.includes(c.id));
   };
+
+  console.log(`Render: filteredCustomers count = ${filteredCustomers.length}`);
 
   return (
     <div className="admin-tasks">

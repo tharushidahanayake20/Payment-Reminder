@@ -107,7 +107,7 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
                 Caller: <strong>{formData.name}</strong> ({formData.callerId})
               </p>
 
-              <div className="form-group">
+              <div className="form-group" style={{ marginBottom: '15px' }}>
                 <label>Status</label>
                 <select
                   name="status"
@@ -119,6 +119,21 @@ function EditCallerModal({ show, caller, onClose, onSave }) {
                   <option value="BUSY">Busy</option>
                   <option value="OFFLINE">Offline</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label>Max Load (Capacity)</label>
+                <input
+                  type="number"
+                  name="maxLoad"
+                  value={formData.maxLoad}
+                  onChange={handleChange}
+                  min="1"
+                  max="100"
+                  placeholder="20"
+                  style={{ fontSize: '16px', padding: '10px' }}
+                />
+                <small className="form-text text-muted">Total customers this caller can handle at once.</small>
               </div>
             </div>
           ) : (
