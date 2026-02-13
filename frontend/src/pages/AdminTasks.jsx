@@ -47,13 +47,14 @@ function AdminTasks() {
             status: customer.status || "UNASSIGNED"
           }));
 
-        logger.info(`Loaded ${unassignedCustomers.length} unassigned customers`);
+        console.log(`Loaded ${unassignedCustomers.length} unassigned customers`);
+        setAllCustomers(unassignedCustomers);
       } else {
-        logger.error('Failed to fetch customers');
+        console.error('Failed to fetch customers');
       }
       setLoading(false);
     } catch (error) {
-      logger.error('Error loading customers:', error);
+      console.error('Error loading customers:', error);
       setLoading(false);
     }
   };
@@ -83,12 +84,12 @@ function AdminTasks() {
         );
 
         setAvailableCallers(enabledCallers);
-        logger.info(`Loaded ${enabledCallers.length} enabled callers (filtered from ${mappedCallers.length} total)`);
+        console.log(`Loaded ${enabledCallers.length} enabled callers (filtered from ${mappedCallers.length} total)`);
       } else {
-        logger.error('Failed to fetch callers');
+        console.error('Failed to fetch callers');
       }
     } catch (error) {
-      logger.error('Error loading callers:', error);
+      console.error('Error loading callers:', error);
     }
   };
 
@@ -172,7 +173,7 @@ function AdminTasks() {
       const caller = availableCallers.find(c => c.callerId === callerId || c.id === callerId);
 
       if (!caller) {
-        logger.error('Caller not found:', callerId);
+        console.error('Caller not found:', callerId);
         toast.error('Failed to find caller. Please try again.');
         return;
       }
@@ -188,7 +189,7 @@ function AdminTasks() {
       const callerFromDB = callersArray.find(c => c.callerId === callerId);
 
       if (!callerFromDB) {
-        logger.error('Caller not found in database:', callerId);
+        console.error('Caller not found in database:', callerId);
         toast.error('Failed to find caller in database. Please try again.');
         return;
       }
@@ -208,14 +209,14 @@ function AdminTasks() {
       });
 
       if (createResponse.ok) {
-        logger.info('Request sent to caller:', callerName);
+        console.log('Request sent to caller:', callerName);
       } else {
         const errorData = await createResponse.json();
-        logger.error('Failed to save request to backend:', errorData);
+        console.error('Failed to save request to backend:', errorData);
         toast.error(errorData.message || 'Failed to send request. Please try again.');
       }
     } catch (error) {
-      logger.error('Error sending request to caller:', error);
+      console.error('Error sending request to caller:', error);
       toast.error('Failed to send request. Please try again.');
     }
   };

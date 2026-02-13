@@ -272,9 +272,6 @@ class DataDistributionController extends Controller
                 'by_rtom' => $query->selectRaw('rtom, region, count(*) as count')
                     ->groupBy('rtom', 'region')
                     ->get(),
-                'by_status' => $query->selectRaw('status, count(*) as count')
-                    ->groupBy('status')
-                    ->get(),
             ];
 
             return response()->json([
