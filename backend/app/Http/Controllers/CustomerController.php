@@ -240,11 +240,36 @@ class CustomerController extends Controller
             $user = $request->user();
             $customer = FilteredCustomer::findOrFail($id);
 
-            // Only superadmin can delete customers
-            if ($user instanceof Admin && !$user->isSuperAdmin()) {
+            // Authorization check
+            if ($user instanceof Admin) {
+                if (!$user->isSuperAdmin()) {
+                    // Region admin check
+                    if ($user->isRegionAdmin() && $customer->REGION !== $user->region) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Access denied. You can only delete customers in your region.'
+                        ], 403);
+                    }
+                    // RTOM admin and supervisor check
+                    elseif (($user->isRtomAdmin() || $user->isSupervisor()) && $customer->RTOM !== $user->rtom) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Access denied. You can only delete customers in your RTOM.'
+                        ], 403);
+                    }
+                    // For any other admin role that isn't superadmin and doesn't have region/rtom access
+                    elseif (!$user->isRegionAdmin() && !$user->isRtomAdmin() && !$user->isSupervisor()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Only administrative roles can delete customers.'
+                        ], 403);
+                    }
+                }
+            } else {
+                // Non-admin users (Callers) cannot delete customers
                 return response()->json([
                     'success' => false,
-                    'message' => 'Only superadmin can delete customers'
+                    'message' => 'Access denied. Only administrators can delete customers.'
                 ], 403);
             }
 

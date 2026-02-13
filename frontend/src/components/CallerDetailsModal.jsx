@@ -10,10 +10,10 @@ function CallerDetailsModal({ isOpen, onClose, caller, callerData }) {
   const isLoading = !callerData;
 
   const completedCount = assignedCustomers.filter(c => c.status === "COMPLETED").length;
-  const contactedCount = assignedCustomers.filter(c => 
+  const contactedCount = assignedCustomers.filter(c =>
     c.contactHistory && c.contactHistory.length > 0 && c.status !== "COMPLETED"
   ).length;
-  const notContactedCount = assignedCustomers.filter(c => 
+  const notContactedCount = assignedCustomers.filter(c =>
     (!c.contactHistory || c.contactHistory.length === 0) && c.status !== "COMPLETED"
   ).length;
   const totalAssigned = assignedCustomers.length;
@@ -145,10 +145,10 @@ function CallerDetailsModal({ isOpen, onClose, caller, callerData }) {
                     const lastContact = getLastContact(customer);
                     const customerStatus = getCustomerStatus(customer);
                     return (
-                      <tr key={customer._id} className={`customer-row ${customerStatus.toLowerCase()}`}>
+                      <tr key={customer.id} className={`customer-row ${customerStatus.toLowerCase()}`}>
                         <td>
-                          <span className="caller-details-task-id" style={{ 
-                            fontSize: '0.85em', 
+                          <span className="caller-details-task-id" style={{
+                            fontSize: '0.85em',
                             fontFamily: 'monospace',
                             color: '#666',
                             backgroundColor: '#f0f0f0',
@@ -211,8 +211,8 @@ function CallerDetailsModal({ isOpen, onClose, caller, callerData }) {
           <div className="caller-details-progress">
             <span className="caller-details-progress-label">Progress:</span>
             <div className="caller-details-progress-bar">
-              <div 
-                className="caller-details-progress-fill" 
+              <div
+                className="caller-details-progress-fill"
                 style={{ width: totalAssigned > 0 ? `${(completedCount / totalAssigned) * 100}%` : '0%' }}
               >
                 {totalAssigned > 0 && (

@@ -78,16 +78,16 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
   };
 
   const handleEditSave = (updatedCustomer) => {
-    setCustomers(customers.map(c => c._id === updatedCustomer._id ? updatedCustomer : c));
+    setCustomers(customers.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
     showSuccess('Customer updated successfully');
   };
 
   const handleDelete = async (customer) => {
-    if (deleteConfirmation === customer._id) {
+    if (deleteConfirmation === customer.id) {
       // Second click - proceed with delete
       setDeleteConfirmation(null);
       try {
-        const response = await secureFetch(`/api/customers/${customer._id}`, {
+        const response = await secureFetch(`/api/customers/${customer.id}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -101,7 +101,7 @@ function CustomerTable({ refreshTrigger, searchFilter = {} }) {
       }
     } else {
       // First click - show confirmation toast
-      setDeleteConfirmation(customer._id);
+      setDeleteConfirmation(customer.id);
       showWarning(`Click delete again to confirm deletion of ${customer.name}`);
 
       // Reset confirmation after 3 seconds

@@ -90,7 +90,7 @@ function EditCustomerModal({ show, customer, onClose, onSave }) {
 
     setLoading(true);
     try {
-      const response = await secureFetch(`/customers/${customer._id}`, {
+      const response = await secureFetch(`/api/customers/${customer.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
