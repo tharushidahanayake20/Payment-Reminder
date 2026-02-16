@@ -5,7 +5,7 @@ import { FaUserShield } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { clearSession } from '../utils/auth';
 import API_BASE_URL from '../config/api';
-import { secureFetch } from '../utils/api';
+import { secureFetch, api } from '../utils/api';
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { toast } from "react-toastify";
