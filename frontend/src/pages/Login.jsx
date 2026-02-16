@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./Login.css";
 import logo from "../assets/logo.png";
 import { FaUserShield } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { clearSession } from '../utils/auth';
+import { useLocation, useNavigate } from "react-router-dom";
+import { getCurrentUser } from '../utils/auth';
 import API_BASE_URL from '../config/api';
 import { secureFetch, api } from '../utils/api';
 import { MdOutlineMailOutline } from "react-icons/md";
@@ -13,6 +13,7 @@ import logger from '../utils/logger';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,10 +23,35 @@ const Login = () => {
   const [isAdminLogin, setIsAdminLogin] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Clear any existing session when login page loads
+  const redirectByUser = (user) => {
+    if (!user) return;
+
+    if (user.role === 'superadmin') {
+      navigate('/superadmin', { replace: true });
+    } else if (user.role === 'uploader') {
+      navigate('/upload', { replace: true });
+    } else if (user.role === 'region_admin') {
+      navigate('/region-admin-dashboard', { replace: true });
+    } else if (user.role === 'rtom_admin') {
+      navigate('/rtom-admin-dashboard', { replace: true });
+    } else if (user.role === 'supervisor' || user.role === 'admin') {
+      navigate('/admin', { replace: true });
+    } else if (user.userType === 'caller' || user.role === 'caller') {
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/login', { replace: true });
+    }
+  };
+
+  // If already logged in, don't keep the user on /login
   useEffect(() => {
-    clearSession();
-  }, []);
+    const existingUser = getCurrentUser();
+    if (existingUser) {
+      redirectByUser(existingUser);
+    }
+    // only re-run when route changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -45,21 +71,7 @@ const Login = () => {
         // Direct login without OTP (session already created by backend)
         localStorage.setItem('userData', JSON.stringify(data.user));
 
-        if (data.user.role === 'superadmin') {
-          navigate('/superadmin');
-        } else if (data.user.role === 'uploader') {
-          navigate('/upload');
-        } else if (data.user.role === 'region_admin') {
-          navigate('/region-admin-dashboard');
-        } else if (data.user.role === 'rtom_admin') {
-          navigate('/rtom-admin-dashboard');
-        } else if (data.user.role === 'supervisor' || data.user.role === 'admin') {
-          navigate('/admin');
-        } else if (data.user.userType === 'caller') {
-          navigate('/dashboard');
-        } else {
-          navigate('/admin');
-        }
+        redirectByUser(data.user);
       }
     } catch (err) {
       toast.error(err.message, { autoClose: 5000 });
@@ -104,21 +116,7 @@ const Login = () => {
 
       // Redirect based on role
       setTimeout(() => {
-        if (data.user.role === 'superadmin') {
-          navigate('/superadmin');
-        } else if (data.user.role === 'uploader') {
-          navigate('/upload');
-        } else if (data.user.role === 'region_admin') {
-          navigate('/region-admin-dashboard');
-        } else if (data.user.role === 'rtom_admin') {
-          navigate('/rtom-admin-dashboard');
-        } else if (data.user.role === 'supervisor' || data.user.role === 'admin') {
-          navigate('/admin');
-        } else if (data.user.userType === 'caller') {
-          navigate('/dashboard');
-        } else {
-          navigate('/admin');
-        }
+        redirectByUser(data.user);
       }, 500);
     } catch (err) {
       logger.error('OTP Verification Error:', err);
