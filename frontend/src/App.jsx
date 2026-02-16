@@ -59,13 +59,13 @@ function App() {
 
             <Route path="/dashboard" element={<ProtectedRoute requiredRole="caller"><CallerDashboard /></ProtectedRoute>} />
             <Route path="/tasks" element={<ProtectedRoute requiredRole="caller"><CallerTasks /></ProtectedRoute>} />
-            <Route path="/admin/tasks" element={<ProtectedRoute ><AdminTasks /></ProtectedRoute>} />
+            <Route path="/admin/tasks" element={<ProtectedRoute requiredRole="admin"><AdminTasks /></ProtectedRoute>} />
             <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><AdminReport /></ProtectedRoute>} />
 
             <Route path="/superadmin" element={<ProtectedRoute requiredRole="superadmin"><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/region-admin-dashboard" element={<ProtectedRoute requiredRole="region_admin"><RegionAdminDashboard /></ProtectedRoute>} />
             <Route path="/rtom-admin-dashboard" element={<ProtectedRoute requiredRole="rtom_admin"><RTOMAdminDashboard /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole="supervisor"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
             <Route path="/customers" element={<ProtectedRoute><CustomerManagement /></ProtectedRoute>} />
             <Route path="/employees" element={<ProtectedRoute requiredRole="admin"><CallerManagement /></ProtectedRoute>} />
             <Route path="/reports" element={<ProtectedRoute><Report /></ProtectedRoute>} />
