@@ -90,7 +90,7 @@ function SuperAdminDashboard() {
 
     try {
       const url = editingAdmin
-        ? `/api/superadmin/admins/${editingAdmin._id}`
+        ? `/api/superadmin/admins/${editingAdmin.id}`
         : `/api/superadmin/admins`;
 
       const method = editingAdmin ? 'PUT' : 'POST';
@@ -220,7 +220,7 @@ function SuperAdminDashboard() {
               </tr>
             ) : (
               admins.map(admin => (
-                <tr key={admin._id}>
+                <tr key={admin.id}>
                   <td>{admin.adminId}</td>
                   <td>{admin.name}</td>
                   <td>{admin.email}</td>
@@ -256,7 +256,7 @@ function SuperAdminDashboard() {
                       </button>
                       <button
                         className="btn-delete"
-                        onClick={() => handleDelete(admin._id)}
+                        onClick={() => handleDelete(admin.id)}
                         style={{
                           background: 'none',
                           border: 'none',

@@ -5,7 +5,7 @@ import { FaUserShield } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { clearSession } from '../utils/auth';
 import API_BASE_URL from '../config/api';
-import { secureFetch } from '../utils/api';
+import { secureFetch, api } from '../utils/api';
 import { MdOutlineMailOutline } from "react-icons/md";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { toast } from "react-toastify";
@@ -33,11 +33,7 @@ const Login = () => {
     try {
       const endpoint = '/api/login';
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await secureFetch(`${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, userType })
-      });
+      const res = await api.post(endpoint, { email, password, userType });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || 'Login failed');
 
@@ -77,11 +73,7 @@ const Login = () => {
     setLoading(true);
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
-      const res = await secureFetch(`/api/send-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, userType })
-      });
+      const res = await api.post(`/api/send-otp`, { email, userType });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || data.message || 'Failed to send OTP');
 
@@ -100,11 +92,7 @@ const Login = () => {
     try {
       const userType = isAdminLogin ? 'admin' : 'caller';
 
-      const res = await secureFetch(`/api/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, userType })
-      });
+      const res = await api.post(`/api/verify-otp`, { email, otp, userType });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || data.message || 'OTP verification failed');
