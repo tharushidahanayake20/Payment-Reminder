@@ -108,8 +108,8 @@ jobs:
             npm run build
 
             echo "🔐 Fixing frontend permissions"
-            chown -R nginx:nginx dist
-            chmod -R 755 dist
+            sudo chown -R nginx:nginx dist
+            sudo chmod -R 755 dist
 
             # -----------------------------
             # Restart Services
